@@ -18,7 +18,14 @@ import { PWAInstallModal } from './components/pwa/PWAInstallModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
 
 const MainLayout: React.FC = () => {
-  const { currentView, clientTab, setTrackingOrderId } = useStore();
+  const {
+    currentView,
+    clientTab,
+    setClientTab,
+    setTrackingOrderId,
+    products,
+    setSelectedProductForModal,
+  } = useStore();
   const {
     isIOS,
     showSmartBanner,
@@ -32,7 +39,21 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-neutral-100 flex flex-col antialiased selection:bg-amber-500 selection:text-neutral-950">
       {/* Real-time In-App Notification Banner */}
-      <InAppNotificationBanner onOpenOrder={(id) => setTrackingOrderId(id)} />
+      <InAppNotificationBanner
+        onOpenOrder={(id) => setTrackingOrderId(id)}
+        onOpenPromo={(action) => {
+          if (action === 'menu') {
+            setClientTab('menu');
+          } else if (action && action.startsWith('prod-')) {
+            const found = products.find((p) => p.id === action);
+            if (found) {
+              setSelectedProductForModal(found);
+            } else {
+              setClientTab('menu');
+            }
+          }
+        }}
+      />
 
       {/* Header */}
       <Header />

@@ -203,19 +203,37 @@ export class NotificationService {
     });
   }
 
-  // Promotional push campaign trigger (Requirement 32)
+  // Promotional push campaign trigger with customer segmentation (Requirements 31, 32, 35)
   public static sendPromotionalBroadcast(
     title: string,
     message: string,
     imageUrl?: string,
     ctaLabel: string = 'PEDIR AGORA',
     ctaAction: string = 'menu',
-    targetAudience: AppNotification['targetAudience'] = 'all'
+    targetAudience: AppNotification['targetAudience'] = 'all',
+    customerContext?: {
+      ordersCount: number;
+      isPWAInstalled?: boolean;
+      loyaltyTier?: 'bronze' | 'silver' | 'gold';
+    }
   ) {
     const isPromoOptedIn = this.isPromotionsOptedIn();
-    // Only delivers if user didn't opt out, or if system broadcast
-    if (!isPromoOptedIn && targetAudience === 'promo_opt_in') {
+
+    // Check audience segmentation criteria
+    if (targetAudience === 'promo_opt_in' && !isPromoOptedIn) {
       return null;
+    }
+
+    if (customerContext) {
+      if (targetAudience === 'past_buyers' && customerContext.ordersCount === 0) {
+        return null;
+      }
+      if (targetAudience === 'loyal_customers' && customerContext.ordersCount < 3) {
+        return null;
+      }
+      if (targetAudience === 'pwa_installed' && !customerContext.isPWAInstalled) {
+        return null;
+      }
     }
 
     return this.notify({

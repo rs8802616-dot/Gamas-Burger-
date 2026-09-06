@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Product,
@@ -114,6 +114,14 @@ interface StoreContextType {
   ) => AppNotification | null;
 
   // Customer & Favorites
+  loyaltyTierInfo: {
+    tier: 'Bronze' | 'Prata' | 'Ouro VIP';
+    tierId: 'bronze' | 'silver' | 'gold';
+    ordersCount: number;
+    ordersNeededForNext: number;
+    discountPercent: number;
+    perk: string;
+  };
   isFavorite: (productId: string) => boolean;
   toggleFavorite: (productId: string) => void;
   updateCustomer: (info: Partial<CustomerInfo>) => void;
@@ -748,6 +756,39 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Customer Loyalty Calculation (Requirement 35)
+  const customerOrdersCount = orders.filter((o) => o.status !== 'cancelled').length;
+  const loyaltyTierInfo = useMemo(() => {
+    if (customerOrdersCount >= 6) {
+      return {
+        tier: 'Ouro VIP' as const,
+        tierId: 'gold' as const,
+        ordersCount: customerOrdersCount,
+        ordersNeededForNext: 0,
+        discountPercent: 10,
+        perk: '10% de desconto em todos os pedidos e prioridade máxima na chapa',
+      };
+    } else if (customerOrdersCount >= 3) {
+      return {
+        tier: 'Prata' as const,
+        tierId: 'silver' as const,
+        ordersCount: customerOrdersCount,
+        ordersNeededForNext: 6 - customerOrdersCount,
+        discountPercent: 5,
+        perk: '5% de desconto em pedidos e sobremesa grátis em compras acima de R$ 50',
+      };
+    } else {
+      return {
+        tier: 'Bronze' as const,
+        tierId: 'bronze' as const,
+        ordersCount: customerOrdersCount,
+        ordersNeededForNext: 3 - customerOrdersCount,
+        discountPercent: 0,
+        perk: 'Faça 3 pedidos para desbloquear o nível Prata com descontos exclusivos',
+      };
+    }
+  }, [customerOrdersCount]);
+
   const sendBroadcastNotification = (
     title: string,
     message: string,
@@ -762,7 +803,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       imageUrl,
       ctaLabel,
       ctaAction,
-      targetAudience
+      targetAudience,
+      {
+        ordersCount: customerOrdersCount,
+        isPWAInstalled: customer.isPWAInstalled,
+        loyaltyTier: loyaltyTierInfo.tierId,
+      }
     );
   };
 
@@ -824,6 +870,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         isFavorite,
         toggleFavorite,
+        loyaltyTierInfo,
         updateCustomer,
         updateCustomerProfile: updateCustomer,
         addAddress,
