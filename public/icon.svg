@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="100%" stop-color="#09090b"/>
+    </linearGradient>
+    <linearGradient id="bunGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="pattyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="cheeseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Rounded App Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#f59e0b" stroke-width="4" stroke-opacity="0.3"/>
+
+  <!-- Top Bun -->
+  <path d="M120 220 C 120 130, 392 130, 392 220 Z" fill="url(#bunGrad)"/>
+  
+  <!-- Sesame Seeds -->
+  <ellipse cx="200" cy="170" rx="7" ry="4" fill="#fef3c7" transform="rotate(-15 200 170)"/>
+  <ellipse cx="260" cy="155" rx="7" ry="4" fill="#fef3c7"/>
+  <ellipse cx="320" cy="170" rx="7" ry="4" fill="#fef3c7" transform="rotate(15 320 170)"/>
+  <ellipse cx="230" cy="190" rx="6" ry="3.5" fill="#fef3c7" transform="rotate(5 230 190)"/>
+  <ellipse cx="290" cy="190" rx="6" ry="3.5" fill="#fef3c7" transform="rotate(-8 290 190)"/>
+
+  <!-- Lettuce Crisp Waves -->
+  <path d="M110 232 C 140 216, 170 248, 200 232 C 230 216, 260 248, 290 232 C 320 216, 350 248, 380 232 C 400 222, 410 236, 400 244 C 380 252, 130 252, 110 232 Z" fill="#22c55e"/>
+
+  <!-- Tomato Slice -->
+  <rect x="130" y="244" width="252" height="22" rx="10" fill="#ef4444"/>
+
+  <!-- Cheddar Melt Triangle Drips -->
+  <path d="M116 266 L 396 266 L 376 292 L 320 274 L 260 306 L 200 274 L 140 300 Z" fill="url(#cheeseGrad)"/>
+
+  <!-- Juicy Beef Patty -->
+  <rect x="110" y="278" width="292" height="42" rx="18" fill="url(#pattyGrad)"/>
+
+  <!-- Bottom Bun -->
+  <path d="M130 330 C 130 375, 382 375, 382 330 Z" fill="url(#bunGrad)"/>
+
+  <!-- Brand Label Badge "10" -->
+  <circle cx="390" cy="140" r="46" fill="#f59e0b"/>
+  <circle cx="390" cy="140" r="41" fill="#09090b"/>
+  <text x="390" y="152" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="34" fill="#f59e0b" text-anchor="middle">10</text>
+</svg>

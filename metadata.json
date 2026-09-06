@@ -1,0 +1,6 @@
+{
+  "name": "Burger10 - Hamburgueria & Delivery",
+  "description": "Sistema completo para hamburgueria: cardápio digital moderno, pedidos online, KDS para cozinha, impressão de comandas e painel administrativo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
