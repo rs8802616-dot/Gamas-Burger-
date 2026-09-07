@@ -150,14 +150,16 @@ export class NotificationService {
       }
     }
 
-    // Trigger in-app listeners
-    this.listeners.forEach((listener) => {
-      try {
-        listener(newNotif);
-      } catch (err) {
-        console.error('Error in notification listener:', err);
-      }
-    });
+    // Trigger in-app listeners asynchronously to prevent React render-cycle / setState conflicts
+    setTimeout(() => {
+      this.listeners.forEach((listener) => {
+        try {
+          listener(newNotif);
+        } catch (err) {
+          console.error('Error in notification listener:', err);
+        }
+      });
+    }, 0);
 
     return newNotif;
   }

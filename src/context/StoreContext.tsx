@@ -614,6 +614,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Update order status (Kitchen or Admin)
   const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
+    let orderToUpdate: Order | null = null;
+
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id === orderId) {
@@ -635,15 +637,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             timeline: updatedTimeline,
           };
 
-          // Trigger Push / In-App Notification (Requirement 29, 36)
-          NotificationService.triggerOrderStatusNotification(updatedOrder, newStatus);
-          firebaseService.saveOrder(updatedOrder);
-
+          orderToUpdate = updatedOrder;
           return updatedOrder;
         }
         return order;
       })
     );
+
+    // Trigger Push / In-App Notification and database save outside of the setOrders state updater
+    if (orderToUpdate) {
+      NotificationService.triggerOrderStatusNotification(orderToUpdate, newStatus);
+      firebaseService.saveOrder(orderToUpdate);
+    }
   };
 
   const printThermalReceipt = (order: Order) => {

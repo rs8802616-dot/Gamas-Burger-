@@ -15,18 +15,22 @@ export const InAppNotificationBanner: React.FC<InAppNotificationBannerProps> = (
   const [activeNotification, setActiveNotification] = useState<AppNotification | null>(null);
 
   useEffect(() => {
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
     const unsubscribe = NotificationService.subscribe((notification) => {
       setActiveNotification(notification);
 
+      if (hideTimer) clearTimeout(hideTimer);
       // Auto-hide after 7 seconds
-      const timer = setTimeout(() => {
+      hideTimer = setTimeout(() => {
         setActiveNotification((current) => (current?.id === notification.id ? null : current));
       }, 7000);
-
-      return () => clearTimeout(timer);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (hideTimer) clearTimeout(hideTimer);
+    };
   }, []);
 
   if (!activeNotification) return null;
