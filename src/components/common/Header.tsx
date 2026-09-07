@@ -11,6 +11,7 @@ import {
   Volume2,
   VolumeX,
   Bell,
+  LogOut,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { NotificationCenterModal } from '../notifications/NotificationCenterModal';
@@ -31,6 +32,8 @@ export const Header: React.FC = () => {
     soundEnabled,
     toggleSound,
     setTrackingOrderId,
+    isAdminAuthenticated,
+    adminLogout,
   } = useStore();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -100,9 +103,24 @@ export const Header: React.FC = () => {
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span>Painel Admin</span>
             </button>
+
+            {isAdminAuthenticated && (
+              <button
+                id="view-logout-btn"
+                onClick={adminLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold border border-red-500/20 transition-all text-xs"
+                title="Encerrar sessão de administrador"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sair (Logout)</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2.5">
+            <span className="hidden sm:inline text-[11px] font-mono text-amber-400/80 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-bold">
+              rs8802616@gmail.com
+            </span>
             <button
               onClick={toggleSound}
               title={soundEnabled ? 'Silenciar alertas' : 'Ativar alertas sonoros'}

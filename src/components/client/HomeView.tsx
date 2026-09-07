@@ -8,7 +8,6 @@ import {
   Sparkles,
   ChevronRight,
   UtensilsCrossed,
-  LayoutDashboard,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { formatCurrency } from '../../utils/formatters';
@@ -401,16 +400,9 @@ export const HomeView: React.FC = () => {
         )}
       </div>
 
-      {/* Discrete Staff / Admin Access link for testing & store management */}
+      {/* Client footer */}
       <div className="pt-8 pb-4 text-center text-xs text-white/30 border-t border-white/5">
-        <p className="mb-2 font-medium text-[11px]">Burger10 Hamburgueria Artesanal • Delivery & Balcão</p>
-        <button
-          onClick={() => setCurrentView('admin')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition-colors text-[11px]"
-        >
-          <LayoutDashboard className="w-3 h-3" />
-          <span>Acesso da Equipe (Painel Admin & Cozinha)</span>
-        </button>
+        <p className="font-medium text-[11px]">Burger10 Hamburgueria Artesanal • Feito na chapa com ingredientes selecionados</p>
       </div>
     </div>
   );

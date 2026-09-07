@@ -9,8 +9,6 @@ import {
   MessageCircle,
   Clock,
   HelpCircle,
-  ChefHat,
-  ShieldCheck,
   Check,
   Award,
   Sparkles,
@@ -456,37 +454,6 @@ export const ProfileView: React.FC = () => {
           <MessageCircle className="w-4 h-4" />
           <span>FALAR CONOSCO NO WHATSAPP</span>
         </a>
-      </div>
-
-      {/* Área da Equipe & Gestão (Discreta) */}
-      <div className="pt-2 text-center">
-        <details className="group">
-          <summary className="cursor-pointer text-[11px] text-white/30 hover:text-white/60 transition-colors list-none inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-white/5 hover:bg-white/10 select-none">
-            <ShieldCheck className="w-3 h-3 text-amber-500/70" />
-            <span>Acesso da Equipe (Admin & Cozinha)</span>
-          </summary>
-          <div className="mt-3 p-4 bg-[#151518] border border-white/5 rounded-2xl max-w-sm mx-auto space-y-2.5 shadow-lg">
-            <p className="text-[10px] text-white/40 text-left">
-              Acesso exclusivo para gerentes, chapeiros e operadores de caixa.
-            </p>
-            <div className="flex gap-2 justify-center">
-              <button
-                onClick={() => setCurrentView('kitchen')}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-xl text-xs font-bold hover:bg-orange-500/20 transition-colors"
-              >
-                <ChefHat className="w-3.5 h-3.5" />
-                <span>Cozinha KDS</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('admin')}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 text-white rounded-xl text-xs font-bold hover:bg-white/10 transition-colors"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Painel Admin</span>
-              </button>
-            </div>
-          </div>
-        </details>
       </div>
     </div>
   );

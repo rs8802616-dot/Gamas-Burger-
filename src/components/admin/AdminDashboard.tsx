@@ -24,12 +24,14 @@ import {
   ChevronRight,
   Bell,
   Users,
+  Database,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { formatCurrency, generateWhatsAppLink } from '../../utils/formatters';
 import { Product, Coupon, DeliveryZone, OrderStatus } from '../../types';
 import { AdminNotificationsManager } from './AdminNotificationsManager';
 import { AdminCustomersManager } from './AdminCustomersManager';
+import { AdminFirebaseManager } from './AdminFirebaseManager';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -237,6 +239,7 @@ export const AdminDashboard: React.FC = () => {
           { id: 'notifications', label: 'Notificações', icon: Bell },
           { id: 'customers', label: 'Clientes', icon: Users },
           { id: 'settings', label: 'Configurações', icon: Settings },
+          { id: 'firebase', label: 'Banco Firebase', icon: Database },
         ].map((tab) => {
           const Icon = tab.icon;
           const isSelected = adminTab === tab.id;
@@ -282,6 +285,7 @@ export const AdminDashboard: React.FC = () => {
             { id: 'notifications', label: 'Notificações & Promoções', icon: Bell },
             { id: 'customers', label: 'Clientes & Fidelidade', icon: Users },
             { id: 'settings', label: 'Configurações', icon: Settings },
+            { id: 'firebase', label: 'Banco Firebase', icon: Database },
           ].map((item) => {
             const Icon = item.icon;
             const isSelected = adminTab === item.id;
@@ -943,6 +947,9 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 9: CUSTOMERS & FIDELITY (Requirement 33 & 35) */}
       {adminTab === 'customers' && <AdminCustomersManager />}
+
+      {/* TAB 10: FIREBASE DATABASE & CONSOLE (Requirement: rs8802616@gmail.com) */}
+      {adminTab === 'firebase' && <AdminFirebaseManager />}
 
         </div>
       </div>

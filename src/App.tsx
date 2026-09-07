@@ -13,6 +13,7 @@ import { OrderTrackingModal } from './components/client/OrderTrackingModal';
 import { ThermalReceiptModal } from './components/thermal/ThermalReceiptModal';
 import { KitchenPanel } from './components/kitchen/KitchenPanel';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AdminLoginView } from './components/admin/AdminLoginView';
 import { InAppNotificationBanner } from './components/notifications/InAppNotificationBanner';
 import { PWAInstallModal } from './components/pwa/PWAInstallModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
@@ -20,6 +21,8 @@ import { usePWAInstall } from './hooks/usePWAInstall';
 const MainLayout: React.FC = () => {
   const {
     currentView,
+    setCurrentView,
+    isAdminAuthenticated,
     clientTab,
     setClientTab,
     setTrackingOrderId,
@@ -60,7 +63,7 @@ const MainLayout: React.FC = () => {
 
       {/* Main Container */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-6 pt-4 pb-12">
-        {/* CLIENT VIEWS */}
+        {/* CLIENT VIEWS - Completely isolated from Admin */}
         {currentView === 'client' && (
           <>
             {(clientTab === 'home' || clientTab === 'menu' || clientTab === 'cart') && (
@@ -72,15 +75,33 @@ const MainLayout: React.FC = () => {
           </>
         )}
 
-        {/* KITCHEN KDS VIEW */}
-        {currentView === 'kitchen' && <KitchenPanel />}
+        {/* KITCHEN KDS VIEW - Protected by Authentication */}
+        {currentView === 'kitchen' && (
+          isAdminAuthenticated ? (
+            <KitchenPanel />
+          ) : (
+            <AdminLoginView
+              onSuccess={() => setCurrentView('kitchen')}
+              onBackToClient={() => setCurrentView('client')}
+            />
+          )
+        )}
 
-        {/* ADMIN DASHBOARD VIEW */}
-        {currentView === 'admin' && <AdminDashboard />}
+        {/* ADMIN DASHBOARD VIEW - Protected by Authentication */}
+        {currentView === 'admin' && (
+          isAdminAuthenticated ? (
+            <AdminDashboard />
+          ) : (
+            <AdminLoginView
+              onSuccess={() => setCurrentView('admin')}
+              onBackToClient={() => setCurrentView('client')}
+            />
+          )
+        )}
       </main>
 
-      {/* Mobile Bottom Navigation (Client only) */}
-      <BottomNav />
+      {/* Mobile Bottom Navigation (Client only - hidden in Admin & Kitchen) */}
+      {currentView === 'client' && <BottomNav />}
 
       {/* Global Interactive Modals */}
       <ProductDetailModal />

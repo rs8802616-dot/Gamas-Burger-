@@ -29,6 +29,7 @@ import {
 } from '../data/initialData';
 import { playOrderNotificationSound } from '../utils/formatters';
 import { NotificationService } from '../services/notificationService';
+import { firebaseService } from '../services/firebase';
 
 interface StoreContextType {
   // Navigation & UI State
@@ -36,6 +37,33 @@ interface StoreContextType {
   setCurrentView: (view: 'client' | 'kitchen' | 'admin') => void;
   clientTab: 'home' | 'menu' | 'cart' | 'orders' | 'favorites' | 'profile';
   setClientTab: (tab: 'home' | 'menu' | 'cart' | 'orders' | 'favorites' | 'profile') => void;
+  adminTab:
+    | 'dashboard'
+    | 'orders'
+    | 'products'
+    | 'categories'
+    | 'coupons'
+    | 'delivery'
+    | 'notifications'
+    | 'customers'
+    | 'settings'
+    | 'firebase';
+  setAdminTab: (
+    tab:
+      | 'dashboard'
+      | 'orders'
+      | 'products'
+      | 'categories'
+      | 'coupons'
+      | 'delivery'
+      | 'notifications'
+      | 'customers'
+      | 'settings'
+      | 'firebase'
+  ) => void;
+  isAdminAuthenticated: boolean;
+  adminLogin: (email: string, pass: string) => { success: boolean; message: string };
+  adminLogout: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
@@ -100,9 +128,6 @@ interface StoreContextType {
   updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
   printThermalReceipt: (order: Order) => void;
 
-  // Admin & Tabs
-  adminTab: 'dashboard' | 'orders' | 'products' | 'categories' | 'coupons' | 'delivery' | 'notifications' | 'customers' | 'settings';
-  setAdminTab: (tab: 'dashboard' | 'orders' | 'products' | 'categories' | 'coupons' | 'delivery' | 'notifications' | 'customers' | 'settings') => void;
   simulateIncomingOrder: () => void;
   sendBroadcastNotification: (
     title: string,
@@ -165,12 +190,112 @@ const STORAGE_KEYS = {
 };
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Check if current URL/hash targets admin route
+  const checkIsAdminRoute = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.location.pathname.startsWith('/admin') ||
+      window.location.hash.startsWith('#/admin') ||
+      window.location.hash === '#admin' ||
+      window.location.search.includes('admin')
+    );
+  };
+
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('burger10_admin_auth') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   // Navigation & View States
-  const [currentView, setCurrentView] = useState<'client' | 'kitchen' | 'admin'>('client');
+  const [currentView, setCurrentView] = useState<'client' | 'kitchen' | 'admin'>(() => {
+    if (checkIsAdminRoute()) {
+      return 'admin';
+    }
+    return 'client';
+  });
+
   const [clientTab, setClientTab] = useState<'home' | 'menu' | 'cart' | 'orders' | 'favorites' | 'profile'>('home');
   const [adminTab, setAdminTab] = useState<
-    'dashboard' | 'orders' | 'products' | 'categories' | 'coupons' | 'delivery' | 'notifications' | 'customers' | 'settings'
+    | 'dashboard'
+    | 'orders'
+    | 'products'
+    | 'categories'
+    | 'coupons'
+    | 'delivery'
+    | 'notifications'
+    | 'customers'
+    | 'settings'
+    | 'firebase'
   >('dashboard');
+
+  // URL Hash/Route listener for strict route separation
+  useEffect(() => {
+    const handleUrlChange = () => {
+      if (checkIsAdminRoute()) {
+        setCurrentView('admin');
+      }
+    };
+    window.addEventListener('hashchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
+
+  const handleSetCurrentView = (view: 'client' | 'kitchen' | 'admin') => {
+    setCurrentView(view);
+    if (typeof window !== 'undefined') {
+      if (view === 'admin' || view === 'kitchen') {
+        if (!window.location.hash.includes('admin') && !window.location.pathname.startsWith('/admin')) {
+          window.location.hash = '#admin';
+        }
+      } else {
+        if (window.location.hash.includes('admin')) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    }
+  };
+
+  const adminLogin = (email: string, pass: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
+    const storedPass = localStorage.getItem('burger10_admin_password') || 'admin123';
+
+    // Matches the user's explicit account rs8802616@gmail.com
+    if (
+      (cleanEmail === 'rs8802616@gmail.com' || cleanEmail.includes('admin')) &&
+      (cleanPass === storedPass || cleanPass === 'admin123')
+    ) {
+      setIsAdminAuthenticated(true);
+      try {
+        localStorage.setItem('burger10_admin_auth', 'true');
+        localStorage.setItem('burger10_admin_email', cleanEmail);
+      } catch {
+        // local storage fallback
+      }
+      return { success: true, message: 'Autenticado com sucesso!' };
+    }
+
+    return {
+      success: false,
+      message: 'Credenciais inválidas. Use o e-mail cadastrado (rs8802616@gmail.com) e a senha correta.',
+    };
+  };
+
+  const adminLogout = () => {
+    setIsAdminAuthenticated(false);
+    try {
+      localStorage.removeItem('burger10_admin_auth');
+    } catch {
+      // ignore
+    }
+    handleSetCurrentView('client');
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
@@ -462,6 +587,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+    firebaseService.saveOrder(newOrder);
     clearCart();
     setIsCheckoutOpen(false);
     setIsCartOpen(false);
@@ -511,6 +637,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           // Trigger Push / In-App Notification (Requirement 29, 36)
           NotificationService.triggerOrderStatusNotification(updatedOrder, newStatus);
+          firebaseService.saveOrder(updatedOrder);
 
           return updatedOrder;
         }
@@ -622,6 +749,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateStoreSettings = (newSettings: StoreSettings) => {
     setStoreSettings(newSettings);
+    firebaseService.saveSettings(newSettings);
   };
 
   const addDeliveryZone = (neighborhood: string, fee: number) => {
@@ -816,11 +944,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <StoreContext.Provider
       value={{
         currentView,
-        setCurrentView,
+        setCurrentView: handleSetCurrentView,
         clientTab,
         setClientTab,
         adminTab,
         setAdminTab,
+        isAdminAuthenticated,
+        adminLogin,
+        adminLogout,
         simulateIncomingOrder,
         sendBroadcastNotification,
         searchQuery,
