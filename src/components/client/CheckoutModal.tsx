@@ -28,7 +28,10 @@ export const CheckoutModal: React.FC = () => {
     cartTotals,
     placeOrder,
     storeSettings,
+    theme,
   } = useStore();
+
+  const isDark = theme === 'dark';
 
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
   const [selectedAddressId, setSelectedAddressId] = useState<string>(
@@ -102,24 +105,30 @@ export const CheckoutModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 sm:p-4 overflow-y-auto">
-      <div className="w-full sm:max-w-md bg-[#0e0e11] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[95vh] flex flex-col shadow-2xl relative animate-in slide-in-from-bottom duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
+      <div className={`w-full sm:max-w-md border-t sm:border rounded-t-3xl sm:rounded-3xl max-h-[95vh] flex flex-col shadow-2xl relative animate-in slide-in-from-bottom duration-200 ${
+        isDark ? 'bg-[#0e0e11] border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900'
+      }`}>
         {/* Header matching Screen 4: "← Finalizar pedido" */}
-        <div className="p-4 border-b border-white/10 flex items-center gap-3">
+        <div className={`p-4 border-b flex items-center gap-3 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
           <button
             onClick={() => setIsCheckoutOpen(false)}
-            className="p-1.5 rounded-xl text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
+            className={`p-1.5 rounded-xl transition-colors ${
+              isDark
+                ? 'text-neutral-400 hover:text-white hover:bg-white/5'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+            }`}
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
-          <h2 className="text-base font-black text-white">Finalizar pedido</h2>
+          <h2 className={`text-base font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Finalizar pedido</h2>
         </div>
 
         {/* Step Indicator matching Screen 4: 1. Endereço -> 2. Pagamento -> 3. Confirmar */}
         <div className="px-6 pt-4 pb-2">
           <div className="flex items-center justify-between relative">
             {/* Connecting line */}
-            <div className="absolute left-6 right-6 top-4 -translate-y-1/2 h-0.5 bg-white/10 z-0" />
+            <div className={`absolute left-6 right-6 top-4 -translate-y-1/2 h-0.5 z-0 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
 
             {/* Step 1: Endereço */}
             <div className="flex flex-col items-center relative z-10">
@@ -131,18 +140,22 @@ export const CheckoutModal: React.FC = () => {
 
             {/* Step 2: Pagamento */}
             <div className="flex flex-col items-center relative z-10">
-              <div className="w-8 h-8 rounded-full bg-[#1e1e24] text-amber-500 border border-amber-500/40 flex items-center justify-center text-xs font-black">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border ${
+                isDark ? 'bg-[#1e1e24] text-amber-500 border-amber-500/40' : 'bg-amber-50 text-amber-600 border-amber-300'
+              }`}>
                 <CreditCard className="w-4 h-4 stroke-[2.5]" />
               </div>
-              <span className="text-[10px] font-bold text-white mt-1">Pagamento</span>
+              <span className={`text-[10px] font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-800'}`}>Pagamento</span>
             </div>
 
             {/* Step 3: Confirmar */}
             <div className="flex flex-col items-center relative z-10">
-              <div className="w-8 h-8 rounded-full bg-[#18181c] text-neutral-500 border border-white/10 flex items-center justify-center text-xs font-black">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border ${
+                isDark ? 'bg-[#18181c] text-neutral-500 border-white/10' : 'bg-gray-100 text-gray-400 border-gray-300'
+              }`}>
                 <Check className="w-4 h-4 stroke-[2.5]" />
               </div>
-              <span className="text-[10px] font-bold text-neutral-400 mt-1">Confirmar</span>
+              <span className={`text-[10px] font-bold mt-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Confirmar</span>
             </div>
           </div>
         </div>
@@ -151,7 +164,7 @@ export const CheckoutModal: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
           {/* Forma de recebimento */}
           <div>
-            <h3 className="text-xs font-black text-white uppercase tracking-wider mb-2.5">
+            <h3 className={`text-xs font-black uppercase tracking-wider mb-2.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Forma de recebimento
             </h3>
             <div className="space-y-2">
@@ -160,22 +173,26 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setDeliveryType('delivery')}
                 className={`p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
                   deliveryType === 'delivery'
-                    ? 'bg-amber-500/10 border-amber-500 text-white'
-                    : 'bg-[#151518] border-white/5 text-neutral-300 hover:border-white/10'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500 text-white'
+                      : 'bg-amber-50 border-amber-500 text-gray-900'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300 hover:border-white/10'
+                    : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-neutral-950 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-neutral-950 flex items-center justify-center shrink-0 shadow-sm">
                     <Bike className="w-5 h-5 stroke-[2.5]" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Entrega</h4>
-                    <p className="text-[11px] text-neutral-400">
+                    <h4 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Entrega</h4>
+                    <p className={`text-[11px] ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                       Receba no conforto da sua casa
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-neutral-500" />
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
               </div>
 
               {/* Option 2: Retirada */}
@@ -183,20 +200,26 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setDeliveryType('pickup')}
                 className={`p-3.5 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
                   deliveryType === 'pickup'
-                    ? 'bg-amber-500/10 border-amber-500 text-white'
-                    : 'bg-[#151518] border-white/5 text-neutral-300 hover:border-white/10'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500 text-white'
+                      : 'bg-amber-50 border-amber-500 text-gray-900'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300 hover:border-white/10'
+                    : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#202024] text-neutral-300 flex items-center justify-center shrink-0">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    isDark ? 'bg-[#202024] text-neutral-300' : 'bg-gray-200 text-gray-700'
+                  }`}>
                     <Store className="w-5 h-5 stroke-[2]" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Retirada no estabelecimento</h4>
-                    <p className="text-[11px] text-neutral-400">Retire no nosso balcão</p>
+                    <h4 className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Retirada no estabelecimento</h4>
+                    <p className={`text-[11px] ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Retire no nosso balcão</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-neutral-500" />
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
               </div>
             </div>
           </div>
@@ -204,27 +227,29 @@ export const CheckoutModal: React.FC = () => {
           {/* Endereço de entrega matching Screen 4 */}
           {deliveryType === 'delivery' ? (
             <div>
-              <h3 className="text-xs font-black text-white uppercase tracking-wider mb-2.5">
+              <h3 className={`text-xs font-black uppercase tracking-wider mb-2.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Endereço de entrega
               </h3>
 
               {!isAddingNewAddress ? (
-                <div className="bg-[#151518] border border-white/5 rounded-2xl p-4 space-y-3">
+                <div className={`border rounded-2xl p-4 space-y-3 ${
+                  isDark ? 'bg-[#151518] border-white/5' : 'bg-gray-50 border-gray-200'
+                }`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 mt-0.5">
                         <MapPin className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-white block">Meu endereço</span>
-                        <p className="text-xs text-neutral-300 mt-0.5 leading-relaxed">
+                        <span className={`text-xs font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>Meu endereço</span>
+                        <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>
                           {currentAddress.street}, {currentAddress.number}
                           {currentAddress.complement ? ` - ${currentAddress.complement}` : ''}
                         </p>
-                        <p className="text-[11px] text-neutral-400">
+                        <p className={`text-[11px] ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                           {currentAddress.neighborhood} - {currentAddress.city}
                         </p>
-                        <p className="text-[10px] text-neutral-500">
+                        <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
                           CEP {currentAddress.zipCode || '01000-000'}
                         </p>
                       </div>
@@ -241,7 +266,7 @@ export const CheckoutModal: React.FC = () => {
 
                   {/* If changing address, list customer addresses */}
                   {isChangingAddress && (
-                    <div className="pt-3 border-t border-white/5 space-y-2">
+                    <div className={`pt-3 border-t space-y-2 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                       {customer.addresses.map((addr) => (
                         <div
                           key={addr.id}
@@ -251,8 +276,10 @@ export const CheckoutModal: React.FC = () => {
                           }}
                           className={`p-2.5 rounded-xl border text-xs cursor-pointer ${
                             addr.id === currentAddress.id
-                              ? 'border-amber-500 bg-amber-500/10 text-white font-bold'
-                              : 'border-white/5 bg-[#0e0e11] text-neutral-300'
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-500 font-bold'
+                              : isDark
+                              ? 'border-white/5 bg-[#0e0e11] text-neutral-300'
+                              : 'border-gray-200 bg-white text-gray-700'
                           }`}
                         >
                           {addr.street}, {addr.number} ({addr.neighborhood})
@@ -264,15 +291,21 @@ export const CheckoutModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsAddingNewAddress(true)}
-                    className="w-full py-2.5 bg-[#0e0e11] hover:bg-[#121215] border border-white/10 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition-colors"
+                    className={`w-full py-2.5 border rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
+                      isDark
+                        ? 'bg-[#0e0e11] hover:bg-[#121215] border-white/10 text-white'
+                        : 'bg-white hover:bg-gray-100 border-gray-300 text-gray-800'
+                    }`}
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Adicionar novo endereço</span>
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSaveNewAddress} className="bg-[#151518] border border-white/5 rounded-2xl p-4 space-y-2.5">
-                  <span className="text-xs font-bold text-white block mb-1">Novo Endereço</span>
+                <form onSubmit={handleSaveNewAddress} className={`border rounded-2xl p-4 space-y-2.5 ${
+                  isDark ? 'bg-[#151518] border-white/5' : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <span className={`text-xs font-bold block mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Novo Endereço</span>
                   <div className="grid grid-cols-3 gap-2">
                     <input
                       type="text"
@@ -280,7 +313,11 @@ export const CheckoutModal: React.FC = () => {
                       value={newStreet}
                       onChange={(e) => setNewStreet(e.target.value)}
                       required
-                      className="col-span-2 bg-[#0e0e11] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500"
+                      className={`col-span-2 border rounded-xl px-3 py-2 text-xs ${
+                        isDark
+                          ? 'bg-[#0e0e11] border-white/10 text-white placeholder-neutral-500'
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                      }`}
                     />
                     <input
                       type="text"
@@ -288,7 +325,11 @@ export const CheckoutModal: React.FC = () => {
                       value={newNumber}
                       onChange={(e) => setNewNumber(e.target.value)}
                       required
-                      className="bg-[#0e0e11] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500"
+                      className={`border rounded-xl px-3 py-2 text-xs ${
+                        isDark
+                          ? 'bg-[#0e0e11] border-white/10 text-white placeholder-neutral-500'
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                      }`}
                     />
                   </div>
                   <input
@@ -296,12 +337,20 @@ export const CheckoutModal: React.FC = () => {
                     placeholder="Complemento (opcional)"
                     value={newComplement}
                     onChange={(e) => setNewComplement(e.target.value)}
-                    className="w-full bg-[#0e0e11] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500"
+                    className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                      isDark
+                        ? 'bg-[#0e0e11] border-white/10 text-white placeholder-neutral-500'
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                    }`}
                   />
                   <select
                     value={newNeighborhood}
                     onChange={(e) => setNewNeighborhood(e.target.value)}
-                    className="w-full bg-[#0e0e11] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                    className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                      isDark
+                        ? 'bg-[#0e0e11] border-white/10 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                   >
                     {deliveryZones.map((z) => (
                       <option key={z.id} value={z.neighborhood}>
@@ -319,7 +368,9 @@ export const CheckoutModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsAddingNewAddress(false)}
-                      className="px-3 bg-neutral-800 text-white font-bold py-2 rounded-xl text-xs"
+                      className={`px-3 font-bold py-2 rounded-xl text-xs ${
+                        isDark ? 'bg-neutral-800 text-white' : 'bg-gray-200 text-gray-700'
+                      }`}
                     >
                       Cancelar
                     </button>
@@ -328,16 +379,18 @@ export const CheckoutModal: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="bg-[#151518] border border-white/5 rounded-2xl p-4 text-xs">
+            <div className={`border rounded-2xl p-4 text-xs ${
+              isDark ? 'bg-[#151518] border-white/5' : 'bg-gray-50 border-gray-200'
+            }`}>
               <span className="font-bold text-amber-500 block mb-1">Local de Retirada:</span>
-              <p className="text-white font-medium">{storeSettings.name}</p>
-              <p className="text-neutral-400">{storeSettings.address}</p>
+              <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{storeSettings.name}</p>
+              <p className={isDark ? 'text-neutral-400' : 'text-gray-500'}>{storeSettings.address}</p>
             </div>
           )}
 
           {/* Forma de pagamento matching Screen 4 */}
           <div>
-            <h3 className="text-xs font-black text-white uppercase tracking-wider mb-2.5">
+            <h3 className={`text-xs font-black uppercase tracking-wider mb-2.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Forma de pagamento
             </h3>
 
@@ -347,31 +400,37 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setPaymentMethod('pix')}
                 className={`p-3 rounded-2xl border cursor-pointer transition-all ${
                   paymentMethod === 'pix'
-                    ? 'bg-amber-500/10 border-amber-500'
-                    : 'bg-[#151518] border-white/5 text-neutral-300'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500'
+                      : 'bg-amber-50 border-amber-500'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      paymentMethod === 'pix' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-600'
+                      paymentMethod === 'pix' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-500'
                     }`}>
                       {paymentMethod === 'pix' && '✓'}
                     </div>
-                    <span className="text-xs font-bold text-white">PIX</span>
+                    <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>PIX</span>
                     <span className="bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full">
                       Recomendado
                     </span>
                   </div>
-                  <span className="text-[11px] text-emerald-400 font-bold">Imediato</span>
+                  <span className="text-[11px] text-emerald-500 font-bold">Imediato</span>
                 </div>
 
                 {paymentMethod === 'pix' && (
-                  <div className="mt-3 pt-3 border-t border-white/5 bg-[#0e0e11] p-3 rounded-xl flex flex-col items-center text-center">
-                    <div className="w-24 h-24 bg-white p-2 rounded-xl flex items-center justify-center shadow-lg mb-2">
+                  <div className={`mt-3 pt-3 border-t p-3 rounded-xl flex flex-col items-center text-center ${
+                    isDark ? 'border-white/5 bg-[#0e0e11]' : 'border-gray-200 bg-white'
+                  }`}>
+                    <div className="w-24 h-24 bg-white p-2 rounded-xl flex items-center justify-center shadow-lg mb-2 border border-gray-200">
                       <QrCode className="w-20 h-20 text-black" />
                     </div>
-                    <p className="text-[10px] text-neutral-400 mb-2">
+                    <p className={`text-[10px] mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                       Escaneie ou copie a chave PIX abaixo:
                     </p>
                     <button
@@ -391,19 +450,23 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setPaymentMethod('credit_card')}
                 className={`p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
                   paymentMethod === 'credit_card'
-                    ? 'bg-amber-500/10 border-amber-500'
-                    : 'bg-[#151518] border-white/5 text-neutral-300'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500'
+                      : 'bg-amber-50 border-amber-500'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'credit_card' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-600'
+                    paymentMethod === 'credit_card' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-500'
                   }`}>
                     {paymentMethod === 'credit_card' && '✓'}
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-white block">Cartão de crédito</span>
-                    <span className="text-[10px] text-neutral-500">Em até 12x (com juros)</span>
+                    <span className={`text-xs font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>Cartão de crédito</span>
+                    <span className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Em até 12x (com juros)</span>
                   </div>
                 </div>
               </div>
@@ -413,17 +476,21 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setPaymentMethod('debit_card')}
                 className={`p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
                   paymentMethod === 'debit_card'
-                    ? 'bg-amber-500/10 border-amber-500'
-                    : 'bg-[#151518] border-white/5 text-neutral-300'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500'
+                      : 'bg-amber-50 border-amber-500'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'debit_card' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-600'
+                    paymentMethod === 'debit_card' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-500'
                   }`}>
                     {paymentMethod === 'debit_card' && '✓'}
                   </div>
-                  <span className="text-xs font-bold text-white">Cartão de débito</span>
+                  <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Cartão de débito</span>
                 </div>
               </div>
 
@@ -432,24 +499,28 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setPaymentMethod('cash')}
                 className={`p-3 rounded-2xl border cursor-pointer transition-all ${
                   paymentMethod === 'cash'
-                    ? 'bg-amber-500/10 border-amber-500'
-                    : 'bg-[#151518] border-white/5 text-neutral-300'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500'
+                      : 'bg-amber-50 border-amber-500'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      paymentMethod === 'cash' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-600'
+                      paymentMethod === 'cash' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-500'
                     }`}>
                       {paymentMethod === 'cash' && '✓'}
                     </div>
-                    <span className="text-xs font-bold text-white">Dinheiro</span>
+                    <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dinheiro</span>
                   </div>
                 </div>
 
                 {paymentMethod === 'cash' && (
-                  <div className="mt-2.5 pt-2.5 border-t border-white/5 flex items-center gap-2">
-                    <label className="text-[11px] text-neutral-300 flex items-center gap-1.5 cursor-pointer">
+                  <div className={`mt-2.5 pt-2.5 border-t flex items-center gap-2 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
+                    <label className={`text-[11px] flex items-center gap-1.5 cursor-pointer ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>
                       <input
                         type="checkbox"
                         checked={needChange}
@@ -464,7 +535,11 @@ export const CheckoutModal: React.FC = () => {
                         placeholder="R$ 50,00"
                         value={changeFor}
                         onChange={(e) => setChangeFor(e.target.value)}
-                        className="w-24 bg-[#0e0e11] border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
+                        className={`w-24 border rounded-lg px-2 py-1 text-xs ${
+                          isDark
+                            ? 'bg-[#0e0e11] border-white/10 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
                       />
                     )}
                   </div>
@@ -476,17 +551,21 @@ export const CheckoutModal: React.FC = () => {
                 onClick={() => setPaymentMethod('on_delivery')}
                 className={`p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all ${
                   paymentMethod === 'on_delivery'
-                    ? 'bg-amber-500/10 border-amber-500'
-                    : 'bg-[#151518] border-white/5 text-neutral-300'
+                    ? isDark
+                      ? 'bg-amber-500/10 border-amber-500'
+                      : 'bg-amber-50 border-amber-500'
+                    : isDark
+                    ? 'bg-[#151518] border-white/5 text-neutral-300'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
                   <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                    paymentMethod === 'on_delivery' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-600'
+                    paymentMethod === 'on_delivery' ? 'border-amber-500 bg-amber-500 text-black font-black text-[9px]' : 'border-neutral-500'
                   }`}>
                     {paymentMethod === 'on_delivery' && '✓'}
                   </div>
-                  <span className="text-xs font-bold text-white">Pagamento na entrega</span>
+                  <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Pagamento na entrega</span>
                 </div>
               </div>
             </div>
@@ -494,7 +573,7 @@ export const CheckoutModal: React.FC = () => {
 
           {/* Observações */}
           <div>
-            <h3 className="text-xs font-black text-white uppercase tracking-wider mb-1.5">
+            <h3 className={`text-xs font-black uppercase tracking-wider mb-1.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Observações gerais
             </h3>
             <input
@@ -502,32 +581,38 @@ export const CheckoutModal: React.FC = () => {
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
               placeholder="Ex: Tocar interfone 42, campainha..."
-              className="w-full bg-[#151518] border border-white/10 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
+              className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 ${
+                isDark
+                  ? 'bg-[#151518] border-white/10 text-white placeholder-neutral-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+              }`}
             />
           </div>
 
           {/* Summary Box */}
-          <div className="bg-[#151518] border border-white/5 rounded-2xl p-4 space-y-2 text-xs">
-            <div className="flex justify-between text-neutral-400">
+          <div className={`border rounded-2xl p-4 space-y-2 text-xs ${
+            isDark ? 'bg-[#151518] border-white/5' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className={`flex justify-between ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
               <span>Subtotal</span>
-              <span className="text-white font-semibold">{formatCurrency(cartTotals.subtotal)}</span>
+              <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(cartTotals.subtotal)}</span>
             </div>
             {cartTotals.discount > 0 && (
-              <div className="flex justify-between text-amber-400 font-bold">
+              <div className="flex justify-between text-amber-500 font-bold">
                 <span>Desconto</span>
                 <span>- {formatCurrency(cartTotals.discount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-neutral-400">
+            <div className={`flex justify-between ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
               <span>Taxa de entrega</span>
-              <span className="text-white font-semibold">
+              <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {deliveryType === 'delivery'
                   ? formatCurrency(selectedDeliveryZone?.fee || 5.0)
                   : 'Grátis'}
               </span>
             </div>
-            <div className="border-t border-white/10 pt-2 flex justify-between items-baseline">
-              <span className="text-xs font-bold text-white">Total</span>
+            <div className={`border-t pt-2 flex justify-between items-baseline ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+              <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Total</span>
               <span className="text-xl font-black text-amber-500">
                 {formatCurrency(
                   deliveryType === 'delivery'
@@ -540,7 +625,7 @@ export const CheckoutModal: React.FC = () => {
         </div>
 
         {/* Sticky Bottom Action matching Screen 4: "Ir para o pagamento >" */}
-        <div className="p-4 border-t border-white/10 bg-[#0e0e11]">
+        <div className={`p-4 border-t ${isDark ? 'border-white/10 bg-[#0e0e11]' : 'border-gray-200 bg-white'}`}>
           <button
             id="confirm-order-btn"
             type="button"

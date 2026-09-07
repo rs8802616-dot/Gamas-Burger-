@@ -6,6 +6,8 @@ export type OrderStatus =
   | 'delivered'
   | 'cancelled';
 
+export type AppTheme = 'light' | 'dark';
+
 export interface AddonOption {
   id: string;
   name: string;

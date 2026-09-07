@@ -15,6 +15,7 @@ import {
   StoreSettings,
   SelectedAddon,
   AppNotification,
+  AppTheme,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -80,6 +81,9 @@ interface StoreContextType {
   setThermalReceiptOrder: (order: Order | null) => void;
   soundEnabled: boolean;
   toggleSound: () => void;
+  theme: AppTheme;
+  setTheme: (theme: AppTheme) => void;
+  toggleTheme: () => void;
 
   // Data
   products: Product[];
@@ -304,6 +308,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>('ord-1045');
   const [thermalReceiptOrder, setThermalReceiptOrder] = useState<Order | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Theme Management (Default to 'light' as requested, with instant toggle to 'dark')
+  const [theme, setThemeState] = useState<AppTheme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('burger10_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+    }
+    return 'light'; // Default to Modo Claro
+  });
+
+  const setTheme = (t: AppTheme) => {
+    setThemeState(t);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('burger10_theme', t);
+      if (t === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [theme]);
 
   // Core Data States with initial localStorage check
   const [products, setProducts] = useState<Product[]>(() => {
@@ -975,6 +1014,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setThermalReceiptOrder,
         soundEnabled,
         toggleSound,
+        theme,
+        setTheme,
+        toggleTheme,
 
         products,
         categories,

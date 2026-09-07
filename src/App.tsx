@@ -28,6 +28,7 @@ const MainLayout: React.FC = () => {
     setTrackingOrderId,
     products,
     setSelectedProductForModal,
+    theme,
   } = useStore();
   const {
     isIOS,
@@ -39,8 +40,14 @@ const MainLayout: React.FC = () => {
     install,
   } = usePWAInstall();
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-neutral-100 flex flex-col antialiased selection:bg-amber-500 selection:text-neutral-950">
+    <div
+      className={`min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-neutral-950 transition-colors duration-200 ${
+        isDark ? 'bg-[#0A0A0B] text-neutral-100' : 'bg-[#f4f5f7] text-gray-900'
+      }`}
+    >
       {/* Real-time In-App Notification Banner */}
       <InAppNotificationBanner
         onOpenOrder={(id) => setTrackingOrderId(id)}
@@ -61,8 +68,8 @@ const MainLayout: React.FC = () => {
       {/* Header */}
       <Header />
 
-      {/* Main Container */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-6 pt-4 pb-12">
+      {/* Main Container - Expansive Responsive Width for Hamburgueria PC */}
+      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24">
         {/* CLIENT VIEWS - Completely isolated from Admin */}
         {currentView === 'client' && (
           <>

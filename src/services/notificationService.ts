@@ -35,6 +35,7 @@ const INITIAL_NOTIFICATIONS: AppNotification[] = [
 
 export class NotificationService {
   private static listeners: Array<(notification: AppNotification) => void> = [];
+  private static changeListeners: Array<(notifications: AppNotification[]) => void> = [];
 
   public static getNotifications(): AppNotification[] {
     try {
@@ -51,6 +52,17 @@ export class NotificationService {
     } catch {
       // Storage quota or error fallback
     }
+
+    // Broadcast updated notifications list to change listeners asynchronously
+    setTimeout(() => {
+      this.changeListeners.forEach((cl) => {
+        try {
+          cl(list);
+        } catch (err) {
+          console.error('Error in notification changeListener:', err);
+        }
+      });
+    }, 0);
   }
 
   public static hasPermission(): boolean {
@@ -116,6 +128,13 @@ export class NotificationService {
     this.listeners.push(listener);
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
+    };
+  }
+
+  public static subscribeChanges(listener: (notifications: AppNotification[]) => void) {
+    this.changeListeners.push(listener);
+    return () => {
+      this.changeListeners = this.changeListeners.filter((l) => l !== listener);
     };
   }
 

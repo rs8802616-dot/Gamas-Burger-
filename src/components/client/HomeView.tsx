@@ -26,8 +26,10 @@ export const HomeView: React.FC = () => {
     isFavorite,
     toggleFavorite,
     setClientTab,
+    theme,
   } = useStore();
 
+  const isDark = theme === 'dark';
   const [dismissLastOrderBanner, setDismissLastOrderBanner] = useState(false);
 
   // 5 Top Offers for the Rotating/Passing Carousel ("Passando as Ofertas")
@@ -299,9 +301,9 @@ export const HomeView: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Categorias Compactas (Reduzidas para tamanho ideal e equilibrado) */}
+      {/* 2. Categorias Compactas */}
       <div className="pt-1">
-        <div className="grid grid-cols-4 gap-y-2.5 gap-x-1.5 sm:gap-3 text-center">
+        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-y-2.5 gap-x-1.5 sm:gap-3 text-center">
           {categoryGrid.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
@@ -315,16 +317,22 @@ export const HomeView: React.FC = () => {
                 <div
                   className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl shadow-md transition-all ${
                     isSelected
-                      ? 'bg-gradient-to-b from-amber-400 to-amber-600 ring-2 ring-white ring-offset-2 ring-offset-[#0A0A0B] shadow-amber-500/40 scale-105'
+                      ? `bg-gradient-to-b from-amber-400 to-amber-600 ring-2 ring-amber-500 ring-offset-2 ${
+                          isDark ? 'ring-offset-[#0A0A0B]' : 'ring-offset-white'
+                        } shadow-amber-500/40 scale-105`
                       : 'bg-gradient-to-b from-[#ff8c2b] to-[#f95700] hover:brightness-110 shadow-orange-500/20'
                   }`}
                 >
                   <span className="leading-none">{cat.icon}</span>
                 </div>
-                {/* Compact Label without weird truncation */}
+                {/* Compact Label */}
                 <span
-                  className={`mt-1 text-[10.5px] sm:text-xs font-semibold tracking-tight text-center leading-tight max-w-[72px] ${
-                    isSelected ? 'text-amber-400 font-bold' : 'text-neutral-300'
+                  className={`mt-1 text-[10.5px] sm:text-xs font-bold tracking-tight text-center leading-tight max-w-[76px] ${
+                    isSelected
+                      ? 'text-amber-500'
+                      : isDark
+                      ? 'text-neutral-300'
+                      : 'text-gray-700'
                   }`}
                 >
                   {cat.name}
@@ -335,30 +343,36 @@ export const HomeView: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Seção "Mais pedidos" (Matching Exact Screen 1 Section) */}
+      {/* 3. Seção "Mais pedidos" */}
       {!searchQuery && selectedCategory === 'todos' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+            <h3 className={`text-base sm:text-lg font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Mais pedidos
             </h3>
             <button
               onClick={() => setSelectedCategory('mais_vendidos')}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-0.5"
+              className="text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center gap-0.5"
             >
               <span>Ver todos</span>
               <span>&gt;</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-4">
             {maisPedidos.map((product) => (
               <div
                 key={product.id}
                 onClick={() => handleOpenProduct(product)}
-                className="bg-[#151518] border border-white/5 hover:border-amber-500/30 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer group transition-all shadow-md"
+                className={`border rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between cursor-pointer group transition-all shadow-md ${
+                  isDark
+                    ? 'bg-[#151518] border-white/5 hover:border-amber-500/30'
+                    : 'bg-white border-gray-200 hover:border-amber-500 shadow-sm'
+                }`}
               >
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#202024] mb-2 border border-white/5">
+                <div className={`relative w-full aspect-square rounded-xl overflow-hidden mb-2 border ${
+                  isDark ? 'bg-[#202024] border-white/5' : 'bg-gray-100 border-gray-200'
+                }`}>
                   <img
                     src={product.photo}
                     alt={product.name}
@@ -367,7 +381,9 @@ export const HomeView: React.FC = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">
+                  <h4 className={`text-xs sm:text-sm font-bold truncate group-hover:text-amber-500 transition-colors ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>
                     {product.name.replace(' Especial', '').replace(' Burger10', '').replace(' Gourmet', '')}
                   </h4>
                   <span className="text-xs sm:text-sm font-black text-amber-500 mt-0.5 block">
@@ -380,7 +396,7 @@ export const HomeView: React.FC = () => {
         </div>
       )}
 
-      {/* 4. Banner Amarelo "Seu último pedido" (Matching Exact Screen 1 Bottom Bar) */}
+      {/* 4. Banner Amarelo "Seu último pedido" */}
       {lastOrder && !dismissLastOrderBanner && (
         <div className="bg-[#f59e0b] text-neutral-950 rounded-2xl p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3 relative animate-in fade-in duration-200">
           <button
@@ -419,24 +435,26 @@ export const HomeView: React.FC = () => {
         </div>
       )}
 
-      {/* 5. Lista Geral de Produtos do Cardápio */}
+      {/* 5. Lista Geral de Produtos do Cardápio - Expansiva para PC (1 -> 2 -> 3 -> 4 colunas) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+          <h3 className={`text-base sm:text-lg font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
             {searchQuery
               ? `Resultados para "${searchQuery}"`
               : selectedCategory === 'todos'
               ? 'Todos os Lanches'
               : categories.find((c) => c.id === selectedCategory)?.name || 'Cardápio'}
           </h3>
-          <span className="text-xs text-neutral-500">
+          <span className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
             {filteredProducts.length} itens
           </span>
         </div>
 
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-10 bg-[#151518] rounded-2xl border border-white/5 p-6">
-            <p className="text-sm text-neutral-400 mb-2">Nenhum produto encontrado</p>
+          <div className={`text-center py-10 rounded-2xl border p-6 ${
+            isDark ? 'bg-[#151518] border-white/5 text-neutral-400' : 'bg-white border-gray-200 text-gray-600 shadow-sm'
+          }`}>
+            <p className="text-sm mb-2">Nenhum produto encontrado</p>
             <button
               onClick={() => setSelectedCategory('todos')}
               className="text-xs text-amber-500 font-bold hover:underline"
@@ -445,14 +463,20 @@ export const HomeView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 onClick={() => handleOpenProduct(product)}
-                className="bg-[#151518] border border-white/5 hover:border-white/15 p-3 rounded-2xl flex gap-3 cursor-pointer group transition-all"
+                className={`border p-3.5 rounded-2xl flex gap-3 cursor-pointer group transition-all shadow-sm ${
+                  isDark
+                    ? 'bg-[#151518] border-white/5 hover:border-amber-500/30'
+                    : 'bg-white border-gray-200 hover:border-amber-500 hover:shadow-md'
+                }`}
               >
-                <div className="w-20 h-20 bg-[#202024] rounded-xl overflow-hidden shrink-0 border border-white/5">
+                <div className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border ${
+                  isDark ? 'bg-[#202024] border-white/5' : 'bg-gray-100 border-gray-200'
+                }`}>
                   <img
                     src={product.photo}
                     alt={product.name}
@@ -463,7 +487,9 @@ export const HomeView: React.FC = () => {
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                   <div>
                     <div className="flex items-start justify-between gap-1">
-                      <h4 className="text-sm font-bold text-white truncate group-hover:text-amber-400">
+                      <h4 className={`text-sm font-bold truncate group-hover:text-amber-500 transition-colors ${
+                        isDark ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {product.name}
                       </h4>
                       <button
@@ -472,7 +498,7 @@ export const HomeView: React.FC = () => {
                           e.stopPropagation();
                           toggleFavorite(product.id);
                         }}
-                        className="text-neutral-500 hover:text-red-500 p-0.5"
+                        className="text-neutral-400 hover:text-red-500 p-0.5"
                       >
                         <Heart
                           className={`w-3.5 h-3.5 ${
@@ -481,7 +507,9 @@ export const HomeView: React.FC = () => {
                         />
                       </button>
                     </div>
-                    <p className="text-[11px] text-neutral-400 line-clamp-2 mt-0.5">
+                    <p className={`text-[11px] line-clamp-2 mt-0.5 ${
+                      isDark ? 'text-neutral-400' : 'text-gray-500'
+                    }`}>
                       {product.description}
                     </p>
                   </div>
@@ -496,7 +524,7 @@ export const HomeView: React.FC = () => {
                         e.stopPropagation();
                         handleOpenProduct(product);
                       }}
-                      className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 flex items-center justify-center font-black text-xs transition-transform active:scale-95"
+                      className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 flex items-center justify-center font-black text-xs transition-transform active:scale-95 shadow-sm"
                     >
                       <Plus className="w-4 h-4 stroke-[3]" />
                     </button>
@@ -508,8 +536,10 @@ export const HomeView: React.FC = () => {
         )}
       </div>
 
-      {/* 6. Bottom Polish Feature Strip (from footer of reference image) */}
-      <div className="bg-[#121215] border border-white/5 rounded-2xl p-4 text-xs text-neutral-400 space-y-2">
+      {/* 6. Bottom Polish Feature Strip */}
+      <div className={`border rounded-2xl p-4 text-xs space-y-2 ${
+        isDark ? 'bg-[#121215] border-white/5 text-neutral-400' : 'bg-white border-gray-200 text-gray-600 shadow-sm'
+      }`}>
         <div className="flex items-center gap-2">
           <span>⭐</span>
           <span>Cardápio completo com fotos e descrições</span>

@@ -12,6 +12,9 @@ export const playOrderNotificationSound = () => {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     
     // Play pleasant chime
     const playNote = (freq: number, start: number, duration: number) => {

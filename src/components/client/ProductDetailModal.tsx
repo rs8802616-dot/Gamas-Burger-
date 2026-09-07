@@ -20,8 +20,10 @@ export const ProductDetailModal: React.FC = () => {
     addToCart,
     isFavorite,
     toggleFavorite,
+    theme,
   } = useStore();
 
+  const isDark = theme === 'dark';
   const product = selectedProductForModal;
 
   const [quantity, setQuantity] = useState(1);
@@ -94,7 +96,9 @@ export const ProductDetailModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-0 sm:p-4 overflow-y-auto">
-      <div className="w-full sm:max-w-md bg-[#0e0e11] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[95vh] flex flex-col overflow-hidden shadow-2xl relative animate-in slide-in-from-bottom duration-200">
+      <div className={`w-full sm:max-w-md border-t sm:border rounded-t-3xl sm:rounded-3xl max-h-[95vh] flex flex-col overflow-hidden shadow-2xl relative animate-in slide-in-from-bottom duration-200 ${
+        isDark ? 'bg-[#0e0e11] border-white/10' : 'bg-white border-gray-200'
+      }`}>
         {/* Floating Top Nav (Back, Share, Heart) */}
         <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
           <button
@@ -134,20 +138,24 @@ export const ProductDetailModal: React.FC = () => {
         {/* Scrollable Modal Content */}
         <div className="overflow-y-auto flex-1 pb-24">
           {/* Big Hero Image */}
-          <div className="relative w-full h-64 sm:h-72 bg-[#151518]">
+          <div className="relative w-full h-64 sm:h-72 bg-neutral-900">
             <img
               src={product.photo}
               alt={product.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e11] via-transparent to-black/30" />
+            <div className={`absolute inset-0 bg-gradient-to-t via-transparent to-black/30 ${
+              isDark ? 'from-[#0e0e11]' : 'from-white'
+            }`} />
           </div>
 
           {/* Details Body */}
           <div className="px-5 pt-3 space-y-5">
             {/* Title, Price, Rating */}
             <div>
-              <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-1.5">
+              <h2 className={`text-2xl font-black tracking-tight flex items-center gap-1.5 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 {product.name}
               </h2>
 
@@ -158,14 +166,18 @@ export const ProductDetailModal: React.FC = () => {
               </div>
 
               {/* Rating */}
-              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-neutral-400 font-semibold">
+              <div className={`flex items-center gap-1.5 mt-1.5 text-xs font-semibold ${
+                isDark ? 'text-neutral-400' : 'text-gray-500'
+              }`}>
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span className="text-white font-bold">{product.rating || 4.8}</span>
+                <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.rating || 4.8}</span>
                 <span>({product.reviewsCount || '1.230'} avaliações)</span>
               </div>
 
               {/* Description */}
-              <p className="mt-3 text-xs sm:text-sm text-neutral-300 leading-relaxed">
+              <p className={`mt-3 text-xs sm:text-sm leading-relaxed ${
+                isDark ? 'text-neutral-300' : 'text-gray-600'
+              }`}>
                 {product.description}
               </p>
             </div>
@@ -173,14 +185,20 @@ export const ProductDetailModal: React.FC = () => {
             {/* Ingredientes Pills */}
             {product.ingredients && product.ingredients.length > 0 && (
               <div>
-                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-2">
+                <h3 className={`text-xs font-black uppercase tracking-wider mb-2 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
                   Ingredientes
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {product.ingredients.map((ing, i) => (
                     <span
                       key={i}
-                      className="text-xs bg-[#18181c] text-neutral-300 px-3 py-1 rounded-full border border-white/10 font-medium"
+                      className={`text-xs px-3 py-1 rounded-full border font-medium ${
+                        isDark
+                          ? 'bg-[#18181c] text-neutral-300 border-white/10'
+                          : 'bg-gray-100 text-gray-700 border-gray-200'
+                      }`}
                     >
                       {ing}
                     </span>
@@ -190,8 +208,10 @@ export const ProductDetailModal: React.FC = () => {
             )}
 
             {/* Adicionais Checklist */}
-            <div className="border-t border-white/5 pt-4">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider mb-3">
+            <div className={`border-t pt-4 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider mb-3 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 Adicionais
               </h3>
 
@@ -204,8 +224,12 @@ export const ProductDetailModal: React.FC = () => {
                       onClick={() => handleToggleAddon(addon)}
                       className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer select-none ${
                         selected
-                          ? 'bg-amber-500/10 border-amber-500 text-white'
-                          : 'bg-[#151518] border-white/5 text-neutral-300 hover:border-white/10'
+                          ? isDark
+                            ? 'bg-amber-500/10 border-amber-500 text-white'
+                            : 'bg-amber-50 border-amber-500 text-gray-900'
+                          : isDark
+                          ? 'bg-[#151518] border-white/5 text-neutral-300 hover:border-white/10'
+                          : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -213,7 +237,9 @@ export const ProductDetailModal: React.FC = () => {
                           className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
                             selected
                               ? 'bg-amber-500 border-amber-500 text-black'
-                              : 'border-white/20 bg-black/40'
+                              : isDark
+                              ? 'border-white/20 bg-black/40'
+                              : 'border-gray-300 bg-white'
                           }`}
                         >
                           {selected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -227,7 +253,11 @@ export const ProductDetailModal: React.FC = () => {
                         </span>
                         <div
                           className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${
-                            selected ? 'bg-amber-500 text-black' : 'bg-white/5 text-neutral-400'
+                            selected
+                              ? 'bg-amber-500 text-black'
+                              : isDark
+                              ? 'bg-white/5 text-neutral-400'
+                              : 'bg-gray-200 text-gray-600'
                           }`}
                         >
                           +
@@ -240,8 +270,10 @@ export const ProductDetailModal: React.FC = () => {
             </div>
 
             {/* Observação do Pedido */}
-            <div className="border-t border-white/5 pt-4">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider mb-2">
+            <div className={`border-t pt-4 ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
+              <h3 className={`text-xs font-black uppercase tracking-wider mb-2 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 Observação do pedido
               </h3>
               <input
@@ -250,24 +282,36 @@ export const ProductDetailModal: React.FC = () => {
                 value={observation}
                 onChange={(e) => setObservation(e.target.value)}
                 placeholder="Ex: Sem cebola, molho separado..."
-                className="w-full bg-[#151518] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-all"
+                className={`w-full rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-amber-500 transition-all border ${
+                  isDark
+                    ? 'bg-[#151518] border-white/10 text-white placeholder-neutral-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+                }`}
               />
             </div>
           </div>
         </div>
 
         {/* Sticky Bottom Action Bar (Stepper + Adicionar ao carrinho) */}
-        <div className="absolute bottom-0 left-0 right-0 bg-[#0e0e11]/95 backdrop-blur-xl border-t border-white/10 p-4 flex items-center gap-3 shadow-2xl">
+        <div className={`absolute bottom-0 left-0 right-0 backdrop-blur-xl border-t p-4 flex items-center gap-3 shadow-2xl ${
+          isDark ? 'bg-[#0e0e11]/95 border-white/10' : 'bg-white/95 border-gray-200'
+        }`}>
           {/* Stepper [- 1 +] */}
-          <div className="flex items-center bg-[#18181c] border border-white/10 rounded-2xl p-1 shrink-0">
+          <div className={`flex items-center border rounded-2xl p-1 shrink-0 ${
+            isDark ? 'bg-[#18181c] border-white/10' : 'bg-gray-100 border-gray-200'
+          }`}>
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-neutral-400 hover:text-white disabled:opacity-20 transition-colors"
+              className={`w-8 h-8 rounded-xl flex items-center justify-center disabled:opacity-20 transition-colors ${
+                isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+              }`}
             >
               <Minus className="w-4 h-4" />
             </button>
-            <span className="w-8 text-center text-xs font-black text-white">
+            <span className={`w-8 text-center text-xs font-black ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               {quantity}
             </span>
             <button
