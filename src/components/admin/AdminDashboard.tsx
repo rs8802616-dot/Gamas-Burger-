@@ -30,7 +30,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
-import { formatCurrency, generateWhatsAppLink } from '../../utils/formatters';
+import { formatCurrency, generateWhatsAppLink, getCleanClientMenuUrl } from '../../utils/formatters';
 import { Product, Coupon, DeliveryZone, OrderStatus } from '../../types';
 import { AdminNotificationsManager } from './AdminNotificationsManager';
 import { AdminCustomersManager } from './AdminCustomersManager';
@@ -66,10 +66,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Client menu share link (guaranteed clean client link without #admin or credentials)
   const [copiedClientUrl, setCopiedClientUrl] = useState(false);
-  const clientShareUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/?view=client`
-      : '/?view=client';
+  const clientShareUrl = getCleanClientMenuUrl(storeSettings?.publicStoreUrl);
   const shareWhatsAppText = `🍔 Olá! Confira nosso cardápio online e faça seu pedido direto pelo link:\n${clientShareUrl}`;
   const shareWhatsAppUrl = `https://wa.me/?text=${encodeURIComponent(shareWhatsAppText)}`;
 
@@ -284,6 +281,14 @@ export const AdminDashboard: React.FC = () => {
             </p>
             <div className="inline-flex items-center gap-2 bg-[#0A0A0B] border border-white/10 rounded-xl px-3 py-1.5 mt-1 font-mono text-xs text-amber-400 select-all">
               <span>{clientShareUrl}</span>
+              <button
+                type="button"
+                onClick={() => setAdminTab('settings')}
+                className="text-[10px] text-white/40 hover:text-white underline font-sans ml-2 transition-colors"
+                title="Configurar URL oficial nas configurações"
+              >
+                Alterar
+              </button>
             </div>
           </div>
 
@@ -971,6 +976,32 @@ export const AdminDashboard: React.FC = () => {
                 onChange={(e) => updateStoreSettings({ address: e.target.value })}
                 className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-white/50 mb-1.5">
+                Link Oficial do Cardápio para Clientes (URL Pública / Vercel)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="https://gamas-burger.vercel.app"
+                  value={storeSettings.publicStoreUrl || ''}
+                  onChange={(e) => updateStoreSettings({ publicStoreUrl: e.target.value })}
+                  className="w-full bg-[#0A0A0B] border border-amber-500/30 rounded-2xl px-3.5 py-2.5 text-xs text-amber-300 font-mono focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateStoreSettings({ publicStoreUrl: 'https://gamas-burger.vercel.app' })}
+                  className="shrink-0 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-2.5 rounded-2xl text-[11px] font-bold transition-colors border border-white/5"
+                  title="Restaurar link oficial Vercel"
+                >
+                  Usar Vercel
+                </button>
+              </div>
+              <p className="text-[11px] text-white/40 mt-1.5">
+                Link divulgado aos clientes nos botões &quot;Copiar Link&quot; e &quot;Enviar no WhatsApp&quot;. Padrão: <strong className="text-amber-400 font-mono">https://gamas-burger.vercel.app</strong>.
+              </p>
             </div>
           </div>
 

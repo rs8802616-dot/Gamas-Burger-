@@ -399,6 +399,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return {
           ...INITIAL_SETTINGS,
           ...parsed,
+          publicStoreUrl: parsed.publicStoreUrl || INITIAL_SETTINGS.publicStoreUrl || 'https://gamas-burger.vercel.app',
           printerSettings: {
             ...INITIAL_SETTINGS.printerSettings,
             ...(parsed.printerSettings || {}),

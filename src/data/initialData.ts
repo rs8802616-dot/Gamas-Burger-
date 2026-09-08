@@ -307,6 +307,8 @@ export const INITIAL_SETTINGS: StoreSettings = {
   phone: '(11) 98765-4321',
   whatsapp: '5511987654321',
   address: 'Rua das Flores, 123 - Centro, São Paulo - SP',
+  publicStoreUrl: 'https://gamas-burger.vercel.app',
+  openingHours: 'Segunda a Domingo das 18:00 às 23:30',
   minOrderValue: 20.00,
   averagePrepMinutes: 25,
   manualStatus: 'open',

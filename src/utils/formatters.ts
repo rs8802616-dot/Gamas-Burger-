@@ -54,15 +54,28 @@ export const formatPhoneNumber = (value: string): string => {
   return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
 };
 
-export const getCleanClientMenuUrl = (): string => {
-  if (typeof window === 'undefined') return '/';
-  const url = new URL(window.location.href);
-  url.hash = '';
-  // Remove admin-specific query params
-  url.searchParams.delete('admin');
-  url.searchParams.delete('auth');
-  url.searchParams.set('view', 'client');
-  return url.toString();
+export const getCleanClientMenuUrl = (configuredUrl?: string): string => {
+  // 1. If configured in Store Settings, use the custom public URL
+  if (configuredUrl && configuredUrl.trim()) {
+    let clean = configuredUrl.trim();
+    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+      clean = `https://${clean}`;
+    }
+    return clean.replace(/\/+$/, '');
+  }
+
+  // 2. Check browser environment
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    // When previewing in Google AI Studio Cloud Run or local dev, don't share the internal dev URL
+    if (origin.includes('run.app') || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'https://gamas-burger.vercel.app';
+    }
+    // If running directly on production (e.g. Vercel or custom domain)
+    return origin.replace(/\/+$/, '');
+  }
+
+  return 'https://gamas-burger.vercel.app';
 };
 
 export const buildOrderWhatsAppMessage = (order: Order, storeName: string = 'Burger10 Hamburgueria'): string => {

@@ -28,6 +28,7 @@ import {
 import { useStore } from '../../context/StoreContext';
 import { NotificationCenterModal } from '../notifications/NotificationCenterModal';
 import { NotificationService } from '../../services/notificationService';
+import { getCleanClientMenuUrl } from '../../utils/formatters';
 
 export const Header: React.FC = () => {
   const {
@@ -57,10 +58,7 @@ export const Header: React.FC = () => {
   const [copiedMenuLink, setCopiedMenuLink] = useState(false);
 
   const handleCopyMenuLink = () => {
-    const cleanUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/?view=client`
-        : '/?view=client';
+    const cleanUrl = getCleanClientMenuUrl(storeSettings?.publicStoreUrl);
     try {
       navigator.clipboard.writeText(cleanUrl);
       setCopiedMenuLink(true);

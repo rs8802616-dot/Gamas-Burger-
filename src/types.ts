@@ -177,6 +177,8 @@ export interface StoreSettings {
   phone: string;
   whatsapp: string;
   address: string;
+  publicStoreUrl?: string;
+  openingHours?: string;
   minOrderValue: number;
   averagePrepMinutes: number;
   manualStatus: 'auto' | 'open' | 'closed';
