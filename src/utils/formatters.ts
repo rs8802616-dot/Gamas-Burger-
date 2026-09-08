@@ -44,6 +44,91 @@ export const generateWhatsAppLink = (phone: string, message: string): string => 
   return `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
 };
 
+export const formatPhoneNumber = (value: string): string => {
+  const cleaned = value.replace(/\D/g, '').slice(0, 11);
+  if (cleaned.length <= 2) return cleaned.length > 0 ? `(${cleaned}` : '';
+  if (cleaned.length <= 6) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
+  if (cleaned.length <= 10) {
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+  }
+  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
+};
+
+export const getCleanClientMenuUrl = (): string => {
+  if (typeof window === 'undefined') return '/';
+  const url = new URL(window.location.href);
+  url.hash = '';
+  // Remove admin-specific query params
+  url.searchParams.delete('admin');
+  url.searchParams.delete('auth');
+  url.searchParams.set('view', 'client');
+  return url.toString();
+};
+
+export const buildOrderWhatsAppMessage = (order: Order, storeName: string = 'Burger10 Hamburgueria'): string => {
+  const lines: string[] = [
+    `🍔 *NOVO PEDIDO #${order.orderNumber}*`,
+    `🏪 *${storeName}*`,
+    `📅 ${order.createdAt}`,
+    ``,
+    `👤 *Cliente:* ${order.customer.name}`,
+    `📱 *WhatsApp:* ${order.customer.phone}`,
+    ``,
+    `🛒 *ITENS DO PEDIDO:*`,
+  ];
+
+  order.items.forEach((item) => {
+    lines.push(`• *${item.quantity}x ${item.product.name}* (${formatCurrency(item.itemTotalPrice * item.quantity)})`);
+    if (item.selectedAddons && item.selectedAddons.length > 0) {
+      const addonsStr = item.selectedAddons
+        .map((a) => `+ ${a.addon?.name || 'Adicional'}${a.quantity > 1 ? ` (${a.quantity}x)` : ''}`)
+        .join(', ');
+      lines.push(`   └ ${addonsStr}`);
+    }
+    if (item.observation) {
+      lines.push(`   └ Obs: _${item.observation}_`);
+    }
+  });
+
+  lines.push(``);
+  lines.push(`📦 *MODALIDADE:* ${order.deliveryType === 'delivery' ? '🛵 Entrega em Domicílio' : '🏪 Retirada no Balcão'}`);
+
+  if (order.deliveryType === 'delivery' && order.address) {
+    lines.push(`📍 *Endereço:* ${order.address.street}, ${order.address.number}`);
+    if (order.address.complement) lines.push(`   Complemento: ${order.address.complement}`);
+    lines.push(`   Bairro: ${order.address.neighborhood}`);
+    if (order.address.reference) lines.push(`   Ponto de Referência: ${order.address.reference}`);
+  }
+
+  const paymentLabels: Record<string, string> = {
+    pix: 'PIX (Chave enviada)',
+    credit_card: 'Cartão de Crédito (na entrega/retirada)',
+    debit_card: 'Cartão de Débito (na entrega/retirada)',
+    cash: order.cashChangeFor ? `Dinheiro (Troco para ${formatCurrency(order.cashChangeFor)})` : 'Dinheiro (Sem troco)',
+    on_delivery: 'Pagar na Entrega',
+  };
+
+  lines.push(``);
+  lines.push(`💳 *Forma de Pagamento:* ${paymentLabels[order.paymentMethod] || order.paymentMethod}`);
+  if (order.discount > 0) {
+    lines.push(`🏷️ *Desconto:* - ${formatCurrency(order.discount)}`);
+  }
+  if (order.deliveryFee > 0) {
+    lines.push(`🛵 *Taxa de Entrega:* ${formatCurrency(order.deliveryFee)}`);
+  }
+  lines.push(`💰 *VALOR TOTAL: ${formatCurrency(order.total)}*`);
+
+  if (order.notes) {
+    lines.push(``);
+    lines.push(`📝 *Observações:* ${order.notes}`);
+  }
+
+  lines.push(``);
+  lines.push(`👉 _Por favor, confirme o recebimento do meu pedido! Obrigado!_`);
+
+  return lines.join('\n');
+};
+
 export const getStatusBadgeInfo = (status: Order['status'], deliveryType: 'delivery' | 'pickup' = 'delivery') => {
   switch (status) {
     case 'received':

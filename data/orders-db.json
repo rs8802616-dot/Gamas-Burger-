@@ -1,0 +1,791 @@
+[
+  {
+    "id": "ord-1045",
+    "orderNumber": "1045",
+    "createdAt": "02/09/2026 - 14:07",
+    "customer": {
+      "id": "cust-demo-1",
+      "name": "João Silva",
+      "phone": "(11) 99888-7766",
+      "email": "joao.silva@email.com",
+      "addresses": [
+        {
+          "id": "addr-1",
+          "label": "Casa",
+          "street": "Rua das Flores",
+          "number": "123",
+          "complement": "Apto 42 Bloco B",
+          "neighborhood": "Centro",
+          "city": "São Paulo/SP",
+          "zipCode": "01000-000",
+          "reference": "Próximo à praça central"
+        },
+        {
+          "id": "addr-2",
+          "label": "Trabalho",
+          "street": "Av. Paulista",
+          "number": "1000",
+          "complement": "12º andar",
+          "neighborhood": "Bela Vista",
+          "city": "São Paulo/SP",
+          "zipCode": "01310-100"
+        }
+      ]
+    },
+    "items": [
+      {
+        "cartItemId": "item-1045-1",
+        "product": {
+          "id": "prod-xbacon-especial",
+          "name": "X-Bacon Especial 🔥",
+          "description": "Pão brioche selado na manteiga, hambúrguer artesanal 160g, queijo cheddar derretido, tiras generosas de bacon crocante, alface americana, tomate fresco e molho especial do chef.",
+          "ingredients": [
+            "Pão brioche",
+            "Hambúrguer artesanal 160g",
+            "Queijo cheddar",
+            "Bacon crocante",
+            "Alface americana",
+            "Tomate",
+            "Molho especial"
+          ],
+          "price": 29.9,
+          "promoPrice": 29.9,
+          "categoryId": "hamburgueres",
+          "photo": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isFeatured": true,
+          "isBestSeller": true,
+          "rating": 4.9,
+          "reviewsCount": 1230,
+          "addons": [
+            {
+              "id": "addon-bacon",
+              "name": "Bacon crocante artesanal",
+              "price": 5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-queijo",
+              "name": "Queijo Cheddar fatiado derretido",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-carne",
+              "name": "Hambúrguer artesanal extra (160g)",
+              "price": 8,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-molho",
+              "name": "Molho especial da casa (pote 40ml)",
+              "price": 2,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-cebola",
+              "name": "Cebola caramelizada no shoyu",
+              "price": 4,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-ovo",
+              "name": "Ovo na chapa gema mole",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-picles",
+              "name": "Picles agridoce em fatias",
+              "price": 2.5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-catupiry",
+              "name": "Requeijão cremoso tipo Catupiry",
+              "price": 4.5,
+              "isAvailable": true
+            }
+          ]
+        },
+        "quantity": 1,
+        "selectedAddons": [
+          {
+            "addon": {
+              "id": "addon-bacon",
+              "name": "Bacon crocante artesanal",
+              "price": 5,
+              "isAvailable": true
+            },
+            "quantity": 1
+          },
+          {
+            "addon": {
+              "id": "addon-queijo",
+              "name": "Queijo Cheddar fatiado derretido",
+              "price": 3,
+              "isAvailable": true
+            },
+            "quantity": 1
+          }
+        ],
+        "observation": "Sem cebola",
+        "itemTotalPrice": 37.9
+      },
+      {
+        "cartItemId": "item-1045-2",
+        "product": {
+          "id": "prod-batata-grande",
+          "name": "Batata Grande Crocante",
+          "description": "Porção generosa de batatas palito selecionadas, douradas e crocantes por fora, macias por dentro, temperadas com sal fino e páprica suave.",
+          "ingredients": [
+            "Batata selecionada",
+            "Sal especial",
+            "Toque de páprica"
+          ],
+          "price": 14.9,
+          "categoryId": "porcoes",
+          "photo": "https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isBestSeller": true,
+          "rating": 4.7,
+          "reviewsCount": 780
+        },
+        "quantity": 1,
+        "selectedAddons": [],
+        "observation": "",
+        "itemTotalPrice": 14.9
+      },
+      {
+        "cartItemId": "item-1045-3",
+        "product": {
+          "id": "prod-coca-cola-350",
+          "name": "Coca-Cola Original 350ml",
+          "description": "Lata de Coca-Cola geladinha 350ml.",
+          "ingredients": [
+            "Refrigerante de cola gelado"
+          ],
+          "price": 6.9,
+          "categoryId": "bebidas",
+          "photo": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isBestSeller": true,
+          "rating": 5,
+          "reviewsCount": 920
+        },
+        "quantity": 1,
+        "selectedAddons": [],
+        "observation": "",
+        "itemTotalPrice": 6.9
+      }
+    ],
+    "subtotal": 59.7,
+    "discount": 0,
+    "deliveryFee": 5,
+    "total": 64.7,
+    "deliveryType": "delivery",
+    "address": {
+      "id": "addr-1",
+      "label": "Casa",
+      "street": "Rua das Flores",
+      "number": "123",
+      "complement": "Apto 42 Bloco B",
+      "neighborhood": "Centro",
+      "city": "São Paulo/SP",
+      "zipCode": "01000-000",
+      "reference": "Próximo à praça central"
+    },
+    "paymentMethod": "pix",
+    "status": "preparing",
+    "estimatedTime": "25 - 35 min",
+    "timeline": [
+      {
+        "status": "received",
+        "label": "Pedido recebido",
+        "time": "14:07",
+        "completed": true
+      },
+      {
+        "status": "preparing",
+        "label": "Em preparação",
+        "time": "14:12",
+        "completed": true
+      },
+      {
+        "status": "ready",
+        "label": "Pedido pronto",
+        "time": "",
+        "completed": false
+      },
+      {
+        "status": "out_for_delivery",
+        "label": "Saiu para entrega",
+        "time": "",
+        "completed": false
+      },
+      {
+        "status": "delivered",
+        "label": "Entregue",
+        "time": "",
+        "completed": false
+      }
+    ],
+    "notes": "Campainha com defeito, por favor chamar no interfone.",
+    "printedCount": 1
+  },
+  {
+    "id": "ord-1044",
+    "orderNumber": "1044",
+    "createdAt": "28/08/2026 - 19:30",
+    "customer": {
+      "id": "cust-demo-1",
+      "name": "João Silva",
+      "phone": "(11) 99888-7766",
+      "email": "joao.silva@email.com",
+      "addresses": [
+        {
+          "id": "addr-1",
+          "label": "Casa",
+          "street": "Rua das Flores",
+          "number": "123",
+          "complement": "Apto 42 Bloco B",
+          "neighborhood": "Centro",
+          "city": "São Paulo/SP",
+          "zipCode": "01000-000",
+          "reference": "Próximo à praça central"
+        },
+        {
+          "id": "addr-2",
+          "label": "Trabalho",
+          "street": "Av. Paulista",
+          "number": "1000",
+          "complement": "12º andar",
+          "neighborhood": "Bela Vista",
+          "city": "São Paulo/SP",
+          "zipCode": "01310-100"
+        }
+      ]
+    },
+    "items": [
+      {
+        "cartItemId": "item-1044-1",
+        "product": {
+          "id": "prod-xsalada",
+          "name": "X-Salada Gourmet",
+          "description": "Pão brioche fofinho, hambúrguer bovino 160g grelhado no fogo, queijo prato derretido, alface fresca, rodelas de tomate maduro e maionese verde artesanal temperada com ervas finas.",
+          "ingredients": [
+            "Pão brioche",
+            "Hambúrguer 160g",
+            "Queijo prato",
+            "Alface",
+            "Tomate",
+            "Maionese verde artesanal"
+          ],
+          "price": 24.9,
+          "categoryId": "hamburgueres",
+          "photo": "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isFeatured": true,
+          "isBestSeller": true,
+          "rating": 4.8,
+          "reviewsCount": 512,
+          "addons": [
+            {
+              "id": "addon-bacon",
+              "name": "Bacon crocante artesanal",
+              "price": 5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-queijo",
+              "name": "Queijo Cheddar fatiado derretido",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-carne",
+              "name": "Hambúrguer artesanal extra (160g)",
+              "price": 8,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-molho",
+              "name": "Molho especial da casa (pote 40ml)",
+              "price": 2,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-cebola",
+              "name": "Cebola caramelizada no shoyu",
+              "price": 4,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-ovo",
+              "name": "Ovo na chapa gema mole",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-picles",
+              "name": "Picles agridoce em fatias",
+              "price": 2.5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-catupiry",
+              "name": "Requeijão cremoso tipo Catupiry",
+              "price": 4.5,
+              "isAvailable": true
+            }
+          ]
+        },
+        "quantity": 2,
+        "selectedAddons": [],
+        "observation": "Um sem tomate",
+        "itemTotalPrice": 49.8
+      },
+      {
+        "cartItemId": "item-1044-2",
+        "product": {
+          "id": "prod-batata-grande",
+          "name": "Batata Grande Crocante",
+          "description": "Porção generosa de batatas palito selecionadas, douradas e crocantes por fora, macias por dentro, temperadas com sal fino e páprica suave.",
+          "ingredients": [
+            "Batata selecionada",
+            "Sal especial",
+            "Toque de páprica"
+          ],
+          "price": 14.9,
+          "categoryId": "porcoes",
+          "photo": "https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isBestSeller": true,
+          "rating": 4.7,
+          "reviewsCount": 780
+        },
+        "quantity": 1,
+        "selectedAddons": [],
+        "observation": "",
+        "itemTotalPrice": 14.9
+      },
+      {
+        "cartItemId": "item-1044-3",
+        "product": {
+          "id": "prod-coca-cola-350",
+          "name": "Coca-Cola Original 350ml",
+          "description": "Lata de Coca-Cola geladinha 350ml.",
+          "ingredients": [
+            "Refrigerante de cola gelado"
+          ],
+          "price": 6.9,
+          "categoryId": "bebidas",
+          "photo": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isBestSeller": true,
+          "rating": 5,
+          "reviewsCount": 920
+        },
+        "quantity": 2,
+        "selectedAddons": [],
+        "observation": "",
+        "itemTotalPrice": 13.8
+      }
+    ],
+    "subtotal": 78.5,
+    "discount": 10,
+    "couponCode": "BEMVINDO",
+    "deliveryFee": 5,
+    "total": 73.5,
+    "deliveryType": "delivery",
+    "address": {
+      "id": "addr-1",
+      "label": "Casa",
+      "street": "Rua das Flores",
+      "number": "123",
+      "complement": "Apto 42 Bloco B",
+      "neighborhood": "Centro",
+      "city": "São Paulo/SP",
+      "zipCode": "01000-000",
+      "reference": "Próximo à praça central"
+    },
+    "paymentMethod": "credit_card",
+    "status": "delivered",
+    "estimatedTime": "Entregue",
+    "timeline": [
+      {
+        "status": "received",
+        "label": "Pedido recebido",
+        "time": "19:30",
+        "completed": true
+      },
+      {
+        "status": "preparing",
+        "label": "Em preparação",
+        "time": "19:35",
+        "completed": true
+      },
+      {
+        "status": "ready",
+        "label": "Pedido pronto",
+        "time": "19:55",
+        "completed": true
+      },
+      {
+        "status": "out_for_delivery",
+        "label": "Saiu para entrega",
+        "time": "20:00",
+        "completed": true
+      },
+      {
+        "status": "delivered",
+        "label": "Entregue",
+        "time": "20:18",
+        "completed": true
+      }
+    ],
+    "printedCount": 1
+  },
+  {
+    "id": "ord-1043",
+    "orderNumber": "1043",
+    "createdAt": "25/08/2026 - 20:15",
+    "customer": {
+      "id": "cust-demo-1",
+      "name": "João Silva",
+      "phone": "(11) 99888-7766",
+      "email": "joao.silva@email.com",
+      "addresses": [
+        {
+          "id": "addr-1",
+          "label": "Casa",
+          "street": "Rua das Flores",
+          "number": "123",
+          "complement": "Apto 42 Bloco B",
+          "neighborhood": "Centro",
+          "city": "São Paulo/SP",
+          "zipCode": "01000-000",
+          "reference": "Próximo à praça central"
+        },
+        {
+          "id": "addr-2",
+          "label": "Trabalho",
+          "street": "Av. Paulista",
+          "number": "1000",
+          "complement": "12º andar",
+          "neighborhood": "Bela Vista",
+          "city": "São Paulo/SP",
+          "zipCode": "01310-100"
+        }
+      ]
+    },
+    "items": [
+      {
+        "cartItemId": "item-1043-1",
+        "product": {
+          "id": "prod-xbacon-especial",
+          "name": "X-Bacon Especial 🔥",
+          "description": "Pão brioche selado na manteiga, hambúrguer artesanal 160g, queijo cheddar derretido, tiras generosas de bacon crocante, alface americana, tomate fresco e molho especial do chef.",
+          "ingredients": [
+            "Pão brioche",
+            "Hambúrguer artesanal 160g",
+            "Queijo cheddar",
+            "Bacon crocante",
+            "Alface americana",
+            "Tomate",
+            "Molho especial"
+          ],
+          "price": 29.9,
+          "promoPrice": 29.9,
+          "categoryId": "hamburgueres",
+          "photo": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isFeatured": true,
+          "isBestSeller": true,
+          "rating": 4.9,
+          "reviewsCount": 1230,
+          "addons": [
+            {
+              "id": "addon-bacon",
+              "name": "Bacon crocante artesanal",
+              "price": 5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-queijo",
+              "name": "Queijo Cheddar fatiado derretido",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-carne",
+              "name": "Hambúrguer artesanal extra (160g)",
+              "price": 8,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-molho",
+              "name": "Molho especial da casa (pote 40ml)",
+              "price": 2,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-cebola",
+              "name": "Cebola caramelizada no shoyu",
+              "price": 4,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-ovo",
+              "name": "Ovo na chapa gema mole",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-picles",
+              "name": "Picles agridoce em fatias",
+              "price": 2.5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-catupiry",
+              "name": "Requeijão cremoso tipo Catupiry",
+              "price": 4.5,
+              "isAvailable": true
+            }
+          ]
+        },
+        "quantity": 1,
+        "selectedAddons": [],
+        "observation": "Pão bem tostado",
+        "itemTotalPrice": 29.9
+      },
+      {
+        "cartItemId": "item-1043-2",
+        "product": {
+          "id": "prod-batata-grande",
+          "name": "Batata Grande Crocante",
+          "description": "Porção generosa de batatas palito selecionadas, douradas e crocantes por fora, macias por dentro, temperadas com sal fino e páprica suave.",
+          "ingredients": [
+            "Batata selecionada",
+            "Sal especial",
+            "Toque de páprica"
+          ],
+          "price": 14.9,
+          "categoryId": "porcoes",
+          "photo": "https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isBestSeller": true,
+          "rating": 4.7,
+          "reviewsCount": 780
+        },
+        "quantity": 1,
+        "selectedAddons": [],
+        "observation": "",
+        "itemTotalPrice": 14.9
+      }
+    ],
+    "subtotal": 44.8,
+    "discount": 0,
+    "deliveryFee": 5,
+    "total": 49.8,
+    "deliveryType": "delivery",
+    "address": {
+      "id": "addr-1",
+      "label": "Casa",
+      "street": "Rua das Flores",
+      "number": "123",
+      "complement": "Apto 42 Bloco B",
+      "neighborhood": "Centro",
+      "city": "São Paulo/SP",
+      "zipCode": "01000-000",
+      "reference": "Próximo à praça central"
+    },
+    "paymentMethod": "pix",
+    "status": "delivered",
+    "estimatedTime": "Entregue",
+    "timeline": [
+      {
+        "status": "received",
+        "label": "Pedido recebido",
+        "time": "20:15",
+        "completed": true
+      },
+      {
+        "status": "preparing",
+        "label": "Em preparação",
+        "time": "20:18",
+        "completed": true
+      },
+      {
+        "status": "ready",
+        "label": "Pedido pronto",
+        "time": "20:38",
+        "completed": true
+      },
+      {
+        "status": "out_for_delivery",
+        "label": "Saiu para entrega",
+        "time": "20:42",
+        "completed": true
+      },
+      {
+        "status": "delivered",
+        "label": "Entregue",
+        "time": "21:01",
+        "completed": true
+      }
+    ],
+    "printedCount": 1
+  },
+  {
+    "id": "ord-1042",
+    "orderNumber": "1042",
+    "createdAt": "20/08/2026 - 18:42",
+    "customer": {
+      "id": "cust-demo-1",
+      "name": "João Silva",
+      "phone": "(11) 99888-7766",
+      "email": "joao.silva@email.com",
+      "addresses": [
+        {
+          "id": "addr-1",
+          "label": "Casa",
+          "street": "Rua das Flores",
+          "number": "123",
+          "complement": "Apto 42 Bloco B",
+          "neighborhood": "Centro",
+          "city": "São Paulo/SP",
+          "zipCode": "01000-000",
+          "reference": "Próximo à praça central"
+        },
+        {
+          "id": "addr-2",
+          "label": "Trabalho",
+          "street": "Av. Paulista",
+          "number": "1000",
+          "complement": "12º andar",
+          "neighborhood": "Bela Vista",
+          "city": "São Paulo/SP",
+          "zipCode": "01310-100"
+        }
+      ]
+    },
+    "items": [
+      {
+        "cartItemId": "item-1042-1",
+        "product": {
+          "id": "prod-combo-familia",
+          "name": "Combo Família Burger10",
+          "description": "2 Hambúrgueres artesanais especiais, 1 Porção de batata grande crocante com cheddar e bacon, 2 Refrigerantes 350ml e 1 Sobremesa Cheesecake de Frutas Vermelhas.",
+          "ingredients": [
+            "2 Hambúrgueres especiais",
+            "1 Batata grande com cheddar e bacon",
+            "2 Refrigerantes 350ml",
+            "1 Cheesecake"
+          ],
+          "price": 89.9,
+          "promoPrice": 69.9,
+          "categoryId": "combos",
+          "photo": "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=1000&q=80",
+          "isAvailable": true,
+          "isFeatured": true,
+          "isBestSeller": true,
+          "isDailyOffer": true,
+          "discountPercentage": 22,
+          "rating": 4.9,
+          "reviewsCount": 840,
+          "addons": [
+            {
+              "id": "addon-bacon",
+              "name": "Bacon crocante artesanal",
+              "price": 5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-queijo",
+              "name": "Queijo Cheddar fatiado derretido",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-carne",
+              "name": "Hambúrguer artesanal extra (160g)",
+              "price": 8,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-molho",
+              "name": "Molho especial da casa (pote 40ml)",
+              "price": 2,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-cebola",
+              "name": "Cebola caramelizada no shoyu",
+              "price": 4,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-ovo",
+              "name": "Ovo na chapa gema mole",
+              "price": 3,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-picles",
+              "name": "Picles agridoce em fatias",
+              "price": 2.5,
+              "isAvailable": true
+            },
+            {
+              "id": "addon-catupiry",
+              "name": "Requeijão cremoso tipo Catupiry",
+              "price": 4.5,
+              "isAvailable": true
+            }
+          ]
+        },
+        "quantity": 1,
+        "selectedAddons": [],
+        "observation": "Carnes bem passadas",
+        "itemTotalPrice": 89.9
+      }
+    ],
+    "subtotal": 89.9,
+    "discount": 0,
+    "deliveryFee": 0,
+    "total": 89.9,
+    "deliveryType": "pickup",
+    "paymentMethod": "pix",
+    "status": "delivered",
+    "estimatedTime": "Retirado",
+    "timeline": [
+      {
+        "status": "received",
+        "label": "Pedido recebido",
+        "time": "18:42",
+        "completed": true
+      },
+      {
+        "status": "preparing",
+        "label": "Em preparação",
+        "time": "18:47",
+        "completed": true
+      },
+      {
+        "status": "ready",
+        "label": "Pronto para retirada",
+        "time": "19:10",
+        "completed": true
+      },
+      {
+        "status": "delivered",
+        "label": "Retirado",
+        "time": "19:22",
+        "completed": true
+      }
+    ],
+    "printedCount": 1
+  }
+]

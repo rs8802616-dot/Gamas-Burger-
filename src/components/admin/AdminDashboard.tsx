@@ -25,6 +25,9 @@ import {
   Bell,
   Users,
   Database,
+  Copy,
+  Share2,
+  ExternalLink,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { formatCurrency, generateWhatsAppLink } from '../../utils/formatters';
@@ -58,7 +61,27 @@ export const AdminDashboard: React.FC = () => {
     deleteDeliveryZone,
     simulateIncomingOrder,
     isServerConnected,
+    setCurrentView,
   } = useStore();
+
+  // Client menu share link (guaranteed clean client link without #admin or credentials)
+  const [copiedClientUrl, setCopiedClientUrl] = useState(false);
+  const clientShareUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?view=client`
+      : '/?view=client';
+  const shareWhatsAppText = `🍔 Olá! Confira nosso cardápio online e faça seu pedido direto pelo link:\n${clientShareUrl}`;
+  const shareWhatsAppUrl = `https://wa.me/?text=${encodeURIComponent(shareWhatsAppText)}`;
+
+  const handleCopyClientUrl = () => {
+    try {
+      navigator.clipboard.writeText(clientShareUrl);
+      setCopiedClientUrl(true);
+      setTimeout(() => setCopiedClientUrl(false), 2500);
+    } catch {
+      // Fallback
+    }
+  };
 
   // Product modal state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -240,6 +263,58 @@ export const AdminDashboard: React.FC = () => {
             <Plus className="w-3.5 h-3.5" />
             <span>Simular Pedido</span>
           </button>
+        </div>
+      </div>
+
+      {/* CARD DE COMPARTILHAMENTO DO CARDÁPIO PARA CLIENTES */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-[#151518] to-[#151518] border border-amber-500/30 rounded-3xl p-5 shadow-lg">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xl">📲</span>
+              <h2 className="text-base font-black text-white tracking-tight">
+                Link do Cardápio para seus Clientes
+              </h2>
+              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Exclusivo para Pedidos
+              </span>
+            </div>
+            <p className="text-xs text-white/60 max-w-2xl leading-relaxed">
+              Divulgue este link no WhatsApp, Instagram e panfletos. Ele abre <strong>direto no cardápio de cliente</strong>, sem pedir senha e sem dar acesso à sua conta de administrador.
+            </p>
+            <div className="inline-flex items-center gap-2 bg-[#0A0A0B] border border-white/10 rounded-xl px-3 py-1.5 mt-1 font-mono text-xs text-amber-400 select-all">
+              <span>{clientShareUrl}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              id="copy-client-link-btn"
+              onClick={handleCopyClientUrl}
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+            >
+              {copiedClientUrl ? <Check className="w-4 h-4 stroke-[3]" /> : <Copy className="w-4 h-4 stroke-[2.5]" />}
+              <span>{copiedClientUrl ? 'Link Copiado!' : 'Copiar Link do Cardápio'}</span>
+            </button>
+            <a
+              id="whatsapp-share-client-link-btn"
+              href={shareWhatsAppUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+            >
+              <Share2 className="w-4 h-4 stroke-[2.5]" />
+              <span>Enviar no WhatsApp</span>
+            </a>
+            <button
+              id="preview-as-client-btn"
+              onClick={() => setCurrentView('client')}
+              className="flex items-center gap-2 bg-[#202024] hover:bg-white/10 text-neutral-200 border border-white/10 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-95"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Ver como Cliente</span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -21,6 +21,9 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Share2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { NotificationCenterModal } from '../notifications/NotificationCenterModal';
@@ -51,6 +54,21 @@ export const Header: React.FC = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [copiedMenuLink, setCopiedMenuLink] = useState(false);
+
+  const handleCopyMenuLink = () => {
+    const cleanUrl =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/?view=client`
+        : '/?view=client';
+    try {
+      navigator.clipboard.writeText(cleanUrl);
+      setCopiedMenuLink(true);
+      setTimeout(() => setCopiedMenuLink(false), 2500);
+    } catch {
+      // Fallback
+    }
+  };
 
   useEffect(() => {
     const updateCount = () => {
@@ -544,6 +562,20 @@ export const Header: React.FC = () => {
                   >
                     <LayoutDashboard className="w-4 h-4 text-neutral-400" />
                     <span>Painel Administrativo</span>
+                  </button>
+                  <button
+                    id="drawer-share-menu-btn"
+                    onClick={handleCopyMenuLink}
+                    className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-bold transition-colors ${
+                      copiedMenuLink
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : isDark
+                        ? 'text-amber-400 hover:text-amber-300 hover:bg-white/10'
+                        : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
+                    }`}
+                  >
+                    {copiedMenuLink ? <Check className="w-4 h-4 stroke-[3]" /> : <Share2 className="w-4 h-4 text-amber-500" />}
+                    <span>{copiedMenuLink ? 'Link Limpo Copiado!' : 'Copiar Link para Clientes'}</span>
                   </button>
                 </div>
 

@@ -128,6 +128,11 @@ interface StoreContextType {
     paymentMethod: 'pix' | 'credit_card' | 'debit_card' | 'cash' | 'on_delivery';
     cashChangeFor?: number;
     notes?: string;
+    customerInfo?: {
+      name: string;
+      phone: string;
+      email?: string;
+    };
   }) => Order;
   updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
   printThermalReceipt: (order: Order) => void;
@@ -198,6 +203,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Check if current URL/hash targets admin route
   const checkIsAdminRoute = () => {
     if (typeof window === 'undefined') return false;
+    // Explicit client override: if url contains view=client, always open client view!
+    if (
+      window.location.search.includes('view=client') ||
+      window.location.hash === '#client' ||
+      window.location.hash === '#cardapio'
+    ) {
+      return false;
+    }
     return (
       window.location.pathname.startsWith('/admin') ||
       window.location.hash.startsWith('#/admin') ||
@@ -685,12 +698,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     paymentMethod,
     cashChangeFor,
     notes,
+    customerInfo,
   }: {
     deliveryType: 'delivery' | 'pickup';
     address?: CustomerAddress;
     paymentMethod: 'pix' | 'credit_card' | 'debit_card' | 'cash' | 'on_delivery';
     cashChangeFor?: number;
     notes?: string;
+    customerInfo?: {
+      name: string;
+      phone: string;
+      email?: string;
+    };
   }): Order => {
     const subtotal = cart.reduce((acc, item) => acc + item.itemTotalPrice * item.quantity, 0);
     let discount = 0;
@@ -710,13 +729,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       now.getMinutes()
     ).padStart(2, '0')}`;
 
-    const orderNumber = String(1046 + orders.length);
+    // Use customized customer data from checkout if provided
+    let orderCustomer = customer;
+    if (customerInfo && customerInfo.name && customerInfo.name.trim()) {
+      orderCustomer = {
+        ...customer,
+        name: customerInfo.name.trim(),
+        phone: customerInfo.phone ? customerInfo.phone.trim() : customer.phone,
+        email: customerInfo.email ? customerInfo.email.trim() : customer.email,
+      };
+      setCustomer(orderCustomer);
+    }
+
+    // Determine sequential order number
+    const existingNums = orders
+      .map((o) => parseInt(o.orderNumber, 10))
+      .filter((n) => !isNaN(n));
+    const maxOrderNum = existingNums.length > 0 ? Math.max(...existingNums) : 1045;
+    const orderNumber = String(maxOrderNum + 1);
+    const uniqueOrderId = `ord-${orderNumber}-${Date.now()}`;
 
     const newOrder: Order = {
-      id: `ord-${orderNumber}`,
+      id: uniqueOrderId,
       orderNumber,
       createdAt: formattedDate,
-      customer,
+      customer: orderCustomer,
       items: [...cart],
       subtotal,
       discount,
@@ -724,7 +761,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deliveryFee,
       total,
       deliveryType,
-      address: deliveryType === 'delivery' ? address || customer.addresses[0] : undefined,
+      address: deliveryType === 'delivery' ? address || orderCustomer.addresses[0] : undefined,
       paymentMethod,
       cashChangeFor,
       status: 'received',
@@ -765,10 +802,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }).catch((err) => console.warn('Sync order to server:', err));
 
     clearCart();
-    setIsCheckoutOpen(false);
-    setIsCartOpen(false);
     setTrackingOrderId(newOrder.id);
-    setClientTab('orders');
 
     // Confetti celebration
     confetti({
