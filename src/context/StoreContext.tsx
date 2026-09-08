@@ -131,6 +131,7 @@ interface StoreContextType {
   }) => Order;
   updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
   printThermalReceipt: (order: Order) => void;
+  isServerConnected: boolean;
 
   simulateIncomingOrder: () => void;
   sendBroadcastNotification: (
@@ -175,7 +176,7 @@ interface StoreContextType {
   addDeliveryZone: (neighborhood: string, fee: number) => void;
   updateDeliveryZoneFee: (id: string, fee: number) => void;
   deleteDeliveryZone: (id: string) => void;
-  updateStoreSettings: (settings: StoreSettings) => void;
+  updateStoreSettings: (settings: Partial<StoreSettings>) => void;
 }
 
 const StoreContext = createContext<StoreContextType | null>(null);
@@ -378,14 +379,142 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...INITIAL_SETTINGS,
+          ...parsed,
+          printerSettings: {
+            ...INITIAL_SETTINGS.printerSettings,
+            ...(parsed.printerSettings || {}),
+          },
+        };
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_SETTINGS;
   });
 
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
     return saved ? JSON.parse(saved) : INITIAL_ORDERS;
   });
+
+  const [isServerConnected, setIsServerConnected] = useState<boolean>(false);
+
+  // Real-time server sync between Mobile (customer) and PC (burger shop / kitchen)
+  useEffect(() => {
+    let isMounted = true;
+
+    // 1. Initial fetch from server
+    const fetchOrdersFromServer = async () => {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.orders)) {
+            if (data.orders.length > 0) {
+              setOrders(data.orders);
+            } else {
+              // Seed initial orders to server so it has starting data
+              fetch('/api/orders/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ initialOrders: INITIAL_ORDERS }),
+              }).catch(() => {});
+            }
+            if (isMounted) setIsServerConnected(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend /api/orders offline, using local cache:', err);
+      }
+    };
+
+    fetchOrdersFromServer();
+
+    // 2. Setup Server-Sent Events (SSE) for zero-latency push from phone to PC
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/orders/stream');
+      eventSource.onopen = () => {
+        if (isMounted) setIsServerConnected(true);
+      };
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'new_order' && data.order) {
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === data.order.id)) {
+                return prev;
+              }
+              // Loud notification sound on shop PC / kitchen
+              playOrderNotificationSound();
+              // In-app Notification Banner
+              NotificationService.triggerOrderStatusNotification(data.order, 'received');
+              return [data.order, ...prev];
+            });
+          } else if (data.type === 'status_updated' && data.order) {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === data.order.id ? data.order : o))
+            );
+          }
+        } catch {
+          // ignore parse errors
+        }
+      };
+      eventSource.onerror = () => {
+        if (isMounted) setIsServerConnected(false);
+      };
+    } catch {
+      // EventSource fallback to polling
+    }
+
+    // 3. Fallback poll every 3 seconds to guarantee 100% sync
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.orders) && isMounted) {
+            setIsServerConnected(true);
+            setOrders((prev) => {
+              const prevIds = new Set(prev.map((o) => o.id));
+              const newOrders = data.orders.filter((o: Order) => !prevIds.has(o.id));
+              if (newOrders.length > 0) {
+                // New incoming order placed from phone!
+                playOrderNotificationSound();
+                newOrders.forEach((no: Order) => {
+                  NotificationService.triggerOrderStatusNotification(no, 'received');
+                });
+                return data.orders;
+              }
+              // Check if statuses updated
+              const hasChanges = data.orders.some((serverOrder: Order) => {
+                const localOrder = prev.find((o) => o.id === serverOrder.id);
+                return localOrder && localOrder.status !== serverOrder.status;
+              });
+              if (hasChanges) {
+                return data.orders;
+              }
+              return prev;
+            });
+          }
+        }
+      } catch {
+        // network hiccup
+      }
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      if (eventSource) eventSource.close();
+      clearInterval(pollInterval);
+    };
+  }, []);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
@@ -627,6 +756,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setOrders((prev) => [newOrder, ...prev]);
     firebaseService.saveOrder(newOrder);
+
+    // Sync in real-time to server so burger shop PC receives the order immediately
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    }).catch((err) => console.warn('Sync order to server:', err));
+
     clearCart();
     setIsCheckoutOpen(false);
     setIsCartOpen(false);
@@ -687,6 +824,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (orderToUpdate) {
       NotificationService.triggerOrderStatusNotification(orderToUpdate, newStatus);
       firebaseService.saveOrder(orderToUpdate);
+
+      // Sync status change in real-time to server so customer's cell phone updates live
+      fetch(`/api/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      }).catch((err) => console.warn('Sync status to server:', err));
     }
   };
 
@@ -791,9 +935,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCombos((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const updateStoreSettings = (newSettings: StoreSettings) => {
-    setStoreSettings(newSettings);
-    firebaseService.saveSettings(newSettings);
+  const updateStoreSettings = (newSettings: Partial<StoreSettings>) => {
+    setStoreSettings((prev) => {
+      const updated: StoreSettings = {
+        ...prev,
+        ...newSettings,
+        printerSettings: {
+          ...(prev?.printerSettings || INITIAL_SETTINGS.printerSettings),
+          ...(newSettings.printerSettings || {}),
+        },
+      };
+      firebaseService.saveSettings(updated);
+      return updated;
+    });
   };
 
   const addDeliveryZone = (neighborhood: string, fee: number) => {
@@ -923,6 +1077,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setOrders((prev) => [simulatedOrder, ...prev]);
 
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(simulatedOrder),
+    }).catch((err) => console.warn('Sync simulated order to server:', err));
+
     if (soundEnabled) {
       playOrderNotificationSound();
     }
@@ -1045,6 +1205,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         placeOrder,
         updateOrderStatus,
         printThermalReceipt,
+        isServerConnected,
 
         isFavorite,
         toggleFavorite,

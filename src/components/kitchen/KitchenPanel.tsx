@@ -25,6 +25,7 @@ export const KitchenPanel: React.FC = () => {
     printThermalReceipt,
     simulateIncomingOrder,
     storeSettings,
+    isServerConnected,
   } = useStore();
 
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -230,9 +231,20 @@ export const KitchenPanel: React.FC = () => {
               <h1 className="text-xl font-black text-white tracking-tight">
                 Painel da Cozinha (KDS)
               </h1>
-              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                Tempo Real
+              <span
+                className={`text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
+                  isServerConnected
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                }`}
+                title="Sincronizado automaticamente com os pedidos feitos pelo celular dos clientes"
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isServerConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                  }`}
+                />
+                {isServerConnected ? 'Celular & PC Sincronizados' : 'Conectando Servidor...'}
               </span>
             </div>
             <p className="text-xs text-white/40 mt-0.5">

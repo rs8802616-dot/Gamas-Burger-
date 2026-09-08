@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
+    <script>
+      (function() {
+        var origError = console.error;
+        console.error = function() {
+          var firstArg = arguments[0];
+          if (typeof firstArg === 'string' && (firstArg.indexOf('[vite] failed to connect to websocket') !== -1 || firstArg.indexOf('[vite]') !== -1)) {
+            return;
+          }
+          origError.apply(console, arguments);
+        };
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Burger10 - Hamburgueria & Delivery</title>

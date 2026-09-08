@@ -1,4 +1,8 @@
+// Fix: tsx defines relative __dirname = "." which breaks ESM packages using createRequire(__dirname)
+delete (globalThis as any).__dirname;
+
 import express, { Request, Response } from 'express';
+import http from 'http';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
@@ -219,9 +223,15 @@ app.post('/api/orders/sync', (req: Request, res: Response) => {
 // ==================== VITE & PRODUCTION STARTUP ====================
 
 async function startServer() {
+  const server = http.createServer(app);
+
   if (process.env.NODE_ENV !== 'production') {
+    const isHmrDisabled = process.env.DISABLE_HMR === 'true';
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: isHmrDisabled ? false : { server },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -233,7 +243,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`[Burger10 Server] Running on http://0.0.0.0:${PORT}`);
   });
 }

@@ -57,6 +57,7 @@ export const AdminDashboard: React.FC = () => {
     addDeliveryZone,
     deleteDeliveryZone,
     simulateIncomingOrder,
+    isServerConnected,
   } = useStore();
 
   // Product modal state
@@ -208,6 +209,21 @@ export const AdminDashboard: React.FC = () => {
             </h1>
             <span className="bg-amber-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
               Gerência
+            </span>
+            <span
+              className={`text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
+                isServerConnected
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+              }`}
+              title="Sincronizado automaticamente com os pedidos feitos pelo celular dos clientes"
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isServerConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                }`}
+              />
+              {isServerConnected ? 'Celular & PC Conectados' : 'Conectando Servidor...'}
             </span>
           </div>
           <p className="text-xs text-white/40 mt-0.5">
@@ -894,11 +910,15 @@ export const AdminDashboard: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold text-white/50 mb-1.5">Largura da Bobina</label>
                 <select
-                  value={storeSettings.printerSettings.paperWidth}
+                  value={storeSettings?.printerSettings?.paperWidth || '80mm'}
                   onChange={(e) =>
                     updateStoreSettings({
                       printerSettings: {
-                        ...storeSettings.printerSettings,
+                        ...(storeSettings?.printerSettings || {
+                          paperWidth: '80mm',
+                          customFooterText: 'Obrigado pela preferência!',
+                          autoPrintOnReceive: false,
+                        }),
                         paperWidth: e.target.value as '58mm' | '80mm',
                       },
                     })
@@ -914,11 +934,15 @@ export const AdminDashboard: React.FC = () => {
                 <label className="block text-xs font-bold text-white/50 mb-1.5">Rodapé da Comanda</label>
                 <input
                   type="text"
-                  value={storeSettings.printerSettings.customFooterText}
+                  value={storeSettings?.printerSettings?.customFooterText || ''}
                   onChange={(e) =>
                     updateStoreSettings({
                       printerSettings: {
-                        ...storeSettings.printerSettings,
+                        ...(storeSettings?.printerSettings || {
+                          paperWidth: '80mm',
+                          customFooterText: 'Obrigado pela preferência!',
+                          autoPrintOnReceive: false,
+                        }),
                         customFooterText: e.target.value,
                       },
                     })

@@ -6,7 +6,7 @@ import { formatCurrency } from '../../utils/formatters';
 export const ThermalReceiptModal: React.FC = () => {
   const { thermalReceiptOrder, setThermalReceiptOrder, storeSettings } = useStore();
   const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>(
-    storeSettings.printerSettings.paperWidth || '80mm'
+    storeSettings?.printerSettings?.paperWidth || '80mm'
   );
   const [copied, setCopied] = useState(false);
 
@@ -58,7 +58,7 @@ export const ThermalReceiptModal: React.FC = () => {
     text += `FORMA PAGAMENTO: ${order.paymentMethod.toUpperCase()}\n`;
     if (order.cashChangeFor) text += `TROCO PARA: ${formatCurrency(order.cashChangeFor)}\n`;
     text += `${divider}\n`;
-    text += `${storeSettings.printerSettings.customFooterText}\n`;
+    text += `${storeSettings?.printerSettings?.customFooterText || 'Obrigado pela preferência!'}\n`;
     return text;
   };
 
@@ -228,7 +228,7 @@ export const ThermalReceiptModal: React.FC = () => {
 
             {/* Footer */}
             <div className="pt-2 text-center text-[10px] text-neutral-600 space-y-0.5">
-              <p className="font-bold">{storeSettings.printerSettings.customFooterText}</p>
+              <p className="font-bold">{storeSettings?.printerSettings?.customFooterText || 'Obrigado pela preferência!'}</p>
               <p>IMPRESSO EM {new Date().toLocaleTimeString('pt-BR')}</p>
             </div>
           </div>
