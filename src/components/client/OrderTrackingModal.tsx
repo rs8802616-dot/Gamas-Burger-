@@ -23,7 +23,7 @@ export const OrderTrackingModal: React.FC = () => {
 
   if (!trackingOrderId) return null;
 
-  const order = orders.find((o) => o.id === trackingOrderId) || orders[0];
+  const order = orders.find((o) => o.id === trackingOrderId);
   if (!order) return null;
 
   const handleWhatsAppContact = () => {

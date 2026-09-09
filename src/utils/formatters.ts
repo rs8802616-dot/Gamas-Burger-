@@ -78,10 +78,11 @@ export const getCleanClientMenuUrl = (configuredUrl?: string): string => {
   return 'https://gamas-burger.vercel.app';
 };
 
-export const buildOrderWhatsAppMessage = (order: Order, storeName: string = 'Burger10 Hamburgueria'): string => {
+export const buildOrderWhatsAppMessage = (order: Order, storeName: string = "Gama's Burger"): string => {
+  const cleanStoreName = storeName || "Gama's Burger";
   const lines: string[] = [
     `🍔 *NOVO PEDIDO #${order.orderNumber}*`,
-    `🏪 *${storeName}*`,
+    `🏪 *${cleanStoreName}*`,
     `📅 ${order.createdAt}`,
     ``,
     `👤 *Cliente:* ${order.customer.name}`,

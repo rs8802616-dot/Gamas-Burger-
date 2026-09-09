@@ -98,6 +98,7 @@ interface StoreContextType {
   appliedCoupon: Coupon | null;
   favorites: string[];
   customer: CustomerInfo;
+  clientOrderIds: string[];
   selectedDeliveryZone: DeliveryZone;
   setSelectedDeliveryZone: (zone: DeliveryZone) => void;
 
@@ -227,6 +228,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
+  const [adminToken, setAdminToken] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('gamas_admin_token');
+      if (saved) return saved;
+      if (localStorage.getItem('burger10_admin_auth') === 'true') {
+        return `admin-token-${btoa('rs8802616@gmail.com:admin123')}`;
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  });
+
   // Navigation & View States
   const [currentView, setCurrentView] = useState<'client' | 'kitchen' | 'admin'>(() => {
     if (checkIsAdminRoute()) {
@@ -286,16 +300,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Matches the user's explicit account rs8802616@gmail.com
     if (
-      (cleanEmail === 'rs8802616@gmail.com' || cleanEmail.includes('admin')) &&
+      (cleanEmail === 'rs8802616@gmail.com' || cleanEmail === 'admin@gamasburger.com' || cleanEmail.includes('admin')) &&
       (cleanPass === storedPass || cleanPass === 'admin123')
     ) {
+      const canonical = `admin-token-${btoa(`${cleanEmail}:${cleanPass}`)}`;
       setIsAdminAuthenticated(true);
+      setAdminToken(canonical);
       try {
         localStorage.setItem('burger10_admin_auth', 'true');
         localStorage.setItem('burger10_admin_email', cleanEmail);
+        localStorage.setItem('gamas_admin_token', canonical);
       } catch {
         // local storage fallback
       }
+
+      // Register session with server in background
+      fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: cleanPass }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.token) {
+            setAdminToken(data.token);
+            try {
+              localStorage.setItem('gamas_admin_token', data.token);
+            } catch {}
+          }
+        })
+        .catch(() => {});
+
       return { success: true, message: 'Autenticado com sucesso!' };
     }
 
@@ -306,20 +341,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const adminLogout = () => {
+    if (adminToken) {
+      fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }).catch(() => {});
+    }
     setIsAdminAuthenticated(false);
+    setAdminToken('');
     try {
       localStorage.removeItem('burger10_admin_auth');
+      localStorage.removeItem('burger10_admin_email');
+      localStorage.removeItem('gamas_admin_token');
     } catch {
       // ignore
     }
+    setOrders([]);
     handleSetCurrentView('client');
   };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [trackingOrderId, setTrackingOrderId] = useState<string | null>('ord-1045');
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const [thermalReceiptOrder, setThermalReceiptOrder] = useState<Order | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
@@ -399,6 +445,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return {
           ...INITIAL_SETTINGS,
           ...parsed,
+          name: parsed.name && !parsed.name.includes('BURGER10') ? parsed.name : "Gama's Burger",
+          address: parsed.address && !parsed.address.includes('Rua das Flores') ? parsed.address : INITIAL_SETTINGS.address,
           publicStoreUrl: parsed.publicStoreUrl || INITIAL_SETTINGS.publicStoreUrl || 'https://gamas-burger.vercel.app',
           printerSettings: {
             ...INITIAL_SETTINGS.printerSettings,
@@ -412,9 +460,69 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return INITIAL_SETTINGS;
   });
 
+  // Customer & Client Identifiers
+  const [customerId] = useState<string>(() => {
+    try {
+      let id = localStorage.getItem('gamas_customer_id');
+      if (!id) {
+        id = `cust-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        localStorage.setItem('gamas_customer_id', id);
+      }
+      return id;
+    } catch {
+      return `cust-${Date.now()}`;
+    }
+  });
+
+  const [customer, setCustomer] = useState<CustomerInfo>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMER);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          parsed &&
+          parsed.name &&
+          parsed.name !== 'João Silva' &&
+          parsed.phone !== '(11) 99888-7766'
+        ) {
+          return parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_CUSTOMER;
+  });
+
+  // Client personal order IDs
+  const [clientOrderIds, setClientOrderIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('gamas_client_order_ids');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((id) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(id));
+        }
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
-    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(
+            (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
+          );
+        }
+      }
+    } catch {}
+    return [];
   });
 
   const [isServerConnected, setIsServerConnected] = useState<boolean>(false);
@@ -422,38 +530,75 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Real-time server sync between Mobile (customer) and PC (burger shop / kitchen)
   useEffect(() => {
     let isMounted = true;
+    let eventSource: EventSource | null = null;
 
-    // 1. Initial fetch from server
-    const fetchOrdersFromServer = async () => {
+    const tokenToSend = adminToken || (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
+
+    // Function to fetch orders based on role
+    const fetchOrders = async () => {
       try {
-        const res = await fetch('/api/orders');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.orders)) {
-            if (data.orders.length > 0) {
-              setOrders(data.orders);
-            } else {
-              // Seed initial orders to server so it has starting data
-              fetch('/api/orders/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initialOrders: INITIAL_ORDERS }),
-              }).catch(() => {});
+        if (isAdminAuthenticated) {
+          // Admin sees all orders from protected endpoint
+          const res = await fetch('/api/admin/orders', {
+            headers: {
+              Authorization: `Bearer ${tokenToSend}`,
+            },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.orders) && isMounted) {
+              const clean = data.orders.filter(
+                (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
+              );
+              setOrders(clean);
+              setIsServerConnected(true);
             }
-            if (isMounted) setIsServerConnected(true);
+          }
+        } else {
+          // Client only gets their own orders
+          const storedIdsRaw = localStorage.getItem('gamas_client_order_ids');
+          const storedIds: string[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : clientOrderIds;
+          const phone = customer.phone ? customer.phone.replace(/\D/g, '') : '';
+
+          if (storedIds.length === 0 && !phone) {
+            if (isMounted) {
+              setOrders([]);
+              setIsServerConnected(true);
+            }
+            return;
+          }
+
+          const params = new URLSearchParams();
+          if (customerId) params.set('customerId', customerId);
+          if (storedIds.length > 0) params.set('orderIds', storedIds.join(','));
+          if (phone) params.set('phone', phone);
+
+          const res = await fetch(`/api/orders?${params.toString()}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.orders) && isMounted) {
+              const clean = data.orders.filter(
+                (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
+              );
+              setOrders(clean);
+              setIsServerConnected(true);
+            }
           }
         }
       } catch (err) {
-        console.warn('Backend /api/orders offline, using local cache:', err);
+        console.warn('Orders sync error:', err);
       }
     };
 
-    fetchOrdersFromServer();
+    fetchOrders();
 
-    // 2. Setup Server-Sent Events (SSE) for zero-latency push from phone to PC
-    let eventSource: EventSource | null = null;
+    // Setup SSE connection
     try {
-      eventSource = new EventSource('/api/orders/stream');
+      const sseUrl = isAdminAuthenticated
+        ? `/api/orders/stream?token=${encodeURIComponent(tokenToSend)}`
+        : `/api/orders/stream?customerId=${encodeURIComponent(customerId)}&orderIds=${encodeURIComponent(clientOrderIds.join(','))}`;
+
+      eventSource = new EventSource(sseUrl);
       eventSource.onopen = () => {
         if (isMounted) setIsServerConnected(true);
       };
@@ -461,83 +606,59 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'new_order' && data.order) {
+            if (!isAdminAuthenticated) {
+              const isMyOrder =
+                clientOrderIds.includes(data.order.id) ||
+                (data.order.customer && data.order.customer.id === customerId);
+              if (!isMyOrder) return;
+            }
+
             setOrders((prev) => {
-              if (prev.some((o) => o.id === data.order.id)) {
-                return prev;
-              }
-              // Loud notification sound on shop PC / kitchen
-              playOrderNotificationSound();
-              // In-app Notification Banner
+              if (prev.some((o) => o.id === data.order.id)) return prev;
+              if (soundEnabled) playOrderNotificationSound();
               NotificationService.triggerOrderStatusNotification(data.order, 'received');
               return [data.order, ...prev];
             });
           } else if (data.type === 'status_updated' && data.order) {
+            if (!isAdminAuthenticated) {
+              const isMyOrder =
+                clientOrderIds.includes(data.order.id) ||
+                (data.order.customer && data.order.customer.id === customerId);
+              if (!isMyOrder) return;
+            }
+
             setOrders((prev) =>
-              prev.map((o) => (o.id === data.order.id ? data.order : o))
+              prev.map((o) => (o.id === data.order.id ? { ...o, ...data.order } : o))
             );
           }
         } catch {
-          // ignore parse errors
+          // ignore parsing issues
         }
       };
       eventSource.onerror = () => {
         if (isMounted) setIsServerConnected(false);
       };
     } catch {
-      // EventSource fallback to polling
+      // SSE unsupported fallback
     }
 
-    // 3. Fallback poll every 3 seconds to guarantee 100% sync
-    const pollInterval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/orders');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.orders) && isMounted) {
-            setIsServerConnected(true);
-            setOrders((prev) => {
-              const prevIds = new Set(prev.map((o) => o.id));
-              const newOrders = data.orders.filter((o: Order) => !prevIds.has(o.id));
-              if (newOrders.length > 0) {
-                // New incoming order placed from phone!
-                playOrderNotificationSound();
-                newOrders.forEach((no: Order) => {
-                  NotificationService.triggerOrderStatusNotification(no, 'received');
-                });
-                return data.orders;
-              }
-              // Check if statuses updated
-              const hasChanges = data.orders.some((serverOrder: Order) => {
-                const localOrder = prev.find((o) => o.id === serverOrder.id);
-                return localOrder && localOrder.status !== serverOrder.status;
-              });
-              if (hasChanges) {
-                return data.orders;
-              }
-              return prev;
-            });
-          }
-        }
-      } catch {
-        // network hiccup
+    // Polling fallback every 5 seconds
+    const pollInterval = setInterval(() => {
+      if (isMounted) {
+        fetchOrders();
       }
-    }, 3000);
+    }, 5000);
 
     return () => {
       isMounted = false;
       if (eventSource) eventSource.close();
       clearInterval(pollInterval);
     };
-  }, []);
+  }, [isAdminAuthenticated, adminToken, customerId, clientOrderIds, customer.phone, soundEnabled]);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
     return saved ? JSON.parse(saved) : ['prod-xbacon-especial', 'prod-combo-familia', 'prod-xsalada', 'prod-batata-especial-cheddar-bacon', 'prod-coca-cola-350', 'prod-cheesecake'];
-  });
-
-  const [customer, setCustomer] = useState<CustomerInfo>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMER);
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMER;
   });
 
   // Client Cart
@@ -554,8 +675,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [categories]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
-  }, [orders]);
+    if (!isAdminAuthenticated) {
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    }
+  }, [orders, isAdminAuthenticated]);
+
+  useEffect(() => {
+    localStorage.setItem('gamas_client_order_ids', JSON.stringify(clientOrderIds));
+  }, [clientOrderIds]);
+
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(storeSettings));
@@ -731,10 +859,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ).padStart(2, '0')}`;
 
     // Use customized customer data from checkout if provided
-    let orderCustomer = customer;
+    let orderCustomer = {
+      ...customer,
+      id: customer.id || customerId,
+    };
     if (customerInfo && customerInfo.name && customerInfo.name.trim()) {
       orderCustomer = {
-        ...customer,
+        ...orderCustomer,
         name: customerInfo.name.trim(),
         phone: customerInfo.phone ? customerInfo.phone.trim() : customer.phone,
         email: customerInfo.email ? customerInfo.email.trim() : customer.email,
@@ -805,6 +936,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     clearCart();
     setTrackingOrderId(newOrder.id);
 
+    // Save order ID to client's personal order history list
+    setClientOrderIds((prev) => {
+      const updated = [newOrder.id, ...prev];
+      try {
+        localStorage.setItem('gamas_client_order_ids', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
     // Confetti celebration
     confetti({
       particleCount: 80,
@@ -861,9 +1001,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       firebaseService.saveOrder(orderToUpdate);
 
       // Sync status change in real-time to server so customer's cell phone updates live
+      const tokenToSend = adminToken || (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
       fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tokenToSend ? { Authorization: `Bearer ${tokenToSend}` } : {}),
+        },
         body: JSON.stringify({ status: newStatus }),
       }).catch((err) => console.warn('Sync status to server:', err));
     }
@@ -1112,9 +1256,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setOrders((prev) => [simulatedOrder, ...prev]);
 
+    const tokenToSend = adminToken || (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
     fetch('/api/orders', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(tokenToSend ? { Authorization: `Bearer ${tokenToSend}` } : {}),
+      },
       body: JSON.stringify(simulatedOrder),
     }).catch((err) => console.warn('Sync simulated order to server:', err));
 
@@ -1123,8 +1271,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Customer Loyalty Calculation (Requirement 35)
-  const customerOrdersCount = orders.filter((o) => o.status !== 'cancelled').length;
+  // Customer Loyalty Calculation - only based on orders placed by THIS customer
+  const customerOrdersCount = orders.filter(
+    (o) =>
+      o.status !== 'cancelled' &&
+      (clientOrderIds.includes(o.id) ||
+        (o.customer && (o.customer.id === customer.id || o.customer.id === customerId)) ||
+        (customer.phone && o.customer && o.customer.phone === customer.phone) ||
+        (customer.name && customer.name.trim() !== '' && customer.name !== 'João Silva' && o.customer && o.customer.name === customer.name))
+  ).length;
   const loyaltyTierInfo = useMemo(() => {
     if (customerOrdersCount >= 6) {
       return {
@@ -1225,6 +1380,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         appliedCoupon,
         favorites,
         customer,
+        clientOrderIds,
         selectedDeliveryZone,
         setSelectedDeliveryZone,
 

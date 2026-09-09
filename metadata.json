@@ -1,6 +1,6 @@
 {
-  "name": "Burger10 - Hamburgueria & Delivery",
-  "description": "Sistema completo para hamburgueria: cardápio digital moderno, pedidos online, KDS para cozinha, impressão de comandas e painel administrativo.",
+  "name": "Gama's Burger - Cardápio & Delivery",
+  "description": "Cardápio digital moderno, pedidos online via WhatsApp, acompanhamento de pedidos e delivery artesanal do Gama's Burger.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

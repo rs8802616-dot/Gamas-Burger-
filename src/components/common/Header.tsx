@@ -170,7 +170,7 @@ export const Header: React.FC = () => {
 
           <div className="flex items-center gap-2.5">
             <span className="hidden sm:inline text-[11px] font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-bold">
-              rs8802616@gmail.com
+              Painel Gerencial
             </span>
             <button
               onClick={toggleSound}
@@ -218,11 +218,11 @@ export const Header: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <span className="text-xl">🍔</span>
                 <h1 className={`text-xl sm:text-2xl font-black tracking-tight flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  BURGER<span className="text-amber-500">10</span>
+                  GAMA'S<span className="text-amber-500 ml-1">BURGER</span>
                 </h1>
               </div>
               <span className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.25em] -mt-0.5 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                HAMBURGUERIA
+                HAMBURGUERIA ARTESANAL
               </span>
             </div>
 
@@ -532,35 +532,40 @@ export const Header: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Operations shortcut */}
+                {/* Staff / Admin Only shortcuts - hidden from normal customers */}
+                {isAdminAuthenticated && (
+                  <div className={`pt-3 border-t space-y-1 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                    <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                      Área do Lojista
+                    </p>
+                    <button
+                      onClick={() => {
+                        setCurrentView('kitchen');
+                        setIsDrawerOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-medium transition-colors ${
+                        isDark ? 'text-neutral-300 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <ChefHat className="w-4 h-4 text-orange-400" />
+                      <span>Cozinha (KDS)</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentView('admin');
+                        setIsDrawerOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-medium transition-colors ${
+                        isDark ? 'text-neutral-300 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-neutral-400" />
+                      <span>Painel Administrativo</span>
+                    </button>
+                  </div>
+                )}
+
                 <div className={`pt-3 border-t space-y-1 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                  <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                    Atalhos da Loja
-                  </p>
-                  <button
-                    onClick={() => {
-                      setCurrentView('kitchen');
-                      setIsDrawerOpen(false);
-                    }}
-                    className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-medium transition-colors ${
-                      isDark ? 'text-neutral-300 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <ChefHat className="w-4 h-4 text-orange-400" />
-                    <span>Cozinha (KDS)</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCurrentView('admin');
-                      setIsDrawerOpen(false);
-                    }}
-                    className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-medium transition-colors ${
-                      isDark ? 'text-neutral-300 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 text-neutral-400" />
-                    <span>Painel Administrativo</span>
-                  </button>
                   <button
                     id="drawer-share-menu-btn"
                     onClick={handleCopyMenuLink}
@@ -594,8 +599,21 @@ export const Header: React.FC = () => {
               </div>
 
               <div className={`pt-4 border-t text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                <p className={`text-[11px] font-medium ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Burger10 Hamburgueria © 2026</p>
+                <p className={`text-[11px] font-medium ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{storeSettings.name} © 2026</p>
                 <p className="text-[10px] text-amber-500 mt-0.5 font-semibold">Feito com muito sabor 🔥</p>
+                {!isAdminAuthenticated && (
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setCurrentView('admin');
+                        setIsDrawerOpen(false);
+                      }}
+                      className="text-[10px] text-neutral-500 hover:text-neutral-400 underline decoration-dotted transition-colors"
+                    >
+                      Acesso Lojista / Admin
+                    </button>
+                  </div>
+                )}
               </div>
             </aside>
           </div>,

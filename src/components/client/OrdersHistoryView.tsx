@@ -5,12 +5,27 @@ import { formatCurrency, getStatusBadgeInfo } from '../../utils/formatters';
 import { Order } from '../../types';
 
 export const OrdersHistoryView: React.FC = () => {
-  const { orders, reorder, setTrackingOrderId, setClientTab, theme } = useStore();
+  const { orders, reorder, setTrackingOrderId, setClientTab, theme, customer, clientOrderIds } = useStore();
   const [filterTab, setFilterTab] = useState<'all' | 'delivered' | 'ongoing' | 'cancelled'>('all');
 
   const isDark = theme === 'dark';
 
-  const filteredOrders = orders.filter((order) => {
+  // Only show orders that were placed by this customer/session (never leak admin demo orders)
+  const myOrders = orders.filter((order) => {
+    return (
+      (clientOrderIds && clientOrderIds.includes(order.id)) ||
+      (customer.id && order.customer && order.customer.id === customer.id) ||
+      (customer.phone && customer.phone.trim() !== '' && order.customer && order.customer.phone === customer.phone) ||
+      (customer.name &&
+        customer.name.trim() !== '' &&
+        customer.name !== 'João Silva' &&
+        order.customer &&
+        order.customer.name &&
+        order.customer.name.toLowerCase() === customer.name.toLowerCase())
+    );
+  });
+
+  const filteredOrders = myOrders.filter((order) => {
     if (filterTab === 'delivered') return order.status === 'delivered';
     if (filterTab === 'ongoing')
       return (
@@ -76,10 +91,12 @@ export const OrdersHistoryView: React.FC = () => {
             📦
           </div>
           <h3 className={`text-base font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Nenhum pedido nesta aba
+            {myOrders.length === 0 ? 'Você ainda não realizou nenhum pedido' : 'Nenhum pedido nesta aba'}
           </h3>
           <p className={`text-xs mb-5 max-w-sm mx-auto leading-relaxed ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
-            Faça seu primeiro pedido no nosso cardápio e saboreie nossos smash e burgers artesanais!
+            {myOrders.length === 0
+              ? 'Seus pedidos aparecerão aqui assim que você finalizar sua primeira compra no cardápio.'
+              : 'Selecione outra aba para visualizar seus pedidos anteriores.'}
           </p>
           <button
             onClick={() => setClientTab('home')}

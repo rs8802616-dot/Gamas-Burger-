@@ -301,12 +301,12 @@ export const INITIAL_DELIVERY_ZONES: DeliveryZone[] = [
 ];
 
 export const INITIAL_SETTINGS: StoreSettings = {
-  name: 'BURGER10',
+  name: "GAMA'S BURGER",
   tagline: 'Hamburgueria Artesanal & Delivery',
   logo: '🍔🔥',
   phone: '(11) 98765-4321',
   whatsapp: '5511987654321',
-  address: 'Rua das Flores, 123 - Centro, São Paulo - SP',
+  address: 'Consulte nosso balcão ou delivery',
   publicStoreUrl: 'https://gamas-burger.vercel.app',
   openingHours: 'Segunda a Domingo das 18:00 às 23:30',
   minOrderValue: 20.00,
@@ -325,223 +325,26 @@ export const INITIAL_SETTINGS: StoreSettings = {
     paperWidth: '80mm',
     autoPrintOnOrder: true,
     printCustomerAddress: true,
-    customFooterText: 'Obrigado pela preferência! Bom apetite! Siga @burger10oficial',
+    customFooterText: "Obrigado pela preferência! Bom apetite! Siga @gamasburger",
   },
   whatsappTemplates: {
-    greeting: 'Olá! 👋 Seja bem-vindo à *BURGER10* 🍔\nConfira nosso cardápio e faça seu pedido direto pelo link:\n{CARDAPIO_LINK}',
+    greeting: "Olá! 👋 Seja bem-vindo à *GAMA'S BURGER* 🍔\nConfira nosso cardápio e faça seu pedido direto pelo link:\n{CARDAPIO_LINK}",
     orderReceived: '✅ *Pedido #{ORDER_NUMBER} recebido!*\nOlá {CUSTOMER_NAME}, já registramos seu pedido no valor de R$ {TOTAL}. Em breve nossa cozinha iniciará o preparo!',
     orderPreparing: '👨‍🍳 *Seu pedido #{ORDER_NUMBER} está em preparação!*\nNossa equipe está caprichando nos seus hambúrgueres artesanais. Tempo estimado: {ESTIMATED_TIME}.',
     orderReady: '📦 *Pedido #{ORDER_NUMBER} pronto!*\nSeu pedido acabou de sair da nossa chapa quentinho!',
     orderOutForDelivery: '🛵 *Pedido #{ORDER_NUMBER} saiu para entrega!*\nO entregador já está a caminho do seu endereço: {ADDRESS}. Fique atento!',
-    orderDelivered: '🎉 *Pedido #{ORDER_NUMBER} entregue!*\nEsperamos que sua experiência com a BURGER10 seja incrível. Bom apetite! ⭐⭐⭐⭐⭐',
+    orderDelivered: "🎉 *Pedido #{ORDER_NUMBER} entregue!*\nEsperamos que sua experiência com a GAMA'S BURGER seja incrível. Bom apetite! ⭐⭐⭐⭐⭐",
   },
 };
 
 export const INITIAL_CUSTOMER: CustomerInfo = {
-  id: 'cust-demo-1',
-  name: 'João Silva',
-  phone: '(11) 99888-7766',
-  email: 'joao.silva@email.com',
-  addresses: [
-    {
-      id: 'addr-1',
-      label: 'Casa',
-      street: 'Rua das Flores',
-      number: '123',
-      complement: 'Apto 42 Bloco B',
-      neighborhood: 'Centro',
-      city: 'São Paulo/SP',
-      zipCode: '01000-000',
-      reference: 'Próximo à praça central',
-    },
-    {
-      id: 'addr-2',
-      label: 'Trabalho',
-      street: 'Av. Paulista',
-      number: '1000',
-      complement: '12º andar',
-      neighborhood: 'Bela Vista',
-      city: 'São Paulo/SP',
-      zipCode: '01310-100',
-    },
-  ],
+  id: '',
+  name: '',
+  phone: '',
+  email: '',
+  addresses: [],
 };
 
-// Initial orders matching the user's reference screenshot (#1045, #1044, #1043, #1042)
-export const INITIAL_ORDERS: Order[] = [
-  {
-    id: 'ord-1045',
-    orderNumber: '1045',
-    createdAt: '02/09/2026 - 14:07',
-    customer: INITIAL_CUSTOMER,
-    items: [
-      {
-        cartItemId: 'item-1045-1',
-        product: INITIAL_PRODUCTS[0], // X-Bacon Especial
-        quantity: 1,
-        selectedAddons: [
-          { addon: INITIAL_ADDONS[0], quantity: 1 }, // Bacon
-          { addon: INITIAL_ADDONS[1], quantity: 1 }, // Queijo
-        ],
-        observation: 'Sem cebola',
-        itemTotalPrice: 37.90,
-      },
-      {
-        cartItemId: 'item-1045-2',
-        product: INITIAL_PRODUCTS[5], // Batata Grande
-        quantity: 1,
-        selectedAddons: [],
-        observation: '',
-        itemTotalPrice: 14.90,
-      },
-      {
-        cartItemId: 'item-1045-3',
-        product: INITIAL_PRODUCTS[7], // Coca-Cola 350ml
-        quantity: 1,
-        selectedAddons: [],
-        observation: '',
-        itemTotalPrice: 6.90,
-      },
-    ],
-    subtotal: 59.70,
-    discount: 0,
-    deliveryFee: 5.00,
-    total: 64.70,
-    deliveryType: 'delivery',
-    address: INITIAL_CUSTOMER.addresses[0],
-    paymentMethod: 'pix',
-    status: 'preparing', // Live active order in preparation
-    estimatedTime: '25 - 35 min',
-    timeline: [
-      { status: 'received', label: 'Pedido recebido', time: '14:07', completed: true },
-      { status: 'preparing', label: 'Em preparação', time: '14:12', completed: true },
-      { status: 'ready', label: 'Pedido pronto', time: '', completed: false },
-      { status: 'out_for_delivery', label: 'Saiu para entrega', time: '', completed: false },
-      { status: 'delivered', label: 'Entregue', time: '', completed: false },
-    ],
-    notes: 'Campainha com defeito, por favor chamar no interfone.',
-    printedCount: 1,
-  },
-  {
-    id: 'ord-1044',
-    orderNumber: '1044',
-    createdAt: '28/08/2026 - 19:30',
-    customer: INITIAL_CUSTOMER,
-    items: [
-      {
-        cartItemId: 'item-1044-1',
-        product: INITIAL_PRODUCTS[2], // X-Salada
-        quantity: 2,
-        selectedAddons: [],
-        observation: 'Um sem tomate',
-        itemTotalPrice: 49.80,
-      },
-      {
-        cartItemId: 'item-1044-2',
-        product: INITIAL_PRODUCTS[5], // Batata Grande
-        quantity: 1,
-        selectedAddons: [],
-        observation: '',
-        itemTotalPrice: 14.90,
-      },
-      {
-        cartItemId: 'item-1044-3',
-        product: INITIAL_PRODUCTS[7], // Coca-Cola
-        quantity: 2,
-        selectedAddons: [],
-        observation: '',
-        itemTotalPrice: 13.80,
-      },
-    ],
-    subtotal: 78.50,
-    discount: 10.00,
-    couponCode: 'BEMVINDO',
-    deliveryFee: 5.00,
-    total: 73.50,
-    deliveryType: 'delivery',
-    address: INITIAL_CUSTOMER.addresses[0],
-    paymentMethod: 'credit_card',
-    status: 'delivered',
-    estimatedTime: 'Entregue',
-    timeline: [
-      { status: 'received', label: 'Pedido recebido', time: '19:30', completed: true },
-      { status: 'preparing', label: 'Em preparação', time: '19:35', completed: true },
-      { status: 'ready', label: 'Pedido pronto', time: '19:55', completed: true },
-      { status: 'out_for_delivery', label: 'Saiu para entrega', time: '20:00', completed: true },
-      { status: 'delivered', label: 'Entregue', time: '20:18', completed: true },
-    ],
-    printedCount: 1,
-  },
-  {
-    id: 'ord-1043',
-    orderNumber: '1043',
-    createdAt: '25/08/2026 - 20:15',
-    customer: INITIAL_CUSTOMER,
-    items: [
-      {
-        cartItemId: 'item-1043-1',
-        product: INITIAL_PRODUCTS[0], // X-Bacon
-        quantity: 1,
-        selectedAddons: [],
-        observation: 'Pão bem tostado',
-        itemTotalPrice: 29.90,
-      },
-      {
-        cartItemId: 'item-1043-2',
-        product: INITIAL_PRODUCTS[5], // Batata
-        quantity: 1,
-        selectedAddons: [],
-        observation: '',
-        itemTotalPrice: 14.90,
-      },
-    ],
-    subtotal: 44.80,
-    discount: 0,
-    deliveryFee: 5.00,
-    total: 49.80,
-    deliveryType: 'delivery',
-    address: INITIAL_CUSTOMER.addresses[0],
-    paymentMethod: 'pix',
-    status: 'delivered',
-    estimatedTime: 'Entregue',
-    timeline: [
-      { status: 'received', label: 'Pedido recebido', time: '20:15', completed: true },
-      { status: 'preparing', label: 'Em preparação', time: '20:18', completed: true },
-      { status: 'ready', label: 'Pedido pronto', time: '20:38', completed: true },
-      { status: 'out_for_delivery', label: 'Saiu para entrega', time: '20:42', completed: true },
-      { status: 'delivered', label: 'Entregue', time: '21:01', completed: true },
-    ],
-    printedCount: 1,
-  },
-  {
-    id: 'ord-1042',
-    orderNumber: '1042',
-    createdAt: '20/08/2026 - 18:42',
-    customer: INITIAL_CUSTOMER,
-    items: [
-      {
-        cartItemId: 'item-1042-1',
-        product: INITIAL_PRODUCTS[1], // Combo Família
-        quantity: 1,
-        selectedAddons: [],
-        observation: 'Carnes bem passadas',
-        itemTotalPrice: 89.90,
-      },
-    ],
-    subtotal: 89.90,
-    discount: 0,
-    deliveryFee: 0,
-    total: 89.90,
-    deliveryType: 'pickup',
-    paymentMethod: 'pix',
-    status: 'delivered',
-    estimatedTime: 'Retirado',
-    timeline: [
-      { status: 'received', label: 'Pedido recebido', time: '18:42', completed: true },
-      { status: 'preparing', label: 'Em preparação', time: '18:47', completed: true },
-      { status: 'ready', label: 'Pronto para retirada', time: '19:10', completed: true },
-      { status: 'delivered', label: 'Retirado', time: '19:22', completed: true },
-    ],
-    printedCount: 1,
-  },
-];
+// Initial orders list (empty in production to prevent data leakage)
+export const INITIAL_ORDERS: Order[] = [];
+

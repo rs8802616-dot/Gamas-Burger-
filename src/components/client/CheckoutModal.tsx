@@ -24,7 +24,7 @@ import {
   buildOrderWhatsAppMessage,
   generateWhatsAppLink,
 } from '../../utils/formatters';
-import { Order } from '../../types';
+import { Order, CustomerAddress } from '../../types';
 
 export const CheckoutModal: React.FC = () => {
   const {
@@ -63,7 +63,9 @@ export const CheckoutModal: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>(
     customer.addresses[0]?.id || ''
   );
-  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(
+    customer.addresses.length === 0
+  );
   const [isChangingAddress, setIsChangingAddress] = useState(false);
   const [newStreet, setNewStreet] = useState('');
   const [newNumber, setNewNumber] = useState('');
@@ -85,31 +87,26 @@ export const CheckoutModal: React.FC = () => {
 
   if (!isCheckoutOpen) return null;
 
-  const currentAddress =
-    customer.addresses.find((a) => a.id === selectedAddressId) || customer.addresses[0] || {
-      id: 'default',
+  const currentAddress: CustomerAddress | null =
+    customer.addresses.find((a) => a.id === selectedAddressId) || customer.addresses[0] || null;
+
+  const handleSaveNewAddress = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStreet.trim() || !newNumber.trim()) return;
+
+    const newAddr: CustomerAddress = {
+      id: `addr-${Date.now()}`,
       label: 'Casa',
-      street: 'Rua das Flores',
-      number: '123',
-      neighborhood: 'Centro',
+      street: newStreet.trim(),
+      number: newNumber.trim(),
+      complement: newComplement.trim(),
+      neighborhood: newNeighborhood.trim(),
       city: 'São Paulo/SP',
       zipCode: '01000-000',
     };
 
-  const handleSaveNewAddress = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newStreet || !newNumber) return;
-
-    addAddress({
-      label: 'Casa',
-      street: newStreet,
-      number: newNumber,
-      complement: newComplement,
-      neighborhood: newNeighborhood,
-      city: 'São Paulo/SP',
-      zipCode: '01000-000',
-    });
-
+    addAddress(newAddr);
+    setSelectedAddressId(newAddr.id);
     setIsAddingNewAddress(false);
     setIsChangingAddress(false);
     setNewStreet('');
@@ -129,10 +126,27 @@ export const CheckoutModal: React.FC = () => {
       return;
     }
 
-    if (deliveryType === 'delivery' && isAddingNewAddress) {
-      if (!newStreet.trim() || !newNumber.trim()) {
-        setFormError('Por favor, preencha o endereço de entrega (Rua e Número).');
-        return;
+    let finalAddress: CustomerAddress | undefined = undefined;
+
+    if (deliveryType === 'delivery') {
+      if (isAddingNewAddress || !currentAddress) {
+        if (!newStreet.trim() || !newNumber.trim()) {
+          setFormError('Por favor, preencha o endereço de entrega (Rua e Número).');
+          return;
+        }
+        finalAddress = {
+          id: `addr-${Date.now()}`,
+          label: 'Casa',
+          street: newStreet.trim(),
+          number: newNumber.trim(),
+          complement: newComplement.trim(),
+          neighborhood: newNeighborhood.trim(),
+          city: 'São Paulo/SP',
+          zipCode: '01000-000',
+        };
+        addAddress(finalAddress);
+      } else {
+        finalAddress = currentAddress;
       }
     }
 
@@ -140,7 +154,7 @@ export const CheckoutModal: React.FC = () => {
 
     const order = placeOrder({
       deliveryType,
-      address: deliveryType === 'delivery' ? currentAddress : undefined,
+      address: finalAddress,
       paymentMethod,
       cashChangeFor: needChange ? Number(changeFor) : undefined,
       notes: orderNotes,
@@ -159,7 +173,7 @@ export const CheckoutModal: React.FC = () => {
     try {
       window.open(link, '_blank');
     } catch {
-      // Browser popup blocker fallback
+      // Handled via modal button
     }
   };
 
@@ -511,7 +525,7 @@ export const CheckoutModal: React.FC = () => {
                 Endereço de Entrega
               </h3>
 
-              {!isAddingNewAddress ? (
+              {!isAddingNewAddress && currentAddress ? (
                 <div
                   className={`border rounded-2xl p-4 space-y-3 ${
                     isDark ? 'bg-[#151518] border-white/5' : 'bg-gray-50 border-gray-200'
