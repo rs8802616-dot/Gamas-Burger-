@@ -196,7 +196,7 @@ const STORAGE_KEYS = {
   ZONES: 'burger10_zones_v1',
   SETTINGS: 'burger10_settings_v1',
   ORDERS: 'burger10_orders_v1',
-  FAVORITES: 'burger10_favorites_v1',
+  FAVORITES: 'gamas_burger_favorites_v2',
   CUSTOMER: 'burger10_customer_v1',
 };
 
@@ -209,10 +209,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  // Check if current URL/hash targets admin route - ONLY applicable if user is authenticated as admin
+  // Check if current URL/hash targets admin route
   const checkIsAdminRoute = () => {
     if (typeof window === 'undefined') return false;
-    // Explicit client override: if url contains view=client, always open client view!
+    // Explicit client override: if url contains view=client or #client or #cardapio, always open client view!
     if (
       window.location.search.includes('view=client') ||
       window.location.hash === '#client' ||
@@ -221,17 +221,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return false;
     }
 
-    // Only allow automatic admin view routing if the user is already authenticated as admin
-    const isAuth = typeof window !== 'undefined' && localStorage.getItem('burger10_admin_auth') === 'true';
-    if (!isAuth) {
-      return false;
-    }
-
     return (
       window.location.pathname.startsWith('/admin') ||
       window.location.hash.startsWith('#/admin') ||
       window.location.hash === '#admin' ||
-      window.location.search.includes('admin')
+      window.location.search.includes('view=admin')
     );
   };
 
@@ -278,14 +272,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     | 'firebase'
   >('dashboard');
 
-  // URL Hash/Route listener: only auto-switch to admin if user is already authenticated
+  // URL Hash/Route listener
   useEffect(() => {
     const handleUrlChange = () => {
       if (checkIsAdminRoute()) {
         setCurrentView('admin');
-      } else if (!isAdminAuthenticated && window.location.hash.includes('admin')) {
-        // Clean accidental #admin out of URL so client doesn't get trapped
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      } else {
         setCurrentView('client');
       }
     };
@@ -295,7 +287,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, [isAdminAuthenticated]);
+  }, []);
 
   const handleSetCurrentView = (view: 'client' | 'kitchen' | 'admin') => {
     setCurrentView(view);
@@ -676,8 +668,38 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isAdminAuthenticated, adminToken, customerId, clientOrderIds, customer.phone, soundEnabled]);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
-    return saved ? JSON.parse(saved) : ['prod-xbacon-especial', 'prod-combo-familia', 'prod-xsalada', 'prod-batata-especial-cheddar-bacon', 'prod-coca-cola-350', 'prod-cheesecake'];
+    try {
+      // Check current v2 storage key
+      const saved = localStorage.getItem(STORAGE_KEYS.FAVORITES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Remove any legacy mock favorites that might have been carried over
+          const legacyMockIds = [
+            'prod-xbacon-especial',
+            'prod-combo-familia',
+            'prod-xsalada',
+            'prod-batata-especial-cheddar-bacon',
+            'prod-coca-cola-350',
+            'prod-cheesecake',
+          ];
+          const isExactLegacyMatch =
+            parsed.length === legacyMockIds.length &&
+            parsed.every((id) => legacyMockIds.includes(id));
+          if (isExactLegacyMatch) {
+            localStorage.removeItem(STORAGE_KEYS.FAVORITES);
+            return [];
+          }
+          return parsed;
+        }
+      }
+      // Also clean old legacy key if it existed
+      localStorage.removeItem('burger10_favorites_v1');
+    } catch {
+      // ignore
+    }
+    // Never pre-populate with mock favorites for any customer!
+    return [];
   });
 
   // Client Cart

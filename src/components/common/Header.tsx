@@ -21,14 +21,10 @@ import {
   Sparkles,
   Sun,
   Moon,
-  Share2,
-  Copy,
-  Check,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { NotificationCenterModal } from '../notifications/NotificationCenterModal';
 import { NotificationService } from '../../services/notificationService';
-import { getCleanClientMenuUrl } from '../../utils/formatters';
 
 export const Header: React.FC = () => {
   const {
@@ -55,18 +51,6 @@ export const Header: React.FC = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [copiedMenuLink, setCopiedMenuLink] = useState(false);
-
-  const handleCopyMenuLink = () => {
-    const cleanUrl = getCleanClientMenuUrl(storeSettings?.publicStoreUrl);
-    try {
-      navigator.clipboard.writeText(cleanUrl);
-      setCopiedMenuLink(true);
-      setTimeout(() => setCopiedMenuLink(false), 2500);
-    } catch {
-      // Fallback
-    }
-  };
 
   useEffect(() => {
     const updateCount = () => {
@@ -532,56 +516,6 @@ export const Header: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Staff / Admin Only shortcuts - hidden from normal customers */}
-                {isAdminAuthenticated && (
-                  <div className={`pt-3 border-t space-y-1 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                    <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                      Área do Lojista
-                    </p>
-                    <button
-                      onClick={() => {
-                        setCurrentView('kitchen');
-                        setIsDrawerOpen(false);
-                      }}
-                      className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-medium transition-colors ${
-                        isDark ? 'text-neutral-300 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
-                    >
-                      <ChefHat className="w-4 h-4 text-orange-400" />
-                      <span>Cozinha (KDS)</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCurrentView('admin');
-                        setIsDrawerOpen(false);
-                      }}
-                      className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-medium transition-colors ${
-                        isDark ? 'text-neutral-300 hover:text-white hover:bg-white/10' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
-                    >
-                      <LayoutDashboard className="w-4 h-4 text-neutral-400" />
-                      <span>Painel Administrativo</span>
-                    </button>
-                  </div>
-                )}
-
-                <div className={`pt-3 border-t space-y-1 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                  <button
-                    id="drawer-share-menu-btn"
-                    onClick={handleCopyMenuLink}
-                    className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-xs font-bold transition-colors ${
-                      copiedMenuLink
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : isDark
-                        ? 'text-amber-400 hover:text-amber-300 hover:bg-white/10'
-                        : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
-                    }`}
-                  >
-                    {copiedMenuLink ? <Check className="w-4 h-4 stroke-[3]" /> : <Share2 className="w-4 h-4 text-amber-500" />}
-                    <span>{copiedMenuLink ? 'Link Limpo Copiado!' : 'Copiar Link para Clientes'}</span>
-                  </button>
-                </div>
-
                 <div className={`pt-4 border-t space-y-2.5 text-xs ${isDark ? 'border-white/10 text-neutral-400' : 'border-gray-200 text-gray-600'}`}>
                   <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -601,19 +535,6 @@ export const Header: React.FC = () => {
               <div className={`pt-4 border-t text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <p className={`text-[11px] font-medium ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{storeSettings.name} © 2026</p>
                 <p className="text-[10px] text-amber-500 mt-0.5 font-semibold">Feito com muito sabor 🔥</p>
-                {!isAdminAuthenticated && (
-                  <div className="pt-2">
-                    <button
-                      onClick={() => {
-                        setCurrentView('admin');
-                        setIsDrawerOpen(false);
-                      }}
-                      className="text-[10px] text-neutral-500 hover:text-neutral-400 underline decoration-dotted transition-colors"
-                    >
-                      Acesso Lojista / Admin
-                    </button>
-                  </div>
-                )}
               </div>
             </aside>
           </div>,
