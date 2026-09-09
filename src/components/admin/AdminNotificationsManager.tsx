@@ -20,7 +20,7 @@ export const AdminNotificationsManager: React.FC = () => {
 
   const [title, setTitle] = useState('🔥 OFERTA ESPECIAL DE HOJE!');
   const [message, setMessage] = useState(
-    'Hoje o Combo Especial Burger10 está com 20% de desconto! 2 Burgers Artesanais + Batata Rústica + 2 Bebidas.'
+    "Hoje o Combo Especial Gama's está com 20% de desconto! 2 Burgers Artesanais + Batata Rústica + 2 Bebidas."
   );
   const [imageUrl, setImageUrl] = useState(
     'https://images.unsplash.com/photo-1550547660-d9450f859349?w=500&auto=format&fit=crop&q=80'
@@ -374,9 +374,9 @@ export const AdminNotificationsManager: React.FC = () => {
             <div className="bg-[#18181c] border border-amber-500/30 rounded-2xl p-3 text-left shadow-lg">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-5 h-5 rounded-md bg-amber-500 text-black font-black text-[9px] flex items-center justify-center">
-                  B10
+                  GB
                 </div>
-                <span className="text-[10px] font-bold text-white/80">BURGER10</span>
+                <span className="text-[10px] font-bold text-white/80">GAMA'S BURGER</span>
                 <span className="text-[9px] text-white/40 ml-auto">Agora</span>
               </div>
 

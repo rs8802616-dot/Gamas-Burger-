@@ -319,7 +319,7 @@ export const AdminCustomersManager: React.FC = () => {
 
                       <a
                         href={`https://wa.me/55${cust.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                          `Olá ${cust.name}! Agradecemos por ser um cliente fiel da Burger10 ❤️ Temos uma surpresa especial para você no nosso app!`
+                          `Olá ${cust.name}! Agradecemos por ser um cliente fiel do Gama's Burger ❤️ Temos uma surpresa especial para você no nosso app!`
                         )}`}
                         target="_blank"
                         rel="noreferrer"

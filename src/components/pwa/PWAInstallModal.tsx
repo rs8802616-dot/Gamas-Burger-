@@ -38,7 +38,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
 
           <h3 className="text-lg font-black text-white mb-1">Como instalar no seu iPhone / iPad</h3>
           <p className="text-xs text-white/60 mb-5">
-            Tenha o cardápio da Burger10 na tela de início sem precisar da App Store:
+            Tenha o cardápio do Gama's Burger na tela de início sem precisar da App Store:
           </p>
 
           <div className="space-y-3 mb-6 text-xs">
@@ -105,7 +105,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
           </div>
           <div className="pr-6">
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 block mb-0.5">
-              {isAfterOrder ? '🍔 Gostou da experiência?' : '📱 Aplicativo Burger10'}
+              {isAfterOrder ? '🍔 Gostou da experiência?' : "📱 Aplicativo Gama's Burger"}
             </span>
             <h4 className="text-sm font-extrabold text-white leading-tight">
               {isAfterOrder

@@ -51,7 +51,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             Progressive Web App
           </span>
           <span className="text-sm font-bold text-white block">
-            Instalar Aplicativo Burger10
+            Instalar Aplicativo Gama's Burger
           </span>
           <span className="text-[11px] text-white/50 block">
             Acesso rápido, notificações e pedidos em 1 toque

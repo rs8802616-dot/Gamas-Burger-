@@ -188,7 +188,7 @@ export const ProfileView: React.FC = () => {
               isDark ? 'bg-[#0A0A0B] border-white/5' : 'bg-gray-50 border-gray-200'
             }`}>
               <div>
-                <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Instalar App Burger10 no Celular</p>
+                <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Instalar App Gama's Burger no Celular</p>
                 <p className={`text-[11px] ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
                   Acesso rápido com 1 toque na tela inicial, sem gastar memória da loja de apps.
                 </p>

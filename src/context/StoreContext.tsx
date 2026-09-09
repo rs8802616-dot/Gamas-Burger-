@@ -201,7 +201,15 @@ const STORAGE_KEYS = {
 };
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Check if current URL/hash targets admin route
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('burger10_admin_auth') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Check if current URL/hash targets admin route - ONLY applicable if user is authenticated as admin
   const checkIsAdminRoute = () => {
     if (typeof window === 'undefined') return false;
     // Explicit client override: if url contains view=client, always open client view!
@@ -212,6 +220,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ) {
       return false;
     }
+
+    // Only allow automatic admin view routing if the user is already authenticated as admin
+    const isAuth = typeof window !== 'undefined' && localStorage.getItem('burger10_admin_auth') === 'true';
+    if (!isAuth) {
+      return false;
+    }
+
     return (
       window.location.pathname.startsWith('/admin') ||
       window.location.hash.startsWith('#/admin') ||
@@ -219,14 +234,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       window.location.search.includes('admin')
     );
   };
-
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('burger10_admin_auth') === 'true';
-    } catch {
-      return false;
-    }
-  });
 
   const [adminToken, setAdminToken] = useState<string>(() => {
     try {
@@ -241,10 +248,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  // Navigation & View States
+  // Navigation & View States: Always default to 'client' for customers
   const [currentView, setCurrentView] = useState<'client' | 'kitchen' | 'admin'>(() => {
     if (checkIsAdminRoute()) {
       return 'admin';
+    }
+    // Clean any accidental #admin or ?admin from the URL if not logged in
+    if (typeof window !== 'undefined' && window.location.hash.includes('admin')) {
+      try {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch {
+        // ignore
+      }
     }
     return 'client';
   });
@@ -263,11 +278,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     | 'firebase'
   >('dashboard');
 
-  // URL Hash/Route listener for strict route separation
+  // URL Hash/Route listener: only auto-switch to admin if user is already authenticated
   useEffect(() => {
     const handleUrlChange = () => {
       if (checkIsAdminRoute()) {
         setCurrentView('admin');
+      } else if (!isAdminAuthenticated && window.location.hash.includes('admin')) {
+        // Clean accidental #admin out of URL so client doesn't get trapped
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        setCurrentView('client');
       }
     };
     window.addEventListener('hashchange', handleUrlChange);
@@ -276,18 +295,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, []);
+  }, [isAdminAuthenticated]);
 
   const handleSetCurrentView = (view: 'client' | 'kitchen' | 'admin') => {
     setCurrentView(view);
     if (typeof window !== 'undefined') {
-      if (view === 'admin' || view === 'kitchen') {
-        if (!window.location.hash.includes('admin') && !window.location.pathname.startsWith('/admin')) {
-          window.location.hash = '#admin';
-        }
-      } else {
+      if (view === 'client') {
         if (window.location.hash.includes('admin')) {
           window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else if (isAdminAuthenticated && (view === 'admin' || view === 'kitchen')) {
+        if (!window.location.hash.includes('admin') && !window.location.pathname.startsWith('/admin')) {
+          window.location.hash = '#admin';
         }
       }
     }

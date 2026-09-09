@@ -384,7 +384,7 @@ export const HomeView: React.FC = () => {
                   <h4 className={`text-xs sm:text-sm font-bold truncate group-hover:text-amber-500 transition-colors ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}>
-                    {product.name.replace(' Especial', '').replace(' Burger10', '').replace(' Gourmet', '')}
+                    {product.name.replace(' Especial', '').replace(' Burger10', '').replace(" Gama's", '').replace(' Gourmet', '')}
                   </h4>
                   <span className="text-xs sm:text-sm font-black text-amber-500 mt-0.5 block">
                     {formatCurrency(product.promoPrice ?? product.price)}

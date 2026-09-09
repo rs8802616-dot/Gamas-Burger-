@@ -61,7 +61,9 @@ export const getCleanClientMenuUrl = (configuredUrl?: string): string => {
     if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
       clean = `https://${clean}`;
     }
-    return clean.replace(/\/+$/, '');
+    // Strip any hash or query parameters (such as #admin)
+    clean = clean.split('#')[0].split('?')[0].replace(/\/+$/, '');
+    return clean || 'https://gamas-burger.vercel.app';
   }
 
   // 2. Check browser environment

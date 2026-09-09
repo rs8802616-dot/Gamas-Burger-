@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Mail, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowLeft, Eye, EyeOff, AlertCircle, X } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 
 interface AdminLoginViewProps {
@@ -9,8 +9,8 @@ interface AdminLoginViewProps {
 
 export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onSuccess, onBackToClient }) => {
   const { adminLogin } = useStore();
-  const [email, setEmail] = useState('rs8802616@gmail.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,8 +32,17 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onSuccess, onBac
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-8 relative">
       <div className="w-full max-w-md bg-[#151518] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        {/* Close / Return button in upper corner */}
+        <button
+          onClick={onBackToClient}
+          title="Fechar e ir para o cardápio"
+          className="absolute right-4 top-4 p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-colors z-10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         {/* Glow accent */}
         <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -43,13 +52,13 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onSuccess, onBac
             <ShieldCheck className="w-7 h-7" />
           </div>
           <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 inline-block mb-2">
-            Área Restrita
+            Área Restrita do Lojista
           </span>
           <h2 className="text-xl font-black text-white tracking-tight">
             Painel do Administrador
           </h2>
           <p className="text-xs text-white/50 mt-1">
-            Autenticação de gerência e operadores Burger10
+            Autenticação restrita da gerência e operadores Gama's Burger
           </p>
         </div>
 
@@ -72,7 +81,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onSuccess, onBac
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu.email@gmail.com"
+                placeholder="seu.email@exemplo.com"
                 className="w-full bg-[#101012] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white placeholder-white/20 focus:outline-none focus:border-amber-500 transition-colors"
               />
             </div>
@@ -111,24 +120,15 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onSuccess, onBac
           </button>
         </form>
 
-        {/* Credentials reminder badge */}
-        <div className="mt-5 p-3 rounded-xl bg-white/5 border border-white/5 text-[11px] text-white/40 text-center">
-          <span className="font-bold text-white/60">Credencial de Administrador:</span>
-          <br />
-          E-mail: <strong className="text-amber-400">rs8802616@gmail.com</strong>
-          <br />
-          Senha padrão: <strong className="text-white/80">admin123</strong>
-        </div>
-
-        {/* Return to client app */}
-        <div className="mt-4 pt-4 border-t border-white/5 text-center">
+        {/* Return to client app button */}
+        <div className="mt-5 pt-4 border-t border-white/5 text-center">
           <button
             type="button"
             onClick={onBackToClient}
-            className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors"
+            className="w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 rounded-xl inline-flex items-center justify-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors border border-white/5"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Voltar ao Cardápio do Cliente</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Voltar ao Cardápio (Sou Cliente)</span>
           </button>
         </div>
       </div>

@@ -41,7 +41,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-combo-familia',
-    name: 'Combo Família Burger10',
+    name: "Combo Família Gama's",
     description: '2 Hambúrgueres artesanais especiais, 1 Porção de batata grande crocante com cheddar e bacon, 2 Refrigerantes 350ml e 1 Sobremesa Cheesecake de Frutas Vermelhas.',
     ingredients: ['2 Hambúrgueres especiais', '1 Batata grande com cheddar e bacon', '2 Refrigerantes 350ml', '1 Cheesecake'],
     price: 89.90,
@@ -223,7 +223,7 @@ export const INITIAL_PRODUCTS: Product[] = [
 export const INITIAL_COMBOS: Combo[] = [
   {
     id: 'combo-1',
-    name: 'Combo Família Burger10',
+    name: "Combo Família Gama's",
     description: '2 Hambúrgueres especiais + 1 Batata grande com cheddar e bacon + 2 Refrigerantes 350ml + 1 Cheesecake.',
     photo: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=1000&q=80',
     originalPrice: 89.90,

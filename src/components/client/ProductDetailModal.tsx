@@ -10,7 +10,7 @@ import {
   Check,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getCleanClientMenuUrl } from '../../utils/formatters';
 import { AddonOption, SelectedAddon } from '../../types';
 
 export const ProductDetailModal: React.FC = () => {
@@ -21,6 +21,7 @@ export const ProductDetailModal: React.FC = () => {
     isFavorite,
     toggleFavorite,
     theme,
+    storeSettings,
   } = useStore();
 
   const isDark = theme === 'dark';
@@ -74,16 +75,17 @@ export const ProductDetailModal: React.FC = () => {
   const currentItemTotalPrice = (basePrice + addonsTotal) * quantity;
 
   const handleShare = () => {
+    const cleanUrl = getCleanClientMenuUrl(storeSettings?.publicStoreUrl);
     if (navigator.share) {
       navigator
         .share({
           title: product.name,
-          text: `Olha esse ${product.name} na Burger10! 🍔`,
-          url: window.location.href,
+          text: `Olha esse ${product.name} no Gama's Burger! 🍔`,
+          url: cleanUrl,
         })
         .catch(() => {});
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(cleanUrl);
       setCopiedShare(true);
       setTimeout(() => setCopiedShare(false), 2000);
     }

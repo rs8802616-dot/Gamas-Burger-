@@ -101,8 +101,8 @@ export const Header: React.FC = () => {
           : 'bg-white/95 border-gray-200 text-gray-900 shadow-sm'
       }`}
     >
-      {/* Staff / Admin Management Bar - ONLY visible when in kitchen or admin view */}
-      {currentView !== 'client' && (
+      {/* Staff / Admin Management Bar - ONLY visible when logged in as admin AND in kitchen or admin view */}
+      {isAdminAuthenticated && currentView !== 'client' && (
         <div
           className={`px-3 sm:px-6 py-2 border-b text-xs flex flex-wrap items-center justify-between gap-2 ${
             isDark ? 'bg-[#101012] border-white/5' : 'bg-gray-100 border-gray-200'
@@ -424,8 +424,8 @@ export const Header: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">🍔</span>
                     <div>
-                      <h3 className={`font-black text-base leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        BURGER10
+                      <h3 className={`font-black text-base leading-tight tracking-wide ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {storeSettings.name || "GAMA'S BURGER"}
                       </h3>
                       <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">
                         Hamburgueria Artesanal

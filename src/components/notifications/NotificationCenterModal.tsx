@@ -93,7 +93,7 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
   const handleSendTestNotification = () => {
     NotificationService.notify({
       title: '🍔 Teste de Notificação: Burger Artesanal',
-      message: 'Notificações funcionando 100%! Aproveite as promoções exclusivas da Burger10.',
+      message: "Notificações funcionando 100%! Aproveite as promoções exclusivas do Gama's Burger.",
       type: 'promo',
       ctaLabel: 'Ver Oferta',
       ctaAction: 'menu',

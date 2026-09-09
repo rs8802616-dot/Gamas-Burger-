@@ -11,7 +11,7 @@ const STORAGE_KEYS = {
 const INITIAL_NOTIFICATIONS: AppNotification[] = [
   {
     id: 'notif-welcome',
-    title: '🍔 Bem-vindo à Burger10!',
+    title: "🍔 Bem-vindo ao Gama's Burger!",
     message: 'Aproveite nosso cardápio artesanal com ingredientes frescos e carnes no ponto certo.',
     type: 'system',
     createdAt: 'Hoje, 19:00',
