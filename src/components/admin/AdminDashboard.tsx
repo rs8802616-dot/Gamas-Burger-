@@ -24,7 +24,6 @@ import {
   ChevronRight,
   Bell,
   Users,
-  Database,
   Copy,
   Share2,
   ExternalLink,
@@ -34,7 +33,6 @@ import { formatCurrency, generateWhatsAppLink, getCleanClientMenuUrl } from '../
 import { Product, Coupon, DeliveryZone, OrderStatus } from '../../types';
 import { AdminNotificationsManager } from './AdminNotificationsManager';
 import { AdminCustomersManager } from './AdminCustomersManager';
-import { AdminFirebaseManager } from './AdminFirebaseManager';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -174,7 +172,7 @@ export const AdminDashboard: React.FC = () => {
       promoPrice: prodPromoPrice ? parseFloat(prodPromoPrice) : undefined,
       description: prodDescription,
       photo: prodPhoto || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
-      ingredients: prodIngredients.split(',').map((s) => s.trim()).filter(Boolean),
+      ingredients: typeof prodIngredients === 'string' ? prodIngredients.split(',').map((s) => s.trim()).filter(Boolean) : [],
       isDailyOffer: prodIsDailyOffer,
       isBestSeller: prodIsBestSeller,
       available: true,
@@ -335,7 +333,6 @@ export const AdminDashboard: React.FC = () => {
           { id: 'notifications', label: 'Notificações', icon: Bell },
           { id: 'customers', label: 'Clientes', icon: Users },
           { id: 'settings', label: 'Configurações', icon: Settings },
-          { id: 'firebase', label: 'Banco Firebase', icon: Database },
         ].map((tab) => {
           const Icon = tab.icon;
           const isSelected = adminTab === tab.id;
@@ -381,7 +378,6 @@ export const AdminDashboard: React.FC = () => {
             { id: 'notifications', label: 'Notificações & Promoções', icon: Bell },
             { id: 'customers', label: 'Clientes & Fidelidade', icon: Users },
             { id: 'settings', label: 'Configurações', icon: Settings },
-            { id: 'firebase', label: 'Banco Firebase', icon: Database },
           ].map((item) => {
             const Icon = item.icon;
             const isSelected = adminTab === item.id;
@@ -1093,9 +1089,6 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 9: CUSTOMERS & FIDELITY (Requirement 33 & 35) */}
       {adminTab === 'customers' && <AdminCustomersManager />}
-
-      {/* TAB 10: FIREBASE DATABASE & CONSOLE (Requirement: rs8802616@gmail.com) */}
-      {adminTab === 'firebase' && <AdminFirebaseManager />}
 
         </div>
       </div>

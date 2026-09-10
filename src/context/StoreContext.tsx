@@ -47,8 +47,7 @@ interface StoreContextType {
     | 'delivery'
     | 'notifications'
     | 'customers'
-    | 'settings'
-    | 'firebase';
+    | 'settings';
   setAdminTab: (
     tab:
       | 'dashboard'
@@ -60,7 +59,6 @@ interface StoreContextType {
       | 'notifications'
       | 'customers'
       | 'settings'
-      | 'firebase'
   ) => void;
   isAdminAuthenticated: boolean;
   adminLogin: (email: string, pass: string) => { success: boolean; message: string };
@@ -201,20 +199,81 @@ const STORAGE_KEYS = {
   CUSTOMER: 'burger10_customer_v1',
 };
 
-// Helper to safely merge orders without ever dropping existing/in-flight orders
+// Status hierarchy priority to prevent polling race condition regressions
+const STATUS_RANK: Record<string, number> = {
+  received: 10,
+  preparing: 20,
+  ready: 30,
+  out_for_delivery: 40,
+  delivered: 50,
+  cancelled: 60,
+};
+
+// Helper to safely merge orders without ever dropping existing/in-flight orders or regressing status
 export const mergeOrders = (prev: Order[], incoming: Order[]): Order[] => {
   const map = new Map<string, Order>();
   const blacklist = ['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'];
-  prev.forEach((o) => {
-    if (o && o.id && !blacklist.includes(o.id)) {
-      map.set(o.id, o);
+
+  const sanitizeOrder = (o: Order): Order => {
+    const cust = o.customer;
+    return {
+      ...o,
+      createdAt: o.createdAt || new Date().toLocaleDateString('pt-BR'),
+      customer: cust
+        ? {
+            id: cust.id || `cust-${Date.now()}`,
+            name: cust.name || 'Cliente',
+            phone: cust.phone || '',
+            email: cust.email || '',
+            addresses: Array.isArray(cust.addresses) ? cust.addresses : [],
+            allowPromotionalNotifications: cust.allowPromotionalNotifications,
+            isPWAInstalled: cust.isPWAInstalled,
+          }
+        : {
+            id: `cust-${Date.now()}`,
+            name: 'Cliente',
+            phone: '',
+            email: '',
+            addresses: [],
+          },
+      items: Array.isArray(o.items) ? o.items : [],
+      timeline: Array.isArray(o.timeline) ? o.timeline : [],
+    };
+  };
+
+  prev.forEach((raw) => {
+    if (raw && raw.id && !blacklist.includes(raw.id)) {
+      map.set(raw.id, sanitizeOrder(raw));
     }
   });
-  incoming.forEach((o) => {
-    if (o && o.id && !blacklist.includes(o.id)) {
+  incoming.forEach((raw) => {
+    if (raw && raw.id && !blacklist.includes(raw.id)) {
+      const o = sanitizeOrder(raw);
       const existing = map.get(o.id);
       if (existing) {
-        map.set(o.id, { ...existing, ...o });
+        const existingRank = STATUS_RANK[existing.status] || 0;
+        const incomingRank = STATUS_RANK[o.status] || 0;
+
+        const existingTime = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+        const incomingTime = o.updatedAt ? new Date(o.updatedAt).getTime() : 0;
+        const isIncomingNewer = incomingTime > existingTime;
+
+        let finalStatus = existing.status;
+        let finalTimeline = existing.timeline;
+
+        // Advance status if incoming is higher or genuinely newer; never regress backwards
+        if (incomingRank >= existingRank || isIncomingNewer) {
+          finalStatus = o.status;
+          finalTimeline = o.timeline && o.timeline.length > 0 ? o.timeline : existing.timeline;
+        }
+
+        map.set(o.id, {
+          ...existing,
+          ...o,
+          status: finalStatus,
+          timeline: finalTimeline,
+          updatedAt: isIncomingNewer ? o.updatedAt : existing.updatedAt,
+        });
       } else {
         map.set(o.id, o);
       }
@@ -294,7 +353,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     | 'notifications'
     | 'customers'
     | 'settings'
-    | 'firebase'
   >('dashboard');
 
   // URL Hash/Route listener
@@ -577,8 +635,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // 1. Check cloud orders in Firestore directly
         if (firebaseService.isConfigured()) {
           const cloudOrders = await firebaseService.getOrdersOnce();
-          if (cloudOrders.length > 0) {
-            setOrders((prev) => mergeOrders(prev, cloudOrders));
+          if (Array.isArray(cloudOrders)) {
+            if (cloudOrders.length > 0) {
+              setOrders((prev) => mergeOrders(prev, cloudOrders));
+            }
             setIsServerConnected(true);
           }
         }
@@ -611,21 +671,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (firebaseService.isConfigured()) {
           const cloudOrders = await firebaseService.getOrdersOnce();
-          if (cloudOrders.length > 0) {
-            const myOrders = cloudOrders.filter((o) => {
-              if (storedIds.includes(o.id)) return true;
-              if (customerId && o.customer?.id === customerId) return true;
-              if (
-                phoneDigits &&
-                o.customer?.phone &&
-                o.customer.phone.replace(/\D/g, '').includes(phoneDigits)
-              )
-                return true;
-              return false;
-            });
-            if (myOrders.length > 0) {
-              setOrders((prev) => mergeOrders(prev, myOrders));
-              setIsServerConnected(true);
+          if (Array.isArray(cloudOrders)) {
+            setIsServerConnected(true);
+            if (cloudOrders.length > 0) {
+              const myOrders = cloudOrders.filter((o) => {
+                if (storedIds.includes(o.id)) return true;
+                if (customerId && o.customer?.id === customerId) return true;
+                if (
+                  phoneDigits &&
+                  o.customer?.phone &&
+                  o.customer.phone.replace(/\D/g, '').includes(phoneDigits)
+                )
+                  return true;
+                return false;
+              });
+              if (myOrders.length > 0) {
+                setOrders((prev) => mergeOrders(prev, myOrders));
+              }
             }
           }
         }
@@ -712,7 +774,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       };
       eventSource.onerror = () => {
-        if (isMounted) setIsServerConnected(false);
+        if (isMounted && !firebaseService.isConfigured()) {
+          setIsServerConnected(false);
+        }
       };
     } catch {
       // SSE unsupported fallback
@@ -1028,10 +1092,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Determine sequential order number
     const existingNums = orders
-      .map((o) => parseInt(o.orderNumber, 10))
+      .map((o) => parseInt(String(o.orderNumber), 10))
       .filter((n) => !isNaN(n));
-    const maxOrderNum = existingNums.length > 0 ? Math.max(...existingNums) : 1045;
-    const orderNumber = String(maxOrderNum + 1);
+    let lastSaved = 1045;
+    try {
+      const raw = localStorage.getItem('gamas_last_order_num');
+      if (raw) {
+        const parsed = parseInt(raw, 10);
+        if (!isNaN(parsed) && parsed > lastSaved) lastSaved = parsed;
+      }
+    } catch {}
+    const maxOrderNum = Math.max(existingNums.length > 0 ? Math.max(...existingNums) : 1045, lastSaved);
+    const nextOrderNum = maxOrderNum + 1;
+    try {
+      localStorage.setItem('gamas_last_order_num', String(nextOrderNum));
+    } catch {}
+    const orderNumber = String(nextOrderNum);
     const uniqueOrderId = `ord-${orderNumber}-${Date.now()}`;
 
     const newOrder: Order = {
@@ -1089,7 +1165,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newOrder),
-    }).catch((err) => console.warn('Sync order to server:', err));
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && data.order && data.order.orderNumber) {
+          const serverNum = String(data.order.orderNumber);
+          try {
+            localStorage.setItem('gamas_last_order_num', serverNum);
+          } catch {}
+          if (serverNum !== orderNumber) {
+            const renumbered: Order = { ...newOrder, orderNumber: serverNum };
+            setOrders((prev) =>
+              prev.map((o) => (o.id === newOrder.id ? renumbered : o))
+            );
+            firebaseService.saveOrder(renumbered);
+          }
+        }
+      })
+      .catch((err) => console.warn('Sync order to server:', err));
 
     clearCart();
     setTrackingOrderId(newOrder.id);
@@ -1123,54 +1216,79 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Update order status (Kitchen or Admin)
   const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-    let orderToUpdate: Order | null = null;
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
+    const updatedAt = now.toISOString();
 
-    setOrders((prev) =>
-      prev.map((order) => {
+    // Prepare updated order synchronously from existing state
+    const currentOrder = orders.find((o) => o.id === orderId);
+    let targetOrder: Order | null = null;
+
+    if (currentOrder) {
+      const updatedTimeline = (currentOrder.timeline || []).map((evt) => {
+        if (evt.status === newStatus) {
+          return { ...evt, completed: true, time: evt.time || timeStr };
+        }
+        return evt;
+      });
+
+      targetOrder = {
+        ...currentOrder,
+        status: newStatus,
+        timeline: updatedTimeline,
+        updatedAt,
+      };
+    }
+
+    setOrders((prev) => {
+      const next = prev.map((order) => {
         if (order.id === orderId) {
-          const now = new Date();
-          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(
-            now.getMinutes()
-          ).padStart(2, '0')}`;
-
-          const updatedTimeline = order.timeline.map((evt) => {
+          const updatedTimeline = (order.timeline || []).map((evt) => {
             if (evt.status === newStatus) {
-              return { ...evt, completed: true, time: timeStr };
+              return { ...evt, completed: true, time: evt.time || timeStr };
             }
             return evt;
           });
-
-          const updatedOrder: Order = {
+          const updated: Order = {
             ...order,
             status: newStatus,
             timeline: updatedTimeline,
+            updatedAt,
           };
-
-          orderToUpdate = updatedOrder;
-          return updatedOrder;
+          if (!targetOrder) targetOrder = updated;
+          return updated;
         }
         return order;
-      })
-    );
+      });
 
-    // Trigger Push / In-App Notification and database save outside of the setOrders state updater
-    if (orderToUpdate) {
-      NotificationService.triggerOrderStatusNotification(orderToUpdate, newStatus);
-      firebaseService.saveOrder(orderToUpdate);
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(next));
+      } catch {}
+
+      return next;
+    });
+
+    const finalOrder = targetOrder || currentOrder;
+    if (finalOrder) {
+      const payloadOrder: Order = {
+        ...finalOrder,
+        status: newStatus,
+        updatedAt,
+      };
+
+      // Trigger Push / In-App Notification and database save
+      NotificationService.triggerOrderStatusNotification(payloadOrder, newStatus);
+      firebaseService.saveOrder(payloadOrder);
 
       // Sync status change in real-time to server so customer's cell phone updates live
-      const tokenToSend =
-        adminToken ||
-        (isAdminAuthenticated
-          ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}`
-          : 'admin-token-cnM4ODAyNjE2QGdtYWlsLmNvbTphZG1pbjEyMw==');
       fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(tokenToSend ? { Authorization: `Bearer ${tokenToSend}` } : {}),
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, updatedAt }),
       }).catch((err) => console.warn('Sync status to server:', err));
     }
   };
@@ -1368,7 +1486,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       now.getMinutes()
     ).padStart(2, '0')}`;
 
-    const orderNumber = String(1050 + orders.length + Math.floor(Math.random() * 10));
+    const existingNums = orders
+      .map((o) => parseInt(String(o.orderNumber), 10))
+      .filter((n) => !isNaN(n));
+    let lastSaved = 1045;
+    try {
+      const raw = localStorage.getItem('gamas_last_order_num');
+      if (raw) {
+        const parsed = parseInt(raw, 10);
+        if (!isNaN(parsed) && parsed > lastSaved) lastSaved = parsed;
+      }
+    } catch {}
+    const maxOrderNum = Math.max(existingNums.length > 0 ? Math.max(...existingNums) : 1045, lastSaved);
+    const nextOrderNum = maxOrderNum + 1;
+    try {
+      localStorage.setItem('gamas_last_order_num', String(nextOrderNum));
+    } catch {}
+    const orderNumber = String(nextOrderNum);
 
     const simulatedOrder: Order = {
       id: `ord-${orderNumber}-${Date.now().toString().slice(-4)}`,

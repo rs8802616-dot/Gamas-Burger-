@@ -44,14 +44,14 @@ export function getOrderTimestamp(order: { id?: string; createdAt?: string; upda
     const t = new Date(order.updatedAt).getTime();
     if (!isNaN(t)) return t;
   }
-  if (order.id) {
+  if (typeof order.id === 'string' && order.id.includes('-')) {
     const parts = order.id.split('-');
     const lastPart = Number(parts[parts.length - 1]);
     if (!isNaN(lastPart) && lastPart > 1600000000000) {
       return lastPart;
     }
   }
-  if (order.createdAt) {
+  if (typeof order.createdAt === 'string' && order.createdAt) {
     const t = new Date(order.createdAt).getTime();
     if (!isNaN(t)) return t;
     const match = order.createdAt.match(/(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}):(\d{2})/);

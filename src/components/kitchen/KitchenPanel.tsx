@@ -107,22 +107,28 @@ export const KitchenPanel: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-white/50 mt-0.5 font-medium">
-                Cliente: <span className="text-white font-bold">{order.customer.name}</span>
+                Cliente: <span className="text-white font-bold">{order.customer?.name || 'Cliente'}</span>
               </p>
             </div>
 
             <div className="text-right">
               <div className="flex items-center gap-1 text-xs text-white/40">
                 <Clock className="w-3 h-3 text-amber-500" />
-                <span>{order.createdAt.split('-')[1]?.trim() || order.createdAt}</span>
+                <span>
+                  {order.createdAt
+                    ? order.createdAt.includes('-')
+                      ? order.createdAt.split('-')[1]?.trim() || order.createdAt
+                      : order.createdAt
+                    : 'Agora'}
+                </span>
               </div>
-              <span className="text-[11px] font-bold text-amber-500">{order.estimatedTime}</span>
+              <span className="text-[11px] font-bold text-amber-500">{order.estimatedTime || '30-40 min'}</span>
             </div>
           </div>
 
           {/* Items & Ingredients & Observations */}
           <div className="py-3.5 space-y-3">
-            {order.items.map((item, idx) => (
+            {(order.items || []).map((item, idx) => (
               <div
                 key={idx}
                 className="bg-[#0A0A0B] rounded-2xl p-3.5 border border-white/5 space-y-1.5"
@@ -132,7 +138,7 @@ export const KitchenPanel: React.FC = () => {
                     <span className="w-6 h-6 rounded-lg bg-amber-500 text-black flex items-center justify-center text-xs font-black shrink-0">
                       {item.quantity}x
                     </span>
-                    <span>{item.product.name}</span>
+                    <span>{item.product?.name || 'Item'}</span>
                   </div>
                 </div>
 

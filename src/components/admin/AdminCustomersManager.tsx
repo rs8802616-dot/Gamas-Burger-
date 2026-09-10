@@ -112,7 +112,9 @@ export const AdminCustomersManager: React.FC = () => {
   });
 
   const handleGrantCustomCoupon = (customer: CustomerRecord) => {
-    const code = `VIP-${customer.name.split(' ')[0].toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`;
+    const rawName = customer.name ? customer.name.trim() : 'CLIENTE';
+    const firstWord = rawName.split(' ')[0] || 'CLIENTE';
+    const code = `VIP-${firstWord.toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`;
     addCoupon({
       code,
       discountType: 'percentage',

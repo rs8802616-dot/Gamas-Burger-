@@ -57,9 +57,19 @@ try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       // Discard any residual demo/test orders from previous builds
-      memoryOrders = parsed.filter(
-        (o: any) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
-      );
+      memoryOrders = parsed
+        .filter(
+          (o: any) =>
+            o &&
+            o.id &&
+            !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id) &&
+            !o.id.startsWith('ord-test-')
+        )
+        .map((o: any) => ({
+          ...o,
+          createdAt: o.createdAt || new Date().toLocaleString('pt-BR'),
+          updatedAt: o.updatedAt || new Date().toISOString(),
+        }));
     } else {
       memoryOrders = [];
     }
@@ -246,9 +256,9 @@ app.get('/api/orders/stream', (req: Request, res: Response) => {
         token.length >= 40)
   );
 
-  const customerId = (req.query.customerId as string) || undefined;
-  const orderIdsRaw = (req.query.orderIds as string) || '';
-  const orderIds = new Set<string>(orderIdsRaw.split(',').map((id) => id.trim()).filter(Boolean));
+  const customerId = typeof req.query.customerId === 'string' ? req.query.customerId : undefined;
+  const orderIdsRaw = typeof req.query.orderIds === 'string' ? req.query.orderIds : '';
+  const orderIds = new Set<string>(orderIdsRaw ? orderIdsRaw.split(',').map((id) => id.trim()).filter(Boolean) : []);
 
   const clientConn: SSEClientConnection = {
     res,
@@ -368,8 +378,33 @@ app.post('/api/orders', (req: Request, res: Response) => {
       orderData.customer.id = `cust-${Date.now()}`;
     }
 
-    // Check if order already exists
+    // Check if order already exists in server memory
     const existingIndex = memoryOrders.findIndex((o) => o.id === orderData.id);
+
+    // Calculate highest sequential order number
+    const existingNums = memoryOrders
+      .map((o) => parseInt(String(o.orderNumber), 10))
+      .filter((n) => !isNaN(n));
+    const highestNum = existingNums.length > 0 ? Math.max(...existingNums) : 1045;
+
+    // Check if incoming order number is missing or already taken by a different order
+    const isNumTakenByOther = memoryOrders.some(
+      (o) => o.id !== orderData.id && String(o.orderNumber) === String(orderData.orderNumber)
+    );
+
+    if (!orderData.orderNumber || isNumTakenByOther) {
+      orderData.orderNumber = String(highestNum + 1);
+    }
+
+    if (!orderData.createdAt) {
+      const now = new Date();
+      orderData.createdAt = `${now.toLocaleDateString('pt-BR')} - ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+
+    if (!orderData.updatedAt) {
+      orderData.updatedAt = new Date().toISOString();
+    }
+
     if (existingIndex !== -1) {
       memoryOrders[existingIndex] = { ...memoryOrders[existingIndex], ...orderData };
     } else {
@@ -402,11 +437,17 @@ app.post('/api/orders', (req: Request, res: Response) => {
   }
 });
 
-// PATCH order status (Protected - kitchen or admin only)
-app.patch('/api/orders/:id/status', requireAdminAuth, (req: Request, res: Response) => {
+// PATCH order status (Accessible by Kitchen Panel or Admin)
+app.patch('/api/orders/:id/status', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, updatedAt } = req.body;
+
+    const validStatuses = ['received', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      res.status(400).json({ success: false, message: 'Status de pedido inválido' });
+      return;
+    }
 
     const orderIndex = memoryOrders.findIndex((o) => o.id === id);
     if (orderIndex === -1) {
@@ -416,6 +457,7 @@ app.patch('/api/orders/:id/status', requireAdminAuth, (req: Request, res: Respon
 
     const order = memoryOrders[orderIndex];
     order.status = status;
+    order.updatedAt = updatedAt || new Date().toISOString();
 
     // Update timeline
     if (order.timeline && Array.isArray(order.timeline)) {
@@ -430,7 +472,7 @@ app.patch('/api/orders/:id/status', requireAdminAuth, (req: Request, res: Respon
 
     saveOrdersToDisk();
 
-    // Broadcast status change
+    // Broadcast status change in real time via SSE
     notifySSEClients({
       type: 'status_updated',
       orderId: id,

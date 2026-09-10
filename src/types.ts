@@ -153,6 +153,7 @@ export interface Order {
   timeline: OrderTimelineEvent[];
   notes?: string;
   printedCount?: number;
+  updatedAt?: string;
 }
 
 export interface DeliveryZone {

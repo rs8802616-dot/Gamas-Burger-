@@ -56,13 +56,13 @@ export const formatPhoneNumber = (value: string): string => {
 
 export const getCleanClientMenuUrl = (configuredUrl?: string): string => {
   // 1. If configured in Store Settings, use the custom public URL
-  if (configuredUrl && configuredUrl.trim()) {
+  if (configuredUrl && typeof configuredUrl === 'string' && configuredUrl.trim()) {
     let clean = configuredUrl.trim();
     if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
       clean = `https://${clean}`;
     }
     // Strip any hash or query parameters (such as #admin)
-    clean = clean.split('#')[0].split('?')[0].replace(/\/+$/, '');
+    clean = (clean.split('#')[0] || '').split('?')[0].replace(/\/+$/, '');
     return clean || 'https://gamas-burger.vercel.app';
   }
 
