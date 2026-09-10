@@ -30,7 +30,7 @@ import {
 } from '../data/initialData';
 import { playOrderNotificationSound } from '../utils/formatters';
 import { NotificationService } from '../services/notificationService';
-import { firebaseService } from '../services/firebase';
+import { firebaseService, getOrderTimestamp } from '../services/firebase';
 
 interface StoreContextType {
   // Navigation & UI State
@@ -200,6 +200,30 @@ const STORAGE_KEYS = {
   CUSTOMER: 'burger10_customer_v1',
 };
 
+// Helper to safely merge orders without ever dropping existing/in-flight orders
+export const mergeOrders = (prev: Order[], incoming: Order[]): Order[] => {
+  const map = new Map<string, Order>();
+  const blacklist = ['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'];
+  prev.forEach((o) => {
+    if (o && o.id && !blacklist.includes(o.id)) {
+      map.set(o.id, o);
+    }
+  });
+  incoming.forEach((o) => {
+    if (o && o.id && !blacklist.includes(o.id)) {
+      const existing = map.get(o.id);
+      if (existing) {
+        map.set(o.id, { ...existing, ...o });
+      } else {
+        map.set(o.id, o);
+      }
+    }
+  });
+  const list = Array.from(map.values());
+  list.sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a));
+  return list;
+};
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     try {
@@ -367,7 +391,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // ignore
     }
-    setOrders([]);
+    // Restore client orders from storage rather than wiping out the state
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
+      setOrders(saved ? JSON.parse(saved) : []);
+    } catch {
+      setOrders([]);
+    }
     handleSetCurrentView('client');
   };
 
@@ -549,49 +579,71 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fetchOrders = async () => {
       try {
         if (isAdminAuthenticated) {
-          // Admin sees all orders from protected endpoint
+          // 1. Check cloud orders in Firestore directly first
+          if (firebaseService.isConfigured()) {
+            const cloudOrders = await firebaseService.getOrdersOnce();
+            if (cloudOrders.length > 0 && isMounted) {
+              setOrders((prev) => mergeOrders(prev, cloudOrders));
+              setIsServerConnected(true);
+            }
+          }
+
+          // 2. Admin queries protected endpoint on local server if available
           const res = await fetch('/api/admin/orders', {
             headers: {
               Authorization: `Bearer ${tokenToSend}`,
             },
-          });
-          if (res.ok) {
+          }).catch(() => null);
+
+          if (res && res.ok) {
             const data = await res.json();
             if (data && data.success && Array.isArray(data.orders) && isMounted) {
               const clean = data.orders.filter(
                 (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
               );
-              setOrders(clean);
+              setOrders((prev) => mergeOrders(prev, clean));
               setIsServerConnected(true);
             }
           }
         } else {
-          // Client only gets their own orders
+          // 1. Client checks cloud orders in Firestore directly first
           const storedIdsRaw = localStorage.getItem('gamas_client_order_ids');
           const storedIds: string[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : clientOrderIds;
-          const phone = customer.phone ? customer.phone.replace(/\D/g, '') : '';
+          const phoneDigits = customer.phone ? customer.phone.replace(/\D/g, '') : '';
 
-          if (storedIds.length === 0 && !phone) {
-            if (isMounted) {
-              setOrders([]);
-              setIsServerConnected(true);
+          if (firebaseService.isConfigured()) {
+            const cloudOrders = await firebaseService.getOrdersOnce();
+            if (cloudOrders.length > 0 && isMounted) {
+              const myOrders = cloudOrders.filter((o) => {
+                if (storedIds.includes(o.id)) return true;
+                if (customerId && o.customer?.id === customerId) return true;
+                if (phoneDigits && o.customer?.phone && o.customer.phone.replace(/\D/g, '').includes(phoneDigits)) return true;
+                return false;
+              });
+              if (myOrders.length > 0) {
+                setOrders((prev) => mergeOrders(prev, myOrders));
+                setIsServerConnected(true);
+              }
             }
+          }
+
+          if (storedIds.length === 0 && !phoneDigits) {
             return;
           }
 
           const params = new URLSearchParams();
           if (customerId) params.set('customerId', customerId);
           if (storedIds.length > 0) params.set('orderIds', storedIds.join(','));
-          if (phone) params.set('phone', phone);
+          if (phoneDigits) params.set('phone', phoneDigits);
 
-          const res = await fetch(`/api/orders?${params.toString()}`);
-          if (res.ok) {
+          const res = await fetch(`/api/orders?${params.toString()}`).catch(() => null);
+          if (res && res.ok) {
             const data = await res.json();
             if (data && data.success && Array.isArray(data.orders) && isMounted) {
               const clean = data.orders.filter(
                 (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
               );
-              setOrders(clean);
+              setOrders((prev) => mergeOrders(prev, clean));
               setIsServerConnected(true);
             }
           }
@@ -625,10 +677,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
 
             setOrders((prev) => {
-              if (prev.some((o) => o.id === data.order.id)) return prev;
-              if (soundEnabled) playOrderNotificationSound();
+              const hasOrder = prev.some((o) => o.id === data.order.id);
+              if (soundEnabled && !hasOrder) playOrderNotificationSound();
               NotificationService.triggerOrderStatusNotification(data.order, 'received');
-              return [data.order, ...prev];
+              return mergeOrders(prev, [data.order]);
             });
           } else if (data.type === 'status_updated' && data.order) {
             if (!isAdminAuthenticated) {
@@ -669,20 +721,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               if (hasNew && soundEnabled && prev.length > 0) {
                 playOrderNotificationSound();
               }
-              return cloudOrders;
+              return mergeOrders(prev, cloudOrders);
             });
           } else {
             // Client only gets their own orders
             const storedIdsRaw = localStorage.getItem('gamas_client_order_ids');
             const storedIds: string[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : clientOrderIds;
-            const phone = customer.phone ? customer.phone.replace(/\D/g, '') : '';
+            const phoneDigits = customer.phone ? customer.phone.replace(/\D/g, '') : '';
             const myOrders = cloudOrders.filter((o) => {
               if (storedIds.includes(o.id)) return true;
               if (customerId && o.customer?.id === customerId) return true;
-              if (phone && o.customer?.phone?.replace(/\D/g, '') === phone) return true;
+              if (phoneDigits && o.customer?.phone && o.customer.phone.replace(/\D/g, '').includes(phoneDigits)) return true;
               return false;
             });
-            setOrders(myOrders);
+            setOrders((prev) => mergeOrders(prev, myOrders));
           }
         });
       } catch (err) {
@@ -1002,7 +1054,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       printedCount: 0,
     };
 
-    setOrders((prev) => [newOrder, ...prev]);
+    setOrders((prev) => mergeOrders([newOrder], prev));
+    try {
+      const existingRaw = localStorage.getItem(STORAGE_KEYS.ORDERS);
+      const existing: Order[] = existingRaw ? JSON.parse(existingRaw) : [];
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mergeOrders([newOrder], existing)));
+    } catch {}
     firebaseService.saveOrder(newOrder);
 
     // Sync in real-time to server so burger shop PC receives the order immediately

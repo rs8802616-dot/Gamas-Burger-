@@ -24,6 +24,45 @@ export interface FirebaseConfig {
 const STORAGE_FIREBASE_KEY = 'burger10_firebase_config_v1';
 export const FIRESTORE_DATABASE_ID = 'ai-studio-burger10hamburgu-4b29e9f0-35a5-41ae-bed6-04d17f62a254';
 
+// Helper to remove undefined fields recursively so Firestore setDoc never throws
+export function sanitizeForFirestore<T>(obj: T): T {
+  if (obj === undefined) return null as any;
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map((item) => sanitizeForFirestore(item)) as any;
+  const cleaned: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = sanitizeForFirestore(value);
+    }
+  }
+  return cleaned as T;
+}
+
+// Parse Brazilian DD/MM/YYYY - HH:mm or ISO date into numerical timestamp safely
+export function getOrderTimestamp(order: { id?: string; createdAt?: string; updatedAt?: string }): number {
+  if (order.updatedAt) {
+    const t = new Date(order.updatedAt).getTime();
+    if (!isNaN(t)) return t;
+  }
+  if (order.id) {
+    const parts = order.id.split('-');
+    const lastPart = Number(parts[parts.length - 1]);
+    if (!isNaN(lastPart) && lastPart > 1600000000000) {
+      return lastPart;
+    }
+  }
+  if (order.createdAt) {
+    const t = new Date(order.createdAt).getTime();
+    if (!isNaN(t)) return t;
+    const match = order.createdAt.match(/(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}):(\d{2})/);
+    if (match) {
+      const [, d, m, y, h, min] = match;
+      return new Date(Number(y), Number(m) - 1, Number(d), Number(h), Number(min)).getTime();
+    }
+  }
+  return 0;
+}
+
 // Provisioned Firestore configuration for GAMA'S BURGER
 export const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = {
   apiKey: 'AIzaSyBn5KizMavPb911Xo7ClR0lMi9gfzK3LCc',
@@ -169,8 +208,8 @@ class FirebaseService {
             }
           });
 
-          // Sort orders chronologically descending
-          fetched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          // Sort orders chronologically descending using robust parser
+          fetched.sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a));
           callback(fetched);
           this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
           this.notifyListeners();
@@ -183,6 +222,29 @@ class FirebaseService {
     } catch (error) {
       console.warn('Could not establish Firestore orders listener:', error);
       return () => {};
+    }
+  }
+
+  // Fetch all orders once from Firestore directly
+  public async getOrdersOnce(): Promise<Order[]> {
+    if (!this.isConfigured() || !this.db) {
+      return [];
+    }
+    try {
+      const ordersCol = collection(this.db, 'pedidos');
+      const snapshot = await getDocs(ordersCol);
+      const fetched: Order[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data && data.id) {
+          fetched.push(data as Order);
+        }
+      });
+      fetched.sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a));
+      return fetched;
+    } catch (error) {
+      console.warn('Error fetching orders from Firestore:', error);
+      return [];
     }
   }
 
@@ -200,12 +262,12 @@ class FirebaseService {
       const pingRef = doc(this.db, '_system_health', 'ping');
       await setDoc(
         pingRef,
-        {
+        sanitizeForFirestore({
           timestamp: new Date().toISOString(),
           account: this.config.ownerEmail,
           status: 'online',
           app: 'Burger10',
-        },
+        }),
         { merge: true }
       );
 
@@ -231,11 +293,12 @@ class FirebaseService {
     try {
       if (this.db) {
         const orderRef = doc(this.db, 'pedidos', order.id);
-        await setDoc(orderRef, {
+        const sanitized = sanitizeForFirestore({
           ...order,
           updatedAt: new Date().toISOString(),
           ownerAccount: this.config.ownerEmail,
         });
+        await setDoc(orderRef, sanitized);
       }
       this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
       this.notifyListeners();
@@ -252,11 +315,12 @@ class FirebaseService {
       if (this.db) {
         for (const product of products) {
           const prodRef = doc(this.db, 'produtos', product.id);
-          await setDoc(prodRef, {
+          const sanitized = sanitizeForFirestore({
             ...product,
             updatedAt: new Date().toISOString(),
             ownerAccount: this.config.ownerEmail,
           });
+          await setDoc(prodRef, sanitized);
         }
       }
       this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
@@ -273,11 +337,12 @@ class FirebaseService {
     try {
       if (this.db) {
         const settingsRef = doc(this.db, 'configuracoes', 'geral');
-        await setDoc(settingsRef, {
+        const sanitized = sanitizeForFirestore({
           ...settings,
           updatedAt: new Date().toISOString(),
           ownerAccount: this.config.ownerEmail,
         });
+        await setDoc(settingsRef, sanitized);
       }
       this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
       this.notifyListeners();

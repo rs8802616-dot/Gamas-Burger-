@@ -579,97 +579,113 @@ export const AdminDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {orders
-                    .filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter))
-                    .map((order) => (
-                      <tr key={order.id} className="hover:bg-[#202024]/40 transition-colors">
-                        <td className="p-4 font-black text-white whitespace-nowrap">
-                          #{order.orderNumber}
-                          <span className="block text-[10px] text-white/40 font-normal">
-                            {order.createdAt}
-                          </span>
-                        </td>
+                  {orders.filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter)).length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-10 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <ShoppingBag className="w-10 h-10 text-white/20" />
+                          <p className="text-sm font-bold text-white/70">
+                            Nenhum pedido encontrado {orderFilter !== 'all' ? `com status "${orderFilter}"` : ''}
+                          </p>
+                          <p className="text-xs text-white/40">
+                            Assim que os clientes realizarem novos pedidos, eles aparecerão aqui em tempo real.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    orders
+                      .filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter))
+                      .map((order) => (
+                        <tr key={order.id} className="hover:bg-[#202024]/40 transition-colors">
+                          <td className="p-4 font-black text-white whitespace-nowrap">
+                            #{order.orderNumber}
+                            <span className="block text-[10px] text-white/40 font-normal">
+                              {order.createdAt}
+                            </span>
+                          </td>
 
-                        <td className="p-4">
-                          <span className="font-bold text-white block">{order.customer.name}</span>
-                          <span className="text-[11px] text-white/40">{order.customer.phone}</span>
-                        </td>
+                          <td className="p-4">
+                            <span className="font-bold text-white block">{order.customer.name}</span>
+                            <span className="text-[11px] text-white/40">{order.customer.phone}</span>
+                          </td>
 
-                        <td className="p-4 max-w-[200px]">
-                          <span className="text-white/80 font-medium block truncate">
-                            {order.items
-                              .map((i) => `${i.quantity}x ${i.product.name}`)
-                              .join(', ')}
-                          </span>
-                        </td>
+                          <td className="p-4 max-w-[200px]">
+                            <span className="text-white/80 font-medium block truncate">
+                              {order.items
+                                .map((i) => `${i.quantity}x ${i.product.name}`)
+                                .join(', ')}
+                            </span>
+                          </td>
 
-                        <td className="p-4 whitespace-nowrap">
-                          <span className="font-black text-amber-500 block">
-                            {formatCurrency(order.total)}
-                          </span>
-                          <span className="text-[10px] uppercase text-white/40 font-bold">
-                            {order.paymentMethod}
-                          </span>
-                        </td>
+                          <td className="p-4 whitespace-nowrap">
+                            <span className="font-black text-amber-500 block">
+                              {formatCurrency(order.total)}
+                            </span>
+                            <span className="text-[10px] uppercase text-white/40 font-bold">
+                              {order.paymentMethod}
+                            </span>
+                          </td>
 
-                        <td className="p-4 whitespace-nowrap">
-                          <span
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                              order.deliveryType === 'delivery'
-                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            }`}
-                          >
-                            {order.deliveryType === 'delivery' ? '🛵 Entrega' : '🏪 Retirada'}
-                          </span>
-                        </td>
-
-                        <td className="p-4 whitespace-nowrap">
-                          <select
-                            value={order.status}
-                            onChange={(e) =>
-                              updateOrderStatus(order.id, e.target.value as OrderStatus)
-                            }
-                            className="bg-[#0A0A0B] border border-white/5 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-amber-500"
-                          >
-                            <option value="received">Recebido</option>
-                            <option value="preparing">Preparando</option>
-                            <option value="ready">Pronto</option>
-                            <option value="out_for_delivery">Saiu p/ entrega</option>
-                            <option value="delivered">Entregue</option>
-                            <option value="cancelled">Cancelado</option>
-                          </select>
-                        </td>
-
-                        <td className="p-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* WhatsApp alert */}
-                            <button
-                              onClick={() => {
-                                const msg = `Olá, ${order.customer.name}! Seu pedido #${order.orderNumber} na ${storeSettings.name} está ${order.status}.`;
-                                window.open(
-                                  generateWhatsAppLink(order.customer.phone, msg),
-                                  '_blank'
-                                );
-                              }}
-                              title="Enviar WhatsApp"
-                              className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
+                          <td className="p-4 whitespace-nowrap">
+                            <span
+                              className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                                order.deliveryType === 'delivery'
+                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              }`}
                             >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                            </button>
+                              {order.deliveryType === 'delivery' ? '🛵 Entrega' : '🏪 Retirada'}
+                            </span>
+                          </td>
 
-                            {/* Print */}
-                            <button
-                              onClick={() => printThermalReceipt(order)}
-                              title="Imprimir comanda térmica"
-                              className="p-2 rounded-xl bg-[#0A0A0B] text-white/50 hover:text-white border border-white/5 transition-colors"
+                          <td className="p-4 whitespace-nowrap">
+                            <select
+                              value={order.status}
+                              onChange={(e) =>
+                                updateOrderStatus(order.id, e.target.value as OrderStatus)
+                              }
+                              className="bg-[#0A0A0B] border border-white/5 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-amber-500"
                             >
-                              <Printer className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              <option value="received">Recebido</option>
+                              <option value="preparing">Preparando</option>
+                              <option value="ready">Pronto</option>
+                              <option value="out_for_delivery">Saiu p/ entrega</option>
+                              <option value="delivered">Entregue</option>
+                              <option value="cancelled">Cancelado</option>
+                            </select>
+                          </td>
+
+                          <td className="p-4 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-2">
+                              {/* WhatsApp alert */}
+                              <button
+                                onClick={() => {
+                                  const msg = `Olá, ${order.customer.name}! Seu pedido #${order.orderNumber} na ${storeSettings.name} está ${order.status}.`;
+                                  window.open(
+                                    generateWhatsAppLink(order.customer.phone, msg),
+                                    '_blank'
+                                  );
+                                }}
+                                title="Enviar WhatsApp"
+                                className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* Print */}
+                              <button
+                                onClick={() => printThermalReceipt(order)}
+                                title="Imprimir comanda térmica"
+                                className="p-2 rounded-xl bg-[#0A0A0B] text-white/50 hover:text-white border border-white/5 transition-colors"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
                 </tbody>
               </table>
             </div>
