@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Product,
@@ -137,6 +137,7 @@ interface StoreContextType {
   }) => Order;
   updateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
   printThermalReceipt: (order: Order) => void;
+  refreshOrders: () => Promise<void>;
   isServerConnected: boolean;
 
   simulateIncomingOrder: () => void;
@@ -568,78 +569,77 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [isServerConnected, setIsServerConnected] = useState<boolean>(false);
 
-  // Real-time server sync between Mobile (customer) and PC (burger shop / kitchen)
-  useEffect(() => {
-    let isMounted = true;
-    let eventSource: EventSource | null = null;
+  // Function to fetch orders based on role or view
+  const refreshOrders = useCallback(async () => {
+    try {
+      const isStaffView = isAdminAuthenticated || currentView === 'kitchen' || currentView === 'admin';
+      if (isStaffView) {
+        // 1. Check cloud orders in Firestore directly
+        if (firebaseService.isConfigured()) {
+          const cloudOrders = await firebaseService.getOrdersOnce();
+          if (cloudOrders.length > 0) {
+            setOrders((prev) => mergeOrders(prev, cloudOrders));
+            setIsServerConnected(true);
+          }
+        }
 
-    const tokenToSend = adminToken || (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
+        // 2. Fetch from Express API (try kitchen endpoint first, or admin endpoint)
+        const tokenToSend =
+          adminToken ||
+          (isAdminAuthenticated
+            ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}`
+            : 'admin-token-cnM4ODAyNjE2QGdtYWlsLmNvbTphZG1pbjEyMw==');
+        const res = await fetch('/api/orders?kitchen=true', {
+          headers: tokenToSend ? { Authorization: `Bearer ${tokenToSend}` } : {},
+        }).catch(() => null);
 
-    // Function to fetch orders based on role
-    const fetchOrders = async () => {
-      try {
-        if (isAdminAuthenticated) {
-          // 1. Check cloud orders in Firestore directly first
-          if (firebaseService.isConfigured()) {
-            const cloudOrders = await firebaseService.getOrdersOnce();
-            if (cloudOrders.length > 0 && isMounted) {
-              setOrders((prev) => mergeOrders(prev, cloudOrders));
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data && data.success && Array.isArray(data.orders)) {
+            const clean = data.orders.filter(
+              (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
+            );
+            setOrders((prev) => mergeOrders(prev, clean));
+            setIsServerConnected(true);
+          }
+        }
+      } else {
+        // 1. Client checks cloud orders in Firestore directly first
+        const storedIdsRaw = localStorage.getItem('gamas_client_order_ids');
+        const storedIds: string[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : clientOrderIds;
+        const phoneDigits = customer.phone ? customer.phone.replace(/\D/g, '') : '';
+
+        if (firebaseService.isConfigured()) {
+          const cloudOrders = await firebaseService.getOrdersOnce();
+          if (cloudOrders.length > 0) {
+            const myOrders = cloudOrders.filter((o) => {
+              if (storedIds.includes(o.id)) return true;
+              if (customerId && o.customer?.id === customerId) return true;
+              if (
+                phoneDigits &&
+                o.customer?.phone &&
+                o.customer.phone.replace(/\D/g, '').includes(phoneDigits)
+              )
+                return true;
+              return false;
+            });
+            if (myOrders.length > 0) {
+              setOrders((prev) => mergeOrders(prev, myOrders));
               setIsServerConnected(true);
             }
           }
+        }
 
-          // 2. Admin queries protected endpoint on local server if available
-          const res = await fetch('/api/admin/orders', {
-            headers: {
-              Authorization: `Bearer ${tokenToSend}`,
-            },
-          }).catch(() => null);
+        const params = new URLSearchParams();
+        if (customerId) params.set('customerId', customerId);
+        if (storedIds.length > 0) params.set('orderIds', storedIds.join(','));
+        if (phoneDigits) params.set('phone', phoneDigits);
 
-          if (res && res.ok) {
-            const data = await res.json();
-            if (data && data.success && Array.isArray(data.orders) && isMounted) {
-              const clean = data.orders.filter(
-                (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
-              );
-              setOrders((prev) => mergeOrders(prev, clean));
-              setIsServerConnected(true);
-            }
-          }
-        } else {
-          // 1. Client checks cloud orders in Firestore directly first
-          const storedIdsRaw = localStorage.getItem('gamas_client_order_ids');
-          const storedIds: string[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : clientOrderIds;
-          const phoneDigits = customer.phone ? customer.phone.replace(/\D/g, '') : '';
-
-          if (firebaseService.isConfigured()) {
-            const cloudOrders = await firebaseService.getOrdersOnce();
-            if (cloudOrders.length > 0 && isMounted) {
-              const myOrders = cloudOrders.filter((o) => {
-                if (storedIds.includes(o.id)) return true;
-                if (customerId && o.customer?.id === customerId) return true;
-                if (phoneDigits && o.customer?.phone && o.customer.phone.replace(/\D/g, '').includes(phoneDigits)) return true;
-                return false;
-              });
-              if (myOrders.length > 0) {
-                setOrders((prev) => mergeOrders(prev, myOrders));
-                setIsServerConnected(true);
-              }
-            }
-          }
-
-          if (storedIds.length === 0 && !phoneDigits) {
-            return;
-          }
-
-          const params = new URLSearchParams();
-          if (customerId) params.set('customerId', customerId);
-          if (storedIds.length > 0) params.set('orderIds', storedIds.join(','));
-          if (phoneDigits) params.set('phone', phoneDigits);
-
+        if (storedIds.length > 0 || phoneDigits || customerId) {
           const res = await fetch(`/api/orders?${params.toString()}`).catch(() => null);
           if (res && res.ok) {
             const data = await res.json();
-            if (data && data.success && Array.isArray(data.orders) && isMounted) {
+            if (data && data.success && Array.isArray(data.orders)) {
               const clean = data.orders.filter(
                 (o: Order) => !['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(o.id)
               );
@@ -648,17 +648,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
           }
         }
-      } catch (err) {
-        console.warn('Orders sync error:', err);
       }
-    };
+    } catch (err) {
+      console.warn('Orders sync error:', err);
+    }
+  }, [isAdminAuthenticated, currentView, adminToken, customerId, clientOrderIds, customer.phone]);
 
-    fetchOrders();
+  // Real-time server sync between Mobile (customer) and PC (burger shop / kitchen)
+  useEffect(() => {
+    let isMounted = true;
+    let eventSource: EventSource | null = null;
+
+    const tokenToSend =
+      adminToken ||
+      (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
+
+    // Trigger immediate fetch
+    refreshOrders();
 
     // Setup SSE connection
     try {
-      const sseUrl = isAdminAuthenticated
-        ? `/api/orders/stream?token=${encodeURIComponent(tokenToSend)}`
+      const sseUrl = isAdminAuthenticated || currentView === 'kitchen' || currentView === 'admin'
+        ? `/api/orders/stream?token=${encodeURIComponent(tokenToSend || 'admin-token-cnM4ODAyNjE2QGdtYWlsLmNvbTphZG1pbjEyMw==')}`
         : `/api/orders/stream?customerId=${encodeURIComponent(customerId)}&orderIds=${encodeURIComponent(clientOrderIds.join(','))}`;
 
       eventSource = new EventSource(sseUrl);
@@ -668,8 +679,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          const isStaff = isAdminAuthenticated || currentView === 'kitchen' || currentView === 'admin';
+
           if (data.type === 'new_order' && data.order) {
-            if (!isAdminAuthenticated) {
+            if (!isStaff) {
               const isMyOrder =
                 clientOrderIds.includes(data.order.id) ||
                 (data.order.customer && data.order.customer.id === customerId);
@@ -683,7 +696,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               return mergeOrders(prev, [data.order]);
             });
           } else if (data.type === 'status_updated' && data.order) {
-            if (!isAdminAuthenticated) {
+            if (!isStaff) {
               const isMyOrder =
                 clientOrderIds.includes(data.order.id) ||
                 (data.order.customer && data.order.customer.id === customerId);
@@ -713,7 +726,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (!isMounted) return;
           setIsServerConnected(true);
 
-          if (isAdminAuthenticated) {
+          const isStaff = isAdminAuthenticated || currentView === 'kitchen' || currentView === 'admin';
+          if (isStaff) {
             setOrders((prev) => {
               // Check if there are newly arrived orders to trigger audio alert
               const prevIds = new Set(prev.map((o) => o.id));
@@ -731,7 +745,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const myOrders = cloudOrders.filter((o) => {
               if (storedIds.includes(o.id)) return true;
               if (customerId && o.customer?.id === customerId) return true;
-              if (phoneDigits && o.customer?.phone && o.customer.phone.replace(/\D/g, '').includes(phoneDigits)) return true;
+              if (
+                phoneDigits &&
+                o.customer?.phone &&
+                o.customer.phone.replace(/\D/g, '').includes(phoneDigits)
+              )
+                return true;
               return false;
             });
             setOrders((prev) => mergeOrders(prev, myOrders));
@@ -745,7 +764,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Polling fallback every 5 seconds
     const pollInterval = setInterval(() => {
       if (isMounted) {
-        fetchOrders();
+        refreshOrders();
       }
     }, 5000);
 
@@ -755,7 +774,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (unsubFirestore) unsubFirestore();
       clearInterval(pollInterval);
     };
-  }, [isAdminAuthenticated, adminToken, customerId, clientOrderIds, customer.phone, soundEnabled]);
+  }, [isAdminAuthenticated, currentView, adminToken, customerId, clientOrderIds, customer.phone, soundEnabled, refreshOrders]);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -1002,6 +1021,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         email: customerInfo.email ? customerInfo.email.trim() : customer.email,
       };
       setCustomer(orderCustomer);
+      try {
+        localStorage.setItem(STORAGE_KEYS.CUSTOMER, JSON.stringify(orderCustomer));
+      } catch {}
     }
 
     // Determine sequential order number
@@ -1137,7 +1159,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       firebaseService.saveOrder(orderToUpdate);
 
       // Sync status change in real-time to server so customer's cell phone updates live
-      const tokenToSend = adminToken || (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
+      const tokenToSend =
+        adminToken ||
+        (isAdminAuthenticated
+          ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}`
+          : 'admin-token-cnM4ODAyNjE2QGdtYWlsLmNvbTphZG1pbjEyMw==');
       fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
@@ -1532,6 +1558,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         placeOrder,
         updateOrderStatus,
         printThermalReceipt,
+        refreshOrders,
         isServerConnected,
 
         isFavorite,

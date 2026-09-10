@@ -291,6 +291,9 @@ class FirebaseService {
   // Save order to Firestore collection 'pedidos'
   public async saveOrder(order: Order): Promise<boolean> {
     try {
+      if (!this.db) {
+        this.initialize();
+      }
       if (this.db) {
         const orderRef = doc(this.db, 'pedidos', order.id);
         const sanitized = sanitizeForFirestore({

@@ -26,9 +26,17 @@ export const KitchenPanel: React.FC = () => {
     simulateIncomingOrder,
     storeSettings,
     isServerConnected,
+    refreshOrders,
   } = useStore();
 
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshOrders();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   // Group active orders for KDS
   const receivedOrders = orders.filter((o) => o.status === 'received');
@@ -255,6 +263,16 @@ export const KitchenPanel: React.FC = () => {
 
         {/* Quick Toolbar Controls */}
         <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold border border-white/10 bg-[#0A0A0B] text-white hover:border-amber-500/40 transition-colors active:scale-95"
+            title="Sincronizar pedidos com a nuvem e o servidor local"
+          >
+            <RefreshCw className={`w-4 h-4 text-amber-500 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Sincronizar</span>
+          </button>
+
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold border transition-colors ${

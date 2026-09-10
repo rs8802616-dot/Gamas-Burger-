@@ -1,29 +1,88 @@
 import React, { useState } from 'react';
-import { RotateCcw, Clock, ArrowRight, CheckCircle, Package } from 'lucide-react';
+import { RotateCcw, Clock, ArrowRight, CheckCircle, Package, RefreshCw } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { formatCurrency, getStatusBadgeInfo } from '../../utils/formatters';
 import { Order } from '../../types';
 
 export const OrdersHistoryView: React.FC = () => {
-  const { orders, reorder, setTrackingOrderId, setClientTab, theme, customer, clientOrderIds } = useStore();
+  const {
+    orders,
+    reorder,
+    setTrackingOrderId,
+    setClientTab,
+    theme,
+    customer,
+    clientOrderIds,
+    isAdminAuthenticated,
+    trackingOrderId,
+    refreshOrders,
+  } = useStore();
   const [filterTab, setFilterTab] = useState<'all' | 'delivered' | 'ongoing' | 'cancelled'>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isDark = theme === 'dark';
 
-  // Only show orders that were placed by this customer/session (never leak admin demo orders)
+  const localClientOrderIds = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem('gamas_client_order_ids');
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const cleanPhone = (customer.phone || '').replace(/\D/g, '');
+  const cleanCustomerName = (customer.name || '').trim().toLowerCase();
+
+  // Show orders placed by this customer or in this session
   const myOrders = orders.filter((order) => {
-    return (
-      (clientOrderIds && clientOrderIds.includes(order.id)) ||
-      (customer.id && order.customer && order.customer.id === customer.id) ||
-      (customer.phone && customer.phone.trim() !== '' && order.customer && order.customer.phone === customer.phone) ||
-      (customer.name &&
-        customer.name.trim() !== '' &&
-        customer.name !== 'João Silva' &&
-        order.customer &&
-        order.customer.name &&
-        order.customer.name.toLowerCase() === customer.name.toLowerCase())
-    );
+    // If tracking this exact order
+    if (trackingOrderId && order.id === trackingOrderId) return true;
+
+    // Direct ID match from state or localStorage
+    if (clientOrderIds?.includes(order.id) || localClientOrderIds.includes(order.id)) return true;
+
+    // Customer ID match
+    if (customer.id && order.customer?.id === customer.id) return true;
+
+    // Phone match (digits only, flexible)
+    if (cleanPhone && order.customer?.phone) {
+      const orderPhoneClean = order.customer.phone.replace(/\D/g, '');
+      if (
+        orderPhoneClean &&
+        (orderPhoneClean === cleanPhone ||
+          orderPhoneClean.endsWith(cleanPhone) ||
+          cleanPhone.endsWith(orderPhoneClean))
+      ) {
+        return true;
+      }
+    }
+
+    // Name match if user has set a non-empty name
+    if (
+      cleanCustomerName &&
+      order.customer?.name &&
+      order.customer.name.trim().toLowerCase() === cleanCustomerName
+    ) {
+      return true;
+    }
+
+    // If not logged in as admin, any real order currently in client state was scoped for this client
+    if (!isAdminAuthenticated) {
+      // Exclude legacy template demo seed orders
+      if (!['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(order.id)) {
+        return true;
+      }
+    }
+
+    return false;
   });
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshOrders();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   const filteredOrders = myOrders.filter((order) => {
     if (filterTab === 'delivered') return order.status === 'delivered';
@@ -40,14 +99,29 @@ export const OrdersHistoryView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-28">
-      {/* Title */}
-      <div>
-        <h2 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          Meus Pedidos
-        </h2>
-        <p className={`text-xs mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
-          Acompanhe pedidos em andamento ou repita seus favoritos com um toque
-        </p>
+      {/* Title & Refresh Button */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Meus Pedidos
+          </h2>
+          <p className={`text-xs mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+            Acompanhe pedidos em andamento ou repita seus favoritos com um toque
+          </p>
+        </div>
+        <button
+          onClick={handleManualRefresh}
+          disabled={isRefreshing}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all active:scale-95 ${
+            isDark
+              ? 'bg-[#151518] border-white/10 text-white hover:border-amber-500/40'
+              : 'bg-white border-gray-200 text-gray-700 hover:border-amber-400 shadow-sm'
+          }`}
+          title="Atualizar lista de pedidos"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-amber-500 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Atualizar</span>
+        </button>
       </div>
 
       {/* Filter Tabs */}
@@ -98,12 +172,26 @@ export const OrdersHistoryView: React.FC = () => {
               ? 'Seus pedidos aparecerão aqui assim que você finalizar sua primeira compra no cardápio.'
               : 'Selecione outra aba para visualizar seus pedidos anteriores.'}
           </p>
-          <button
-            onClick={() => setClientTab('home')}
-            className="bg-amber-500 hover:bg-amber-400 text-black font-black px-6 py-3 rounded-2xl text-xs uppercase tracking-wider shadow-md active:scale-95 transition-transform"
-          >
-            Ver Cardápio
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={() => setClientTab('home')}
+              className="bg-amber-500 hover:bg-amber-400 text-black font-black px-6 py-3 rounded-2xl text-xs uppercase tracking-wider shadow-md active:scale-95 transition-transform"
+            >
+              Ver Cardápio
+            </button>
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className={`flex items-center gap-2 font-bold px-6 py-3 rounded-2xl text-xs uppercase tracking-wider border active:scale-95 transition-transform ${
+                isDark
+                  ? 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                  : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-amber-500 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Atualizar Pedidos</span>
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

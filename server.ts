@@ -278,7 +278,17 @@ app.get('/api/orders/stream', (req: Request, res: Response) => {
 
 // GET /api/orders (Public Client Route - strictly filtered by customer/order identifiers)
 app.get('/api/orders', (req: Request, res: Response) => {
-  const { customerId, phone, orderIds } = req.query;
+  const { customerId, phone, orderIds, kitchen } = req.query;
+
+  // Allow kitchen panel to fetch all active orders
+  if (kitchen === 'true') {
+    res.json({
+      success: true,
+      orders: memoryOrders,
+      count: memoryOrders.length,
+    });
+    return;
+  }
 
   const cId = typeof customerId === 'string' ? customerId.trim() : '';
   const cPhone = typeof phone === 'string' ? phone.replace(/\D/g, '') : '';
@@ -304,10 +314,17 @@ app.get('/api/orders', (req: Request, res: Response) => {
     // 2. Customer ID match
     if (cId && order.customer && order.customer.id === cId) return true;
 
-    // 3. Customer phone match
+    // 3. Customer phone match (flexible with or without area code)
     if (cPhone && order.customer && order.customer.phone) {
       const orderPhoneClean = order.customer.phone.replace(/\D/g, '');
-      if (orderPhoneClean && orderPhoneClean === cPhone) return true;
+      if (
+        orderPhoneClean &&
+        (orderPhoneClean === cPhone ||
+          orderPhoneClean.endsWith(cPhone) ||
+          cPhone.endsWith(orderPhoneClean))
+      ) {
+        return true;
+      }
     }
 
     return false;

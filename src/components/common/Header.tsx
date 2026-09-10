@@ -85,8 +85,8 @@ export const Header: React.FC = () => {
           : 'bg-white/95 border-gray-200 text-gray-900 shadow-sm'
       }`}
     >
-      {/* Staff / Admin Management Bar - ONLY visible when logged in as admin AND in kitchen or admin view */}
-      {isAdminAuthenticated && currentView !== 'client' && (
+      {/* Staff / Admin Management Bar - visible whenever logged in as admin */}
+      {isAdminAuthenticated && (
         <div
           className={`px-3 sm:px-6 py-2 border-b text-xs flex flex-wrap items-center justify-between gap-2 ${
             isDark ? 'bg-[#101012] border-white/5' : 'bg-gray-100 border-gray-200'
@@ -272,6 +272,25 @@ export const Header: React.FC = () => {
                   }`}
                 >
                   Favoritos
+                </button>
+                <button
+                  onClick={() => setCurrentView('kitchen')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 ${
+                    currentView === 'kitchen'
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : isDark
+                      ? 'text-orange-400 hover:text-white hover:bg-orange-500/20'
+                      : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
+                  }`}
+                  title="Acessar o Painel da Cozinha (KDS)"
+                >
+                  <ChefHat className="w-3.5 h-3.5" />
+                  <span>Cozinha</span>
+                  {kitchenPendingCount > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                      {kitchenPendingCount}
+                    </span>
+                  )}
                 </button>
               </nav>
             )}
@@ -513,6 +532,52 @@ export const Header: React.FC = () => {
                   >
                     <User className="w-4 h-4 text-amber-500" />
                     <span>Meu Perfil</span>
+                  </button>
+                </div>
+
+                {/* Hamburgueria Management Section */}
+                <div className={`pt-3 border-t space-y-1.5 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-500 px-3">
+                    Área da Hamburgueria
+                  </p>
+                  <button
+                    onClick={() => {
+                      setCurrentView('kitchen');
+                      setIsDrawerOpen(false);
+                    }}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                      currentView === 'kitchen'
+                        ? 'bg-orange-500 text-white font-bold'
+                        : isDark
+                        ? 'hover:bg-white/10 text-white'
+                        : 'hover:bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ChefHat className="w-4 h-4 text-orange-500" />
+                      <span>Cozinha (KDS Pedidos)</span>
+                    </div>
+                    {kitchenPendingCount > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                        {kitchenPendingCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentView('admin');
+                      setIsDrawerOpen(false);
+                    }}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                      currentView === 'admin'
+                        ? 'bg-amber-500 text-black font-bold'
+                        : isDark
+                        ? 'hover:bg-white/10 text-white'
+                        : 'hover:bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-amber-500" />
+                    <span>Painel da Hamburgueria (Admin)</span>
                   </button>
                 </div>
 
