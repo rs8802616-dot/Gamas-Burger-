@@ -653,6 +653,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // SSE unsupported fallback
     }
 
+    // Setup Firestore real-time listener if cloud is configured
+    let unsubFirestore: (() => void) | null = null;
+    if (firebaseService.isConfigured()) {
+      try {
+        unsubFirestore = firebaseService.listenToOrders((cloudOrders) => {
+          if (!isMounted) return;
+          setIsServerConnected(true);
+
+          if (isAdminAuthenticated) {
+            setOrders((prev) => {
+              // Check if there are newly arrived orders to trigger audio alert
+              const prevIds = new Set(prev.map((o) => o.id));
+              const hasNew = cloudOrders.some((o) => !prevIds.has(o.id));
+              if (hasNew && soundEnabled && prev.length > 0) {
+                playOrderNotificationSound();
+              }
+              return cloudOrders;
+            });
+          } else {
+            // Client only gets their own orders
+            const storedIdsRaw = localStorage.getItem('gamas_client_order_ids');
+            const storedIds: string[] = storedIdsRaw ? JSON.parse(storedIdsRaw) : clientOrderIds;
+            const phone = customer.phone ? customer.phone.replace(/\D/g, '') : '';
+            const myOrders = cloudOrders.filter((o) => {
+              if (storedIds.includes(o.id)) return true;
+              if (customerId && o.customer?.id === customerId) return true;
+              if (phone && o.customer?.phone?.replace(/\D/g, '') === phone) return true;
+              return false;
+            });
+            setOrders(myOrders);
+          }
+        });
+      } catch (err) {
+        console.warn('Firebase real-time listener init notice:', err);
+      }
+    }
+
     // Polling fallback every 5 seconds
     const pollInterval = setInterval(() => {
       if (isMounted) {
@@ -663,6 +700,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       isMounted = false;
       if (eventSource) eventSource.close();
+      if (unsubFirestore) unsubFirestore();
       clearInterval(pollInterval);
     };
   }, [isAdminAuthenticated, adminToken, customerId, clientOrderIds, customer.phone, soundEnabled]);

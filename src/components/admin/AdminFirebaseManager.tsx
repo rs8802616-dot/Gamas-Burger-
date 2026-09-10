@@ -116,16 +116,25 @@ export const AdminFirebaseManager: React.FC = () => {
                 <h2 className="text-xl font-black text-white tracking-tight">
                   Banco de Dados Firebase Console
                 </h2>
-                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Conectado à Conta
-                </span>
+                {syncStatus.connected ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Conectado à Nuvem Firestore
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    Nuvem Desconectada (Chaves Pendentes)
+                  </span>
+                )}
               </div>
               <p className="text-xs text-amber-400 font-mono mt-1 font-bold">
                 Proprietário: {config.ownerEmail}
               </p>
               <p className="text-xs text-white/50 mt-0.5">
-                Sincronização em tempo real de pedidos, produtos, clientes e configurações no Firestore.
+                {syncStatus.connected
+                  ? 'Sincronização em tempo real ativa entre celulares dos clientes e o painel da loja via Firestore.'
+                  : 'Para sincronizar pedidos em tempo real na Vercel (celular do cliente até seu computador), configure suas chaves do Firebase abaixo.'}
               </p>
             </div>
           </div>
@@ -206,7 +215,9 @@ export const AdminFirebaseManager: React.FC = () => {
             <Server className="w-4 h-4 text-emerald-400" />
           </div>
           <p className="text-sm font-black text-white truncate">{syncStatus.lastSync}</p>
-          <span className="text-[10px] text-emerald-400 font-medium">Firestore Online</span>
+          <span className={`text-[10px] font-medium ${syncStatus.connected ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {syncStatus.connected ? 'Firestore Online' : 'Memória Local'}
+          </span>
         </div>
       </div>
 
@@ -253,6 +264,20 @@ export const AdminFirebaseManager: React.FC = () => {
                   value={config.projectId}
                   onChange={(e) => setConfig({ ...config, projectId: e.target.value })}
                   className="w-full bg-[#101012] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono disabled:opacity-75 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-white/50 uppercase tracking-wider mb-1">
+                  ID do Banco Firestore (databaseId)
+                </label>
+                <input
+                  type="text"
+                  disabled={!isEditing}
+                  value={config.databaseId || ''}
+                  onChange={(e) => setConfig({ ...config, databaseId: e.target.value })}
+                  placeholder="ai-studio-burger10hamburgu-..."
+                  className="w-full bg-[#101012] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-amber-300 font-mono disabled:opacity-75 focus:outline-none focus:border-amber-500"
                 />
               </div>
 

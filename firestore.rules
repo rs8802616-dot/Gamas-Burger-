@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Orders collection: public create for clients, read and update for restaurant operations
+    match /pedidos/{orderId} {
+      allow read, write: if true;
+    }
+    // Products & categories: read public, write allowed
+    match /produtos/{productId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    // Settings: read public, write allowed
+    match /configuracoes/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    // Fallback
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

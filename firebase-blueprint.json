@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "Customer orders made in the burger shop",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "status": { "type": "string" },
+        "total": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "discount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "orderNumber", "status", "total"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Menu products and burgers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "available": { "type": "boolean" }
+      },
+      "required": ["id", "name", "price", "category"]
+    },
+    "StoreSettings": {
+      "title": "StoreSettings",
+      "description": "Store configuration and business hours",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "isOpen": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/pedidos/{orderId}": {
+      "schema": "Order",
+      "description": "Real-time restaurant orders collection"
+    },
+    "/produtos/{productId}": {
+      "schema": "Product",
+      "description": "Menu products collection"
+    },
+    "/configuracoes/{settingId}": {
+      "schema": "StoreSettings",
+      "description": "Global store settings"
+    }
+  }
+}
