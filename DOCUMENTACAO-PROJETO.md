@@ -30,6 +30,9 @@
 | **2.6** | Chave de API do Firebase exposta em configuração cliente | Observação | 🟡 Baixa | ✅ **Protegido com Regras 2.1** |
 | **3.1** | Status do pedido regride sozinho (`mergeOrders` em `StoreContext.tsx`) | Bug Funcional | 🟠 Alta | ✅ **Corrigido e Testado** |
 | **3.2** | Cliente vê pedidos de outros clientes em "Meus Pedidos" (`OrdersHistoryView.tsx`) | Bug + Privacidade | 🔴 Crítica | ✅ **Corrigido e Testado** |
+| **4.1** | Restrição de acessos e ocultação de links administrativos para clientes | Segurança / UI | 🟠 Alta | ✅ **Implementado e Testado** |
+| **4.2** | Criação da Visão de Balcão / Operação (`BalcaoPanel.tsx`) e controle RBAC | Feature Operacional | 🟠 Alta | ✅ **Implementado e Testado** |
+| **4.3** | Auditoria e correção de contraste no Tema Claro (Light Mode) em todo o Admin e Navegações | UI / Acessibilidade | 🟡 Média | ✅ **Implementado e Testado** |
 
 ---
 
@@ -92,6 +95,27 @@
   - Removido o bloco de fallback permissivo que retornava `true` para qualquer pedido não-demo na visualização de clientes não autenticados.
   - A lista agora exibe exclusivamente pedidos autenticados pelo cliente (correspondência de ID do pedido local, ID de cliente ou número de telefone registrado).
 
+### Item 4.1 — Restrição de acessos e ocultação de links administrativos
+- **Arquivos:** `src/components/layout/Header.tsx`, `src/components/layout/Drawer.tsx`, `src/components/layout/BottomNav.tsx`, `src/App.tsx`
+- **Solução Implementada:**
+  - Ocultados links de acesso direto à Cozinha/Balcão e Painel Admin da interface visível do cliente final (cabeçalho, drawer lateral, navegação inferior e rodapé).
+  - Bloqueado acesso direto via rotas; usuários não autenticados que tentam acessar `/admin` ou rotas restritas são redirecionados com segurança para o formulário de login (`AdminLoginView`).
+
+### Item 4.2 — Criação da Visão de Balcão / Operação e RBAC
+- **Arquivos:** `src/components/balcao/BalcaoPanel.tsx`, `src/components/kitchen/KitchenPanel.tsx`, `src/context/StoreContext.tsx`, `src/App.tsx`, `src/components/admin/AdminDashboard.tsx`
+- **Solução Implementada:**
+  - Criado o tipo `AdminRole` ('admin' | 'balcao') no `StoreContext`.
+  - Criado o componente especializado `BalcaoPanel.tsx` focado na operação de pedidos, fila de preparo, comandas térmicas e despacho rápido de balcão e delivery.
+  - O operador com perfil `balcao` tem acesso estrito ao painel operacional do balcão, sendo impedido de visualizar ou modificar abas financeiras, relatórios gerenciais, cupons e configurações do restaurante.
+  - `KitchenPanel.tsx` configurado como alias compatível para `BalcaoPanel.tsx`.
+
+### Item 4.3 — Auditoria e correção de contraste no Tema Claro (Light Mode)
+- **Arquivos:** `src/components/layout/Header.tsx`, `src/components/layout/Drawer.tsx`, `src/components/layout/BottomNav.tsx`, `src/components/admin/AdminLoginView.tsx`, `src/components/admin/AdminDashboard.tsx`, `src/components/admin/AdminNotificationsManager.tsx`, `src/components/admin/AdminCustomersManager.tsx`, `src/components/balcao/BalcaoPanel.tsx`
+- **Solução Implementada:**
+  - Identificados e corrigidos todos os componentes com classes de texto e ícones brancos estáticos (`text-white`, `text-white/60`) sobre fundos claros quando o tema claro está ativo.
+  - Padronizada a leitura de `isDark = theme === 'dark'` com aplicação de classes de contraste Tailwind adaptativas (ex.: `isDark ? 'text-white bg-[#151518]' : 'text-slate-900 bg-white border-gray-200'`).
+  - Corrigida a legibilidade em inputs, botões secundários, tabelas, badges e modais em todas as abas do painel administrativo.
+
 ---
 
 ## 4. Log Histórico de Alterações
@@ -104,3 +128,6 @@
 | 11/09/2026 | 3.2 | `src/components/client/OrdersHistoryView.tsx` | Remoção do fallback permissivo que vazava pedidos de outros clientes na aba Meus Pedidos. |
 | 11/09/2026 | 2.3, 2.4, 2.5 | `server.ts`, `.env.example` | Implementada autenticação real com sessões e TTL via `crypto`, remoção do bypass de 40 caracteres, endpoint de verificação de sessão e proteção de autenticação no endpoint da cozinha. |
 | 11/09/2026 | 2.2 | `src/context/StoreContext.tsx`, `src/components/admin/AdminLoginView.tsx` | Substituição da autenticação client-side estática por fluxo assíncrono autenticado no servidor com verificação de sessão ativa. |
+| 11/09/2026 | 4.1 | `Header.tsx`, `Drawer.tsx`, `BottomNav.tsx`, `App.tsx` | Ocultação de links administrativos no fluxo do cliente e proteção de rotas. |
+| 11/09/2026 | 4.2 | `BalcaoPanel.tsx`, `KitchenPanel.tsx`, `StoreContext.tsx`, `AdminDashboard.tsx`, `App.tsx` | Implementação do painel operacional do balcão e isolamento por roles (`admin` vs `balcao`). |
+| 11/09/2026 | 4.3 | `AdminDashboard.tsx`, `AdminNotificationsManager.tsx`, `AdminCustomersManager.tsx`, `AdminLoginView.tsx`, `BalcaoPanel.tsx`, `Header.tsx`, `Drawer.tsx`, `BottomNav.tsx` | Auditoria completa e correção de contraste no tema claro (Light Mode) em todos os módulos administrativos e navegações. |

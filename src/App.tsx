@@ -11,7 +11,7 @@ import { CartDrawer } from './components/client/CartDrawer';
 import { CheckoutModal } from './components/client/CheckoutModal';
 import { OrderTrackingModal } from './components/client/OrderTrackingModal';
 import { ThermalReceiptModal } from './components/thermal/ThermalReceiptModal';
-import { KitchenPanel } from './components/kitchen/KitchenPanel';
+import { BalcaoPanel } from './components/balcao/BalcaoPanel';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminLoginView } from './components/admin/AdminLoginView';
 import { InAppNotificationBanner } from './components/notifications/InAppNotificationBanner';
@@ -23,6 +23,7 @@ const MainLayout: React.FC = () => {
     currentView,
     setCurrentView,
     isAdminAuthenticated,
+    adminRole,
     clientTab,
     setClientTab,
     setTrackingOrderId,
@@ -82,22 +83,26 @@ const MainLayout: React.FC = () => {
           </>
         )}
 
-        {/* KITCHEN KDS VIEW - Protected by Authentication */}
-        {currentView === 'kitchen' && (
+        {/* BALCAO & KITCHEN OPERATIONAL VIEW - Protected by Authentication */}
+        {(currentView === 'balcao' || currentView === 'kitchen') && (
           isAdminAuthenticated ? (
-            <KitchenPanel />
+            <BalcaoPanel />
           ) : (
             <AdminLoginView
-              onSuccess={() => setCurrentView('kitchen')}
+              onSuccess={() => setCurrentView('balcao')}
               onBackToClient={() => setCurrentView('client')}
             />
           )
         )}
 
-        {/* ADMIN DASHBOARD VIEW - Protected by Authentication */}
+        {/* ADMIN DASHBOARD VIEW - Protected by Authentication & admin role */}
         {currentView === 'admin' && (
           isAdminAuthenticated ? (
-            <AdminDashboard />
+            adminRole === 'balcao' ? (
+              <BalcaoPanel />
+            ) : (
+              <AdminDashboard />
+            )
           ) : (
             <AdminLoginView
               onSuccess={() => setCurrentView('admin')}
@@ -107,7 +112,7 @@ const MainLayout: React.FC = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation (Client only - hidden in Admin & Kitchen) */}
+      {/* Mobile Bottom Navigation (Client only - hidden in Admin & Balcão) */}
       {currentView === 'client' && <BottomNav />}
 
       {/* Global Interactive Modals */}

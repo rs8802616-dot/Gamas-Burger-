@@ -42,6 +42,7 @@ export const Header: React.FC = () => {
     toggleSound,
     setTrackingOrderId,
     isAdminAuthenticated,
+    adminRole,
     adminLogout,
     theme,
     toggleTheme,
@@ -98,23 +99,23 @@ export const Header: React.FC = () => {
               onClick={() => setCurrentView('client')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/30 transition-all text-xs"
             >
-              <Store className="w-3.5 h-3.5" />
+              <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>← Cardápio do Cliente</span>
             </button>
 
             <button
-              id="view-kitchen-btn"
-              onClick={() => setCurrentView('kitchen')}
+              id="view-balcao-btn"
+              onClick={() => setCurrentView('balcao')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all relative text-xs ${
-                currentView === 'kitchen'
-                  ? 'bg-orange-500 text-white shadow-[0_0_12px_rgba(249,115,22,0.3)]'
+                currentView === 'balcao' || currentView === 'kitchen'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
                   : isDark
-                  ? 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  ? 'text-neutral-300 hover:text-white hover:bg-white/5'
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
               }`}
             >
-              <ChefHat className="w-3.5 h-3.5" />
-              <span>Cozinha (KDS)</span>
+              <Store className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Balcão de Pedidos</span>
               {kitchenPendingCount > 0 && (
                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold animate-pulse">
                   {kitchenPendingCount}
@@ -122,50 +123,51 @@ export const Header: React.FC = () => {
               )}
             </button>
 
-            <button
-              id="view-admin-btn"
-              onClick={() => setCurrentView('admin')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all text-xs ${
-                currentView === 'admin'
-                  ? isDark
-                    ? 'bg-white text-neutral-950 shadow-sm'
-                    : 'bg-neutral-900 text-white shadow-sm'
-                  : isDark
-                  ? 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Painel Admin</span>
-            </button>
-
-            {isAdminAuthenticated && (
+            {/* Admin Dashboard is strictly hidden for balcao role */}
+            {adminRole !== 'balcao' && (
               <button
-                id="view-logout-btn"
-                onClick={adminLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold border border-red-500/20 transition-all text-xs"
-                title="Encerrar sessão de administrador"
+                id="view-admin-btn"
+                onClick={() => setCurrentView('admin')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all text-xs ${
+                  currentView === 'admin'
+                    ? isDark
+                      ? 'bg-white text-neutral-950 shadow-sm'
+                      : 'bg-neutral-900 text-white shadow-sm'
+                    : isDark
+                    ? 'text-neutral-300 hover:text-white hover:bg-white/5'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
+                }`}
               >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sair (Logout)</span>
+                <LayoutDashboard className="w-3.5 h-3.5 text-slate-700 dark:text-neutral-200" />
+                <span>Painel Admin</span>
               </button>
             )}
+
+            <button
+              id="view-logout-btn"
+              onClick={adminLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold border border-red-500/20 transition-all text-xs"
+              title="Encerrar sessão de staff"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-500" />
+              <span>Sair (Logout)</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2.5">
-            <span className="hidden sm:inline text-[11px] font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-bold">
-              Painel Gerencial
+            <span className="hidden sm:inline text-[11px] font-mono text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-bold">
+              {adminRole === 'balcao' ? 'Perfil: Balcão' : 'Perfil: Gerência'}
             </span>
             <button
               onClick={toggleSound}
               title={soundEnabled ? 'Silenciar alertas' : 'Ativar alertas sonoros'}
               className={`p-1 rounded-lg transition-colors ${
-                isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-200'
+                isDark ? 'text-white/40 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200'
               }`}
             >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-amber-500" /> : <VolumeX className="w-3.5 h-3.5" />}
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-amber-500" /> : <VolumeX className="w-3.5 h-3.5 text-gray-500" />}
             </button>
-            <span className="inline-flex items-center gap-1.5 text-emerald-500 font-medium text-[11px]">
+            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Sistema Online
             </span>
@@ -272,25 +274,6 @@ export const Header: React.FC = () => {
                   }`}
                 >
                   Favoritos
-                </button>
-                <button
-                  onClick={() => setCurrentView('kitchen')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5 ${
-                    currentView === 'kitchen'
-                      ? 'bg-orange-500 text-white shadow-sm'
-                      : isDark
-                      ? 'text-orange-400 hover:text-white hover:bg-orange-500/20'
-                      : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
-                  }`}
-                  title="Acessar o Painel da Cozinha (KDS)"
-                >
-                  <ChefHat className="w-3.5 h-3.5" />
-                  <span>Cozinha</span>
-                  {kitchenPendingCount > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                      {kitchenPendingCount}
-                    </span>
-                  )}
                 </button>
               </nav>
             )}
@@ -535,51 +518,71 @@ export const Header: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Hamburgueria Management Section */}
-                <div className={`pt-3 border-t space-y-1.5 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-500 px-3">
-                    Área da Hamburgueria
-                  </p>
-                  <button
-                    onClick={() => {
-                      setCurrentView('kitchen');
-                      setIsDrawerOpen(false);
-                    }}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
-                      currentView === 'kitchen'
-                        ? 'bg-orange-500 text-white font-bold'
-                        : isDark
-                        ? 'hover:bg-white/10 text-white'
-                        : 'hover:bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <ChefHat className="w-4 h-4 text-orange-500" />
-                      <span>Cozinha (KDS Pedidos)</span>
-                    </div>
-                    {kitchenPendingCount > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                        {kitchenPendingCount}
+                {/* Staff / Hamburgueria Management Section - ONLY visible to authenticated staff */}
+                {isAdminAuthenticated && (
+                  <div className={`pt-3 border-t space-y-1.5 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-500 px-3 flex items-center justify-between">
+                      <span>Área da Hamburgueria</span>
+                      <span className="text-[9px] font-mono lowercase opacity-75">
+                        ({adminRole === 'balcao' ? 'balcão' : 'admin'})
                       </span>
+                    </p>
+                    <button
+                      onClick={() => {
+                        setCurrentView('balcao');
+                        setIsDrawerOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                        currentView === 'balcao' || currentView === 'kitchen'
+                          ? 'bg-amber-500 text-slate-950 font-bold'
+                          : isDark
+                          ? 'hover:bg-white/10 text-white'
+                          : 'hover:bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Store className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        <span>Balcão de Pedidos</span>
+                      </div>
+                      {kitchenPendingCount > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                          {kitchenPendingCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Admin panel only for admin role */}
+                    {adminRole !== 'balcao' && (
+                      <button
+                        onClick={() => {
+                          setCurrentView('admin');
+                          setIsDrawerOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                          currentView === 'admin'
+                            ? 'bg-amber-500 text-black font-bold'
+                            : isDark
+                            ? 'hover:bg-white/10 text-white'
+                            : 'hover:bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-amber-500" />
+                        <span>Painel da Hamburgueria (Admin)</span>
+                      </button>
                     )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCurrentView('admin');
-                      setIsDrawerOpen(false);
-                    }}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
-                      currentView === 'admin'
-                        ? 'bg-amber-500 text-black font-bold'
-                        : isDark
-                        ? 'hover:bg-white/10 text-white'
-                        : 'hover:bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 text-amber-500" />
-                    <span>Painel da Hamburgueria (Admin)</span>
-                  </button>
-                </div>
+
+                    <button
+                      onClick={() => {
+                        adminLogout();
+                        setIsDrawerOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl flex items-center gap-3 text-red-500 hover:bg-red-500/10 text-xs font-bold transition-colors`}
+                    >
+                      <LogOut className="w-4 h-4 text-red-500" />
+                      <span>Sair da Conta Staff</span>
+                    </button>
+                  </div>
+                )}
 
                 <div className={`pt-4 border-t space-y-2.5 text-xs ${isDark ? 'border-white/10 text-neutral-400' : 'border-gray-200 text-gray-600'}`}>
                   <div className="flex items-center gap-2">

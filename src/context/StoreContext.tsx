@@ -16,6 +16,9 @@ import {
   SelectedAddon,
   AppNotification,
   AppTheme,
+  StaffRole,
+  UserRole,
+  Tenant,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -27,6 +30,7 @@ import {
   INITIAL_SETTINGS,
   INITIAL_CUSTOMER,
   INITIAL_ORDERS,
+  INITIAL_TENANTS,
 } from '../data/initialData';
 import { playOrderNotificationSound } from '../utils/formatters';
 import { NotificationService } from '../services/notificationService';
@@ -34,8 +38,29 @@ import { firebaseService, getOrderTimestamp } from '../services/firebase';
 
 interface StoreContextType {
   // Navigation & UI State
-  currentView: 'client' | 'kitchen' | 'admin';
-  setCurrentView: (view: 'client' | 'kitchen' | 'admin') => void;
+  currentView: 'client' | 'balcao' | 'admin' | 'master';
+  setCurrentView: (view: 'client' | 'balcao' | 'admin' | 'kitchen' | 'master') => void;
+  adminRole: StaffRole | null;
+  userRole: UserRole;
+  routeAccessDeniedMessage: string | null;
+  clearRouteAccessDeniedMessage: () => void;
+
+  // Multi-Tenant State
+  currentTenant: Tenant | null;
+  allTenants: Tenant[];
+  isStoreNotFound: boolean;
+  isStoreInactive: boolean;
+  currentStoreSlug: string;
+  selectStoreBySlug: (slug: string) => Promise<boolean>;
+  refreshTenants: () => Promise<void>;
+  adminTenantId: string | null;
+  adminTenantName: string | null;
+  adminTenantSlug: string | null;
+  isSuperAdmin: boolean;
+  superAdminSelectedTenantId: string | null;
+  setSuperAdminSelectedTenantId: (tenantId: string | null) => void;
+  isStoreSelectorOpen: boolean;
+  setIsStoreSelectorOpen: (open: boolean) => void;
   clientTab: 'home' | 'menu' | 'cart' | 'orders' | 'favorites' | 'profile';
   setClientTab: (tab: 'home' | 'menu' | 'cart' | 'orders' | 'favorites' | 'profile') => void;
   adminTab:
@@ -307,6 +332,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const checkIsBalcaoRoute = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.location.pathname.startsWith('/balcao') ||
+      window.location.hash.startsWith('#/balcao') ||
+      window.location.hash === '#balcao' ||
+      window.location.search.includes('view=balcao') ||
+      window.location.pathname.startsWith('/kitchen') ||
+      window.location.hash.startsWith('#/kitchen') ||
+      window.location.hash === '#kitchen' ||
+      window.location.search.includes('view=kitchen')
+    );
+  };
+
   const [adminToken, setAdminToken] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('gamas_admin_token');
@@ -317,9 +356,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
+  const [adminRole, setAdminRole] = useState<StaffRole | null>(() => {
+    try {
+      const savedRole = localStorage.getItem('gamas_admin_role');
+      if (savedRole === 'balcao' || savedRole === 'admin') return savedRole;
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [routeAccessDeniedMessage, setRouteAccessDeniedMessage] = useState<string | null>(null);
+  const clearRouteAccessDeniedMessage = () => setRouteAccessDeniedMessage(null);
+
+  const userRole: UserRole = isAdminAuthenticated
+    ? adminRole === 'balcao'
+      ? 'balcao'
+      : 'admin'
+    : 'cliente';
+
   // Item 2.2: Verify saved admin session on startup with the server
   useEffect(() => {
     const saved = localStorage.getItem('gamas_admin_token');
+    const savedRole = (localStorage.getItem('gamas_admin_role') as StaffRole) || null;
     if (saved && !saved.startsWith('admin-token-')) {
       fetch('/api/admin/verify', {
         headers: { Authorization: `Bearer ${saved}` },
@@ -328,34 +387,52 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .then((data) => {
           if (data && data.valid) {
             setIsAdminAuthenticated(true);
+            const role: StaffRole = data.role === 'balcao' ? 'balcao' : 'admin';
+            setAdminRole(role);
             setAdminToken(saved);
+            try {
+              localStorage.setItem('gamas_admin_role', role);
+            } catch {}
           } else {
             setIsAdminAuthenticated(false);
+            setAdminRole(null);
             setAdminToken('');
             localStorage.removeItem('burger10_admin_auth');
             localStorage.removeItem('burger10_admin_email');
             localStorage.removeItem('gamas_admin_token');
+            localStorage.removeItem('gamas_admin_role');
           }
         })
         .catch(() => {
           setIsAdminAuthenticated(false);
+          setAdminRole(null);
           setAdminToken('');
         });
     } else {
       setIsAdminAuthenticated(false);
+      setAdminRole(null);
       setAdminToken('');
       localStorage.removeItem('burger10_admin_auth');
       localStorage.removeItem('gamas_admin_token');
+      localStorage.removeItem('gamas_admin_role');
     }
   }, []);
 
   // Navigation & View States: Always default to 'client' for customers
-  const [currentView, setCurrentView] = useState<'client' | 'kitchen' | 'admin'>(() => {
+  const [currentView, setCurrentView] = useState<'client' | 'balcao' | 'admin'>(() => {
     if (checkIsAdminRoute()) {
       return 'admin';
     }
-    // Clean any accidental #admin or ?admin from the URL if not logged in
-    if (typeof window !== 'undefined' && window.location.hash.includes('admin')) {
+    if (checkIsBalcaoRoute()) {
+      return 'balcao';
+    }
+    // Clean any accidental #admin or #balcao from the URL if browsing client
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.hash.includes('admin') ||
+        window.location.hash.includes('balcao') ||
+        window.location.hash.includes('kitchen'))
+    ) {
       try {
         window.history.replaceState(null, '', window.location.pathname + window.location.search);
       } catch {
@@ -378,11 +455,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     | 'settings'
   >('dashboard');
 
-  // URL Hash/Route listener
+  // URL Hash/Route listener with Route Guards
   useEffect(() => {
     const handleUrlChange = () => {
-      if (checkIsAdminRoute()) {
+      const isAdmin = checkIsAdminRoute();
+      const isBalcao = checkIsBalcaoRoute();
+
+      if (isAdmin) {
+        // Strict guard: If logged in as 'balcao', prevent access to admin route
+        if (adminRole === 'balcao') {
+          setRouteAccessDeniedMessage(
+            'Acesso Bloqueado: O perfil "Balcão" possui acesso exclusivo à tela operacional do Balcão.'
+          );
+          setCurrentView('balcao');
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#balcao';
+          }
+          return;
+        }
         setCurrentView('admin');
+      } else if (isBalcao) {
+        setCurrentView('balcao');
       } else {
         setCurrentView('client');
       }
@@ -393,24 +486,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       window.removeEventListener('hashchange', handleUrlChange);
       window.removeEventListener('popstate', handleUrlChange);
     };
-  }, []);
+  }, [adminRole]);
 
-  const handleSetCurrentView = (view: 'client' | 'kitchen' | 'admin') => {
-    setCurrentView(view);
+  const handleSetCurrentView = (view: 'client' | 'balcao' | 'admin' | 'kitchen') => {
+    const targetView: 'client' | 'balcao' | 'admin' = view === 'kitchen' ? 'balcao' : view;
+
+    // Strict Balcao restriction: If balcao role tries to access admin, block immediately
+    if (targetView === 'admin' && adminRole === 'balcao') {
+      setRouteAccessDeniedMessage(
+        'Acesso Bloqueado: O perfil "Balcão" não possui permissão para acessar o Painel Administrativo.'
+      );
+      setCurrentView('balcao');
+      if (typeof window !== 'undefined') {
+        window.location.hash = '#balcao';
+      }
+      return;
+    }
+
+    setCurrentView(targetView);
     if (typeof window !== 'undefined') {
-      if (view === 'client') {
-        if (window.location.hash.includes('admin')) {
+      if (targetView === 'client') {
+        if (
+          window.location.hash.includes('admin') ||
+          window.location.hash.includes('balcao') ||
+          window.location.hash.includes('kitchen')
+        ) {
           window.history.replaceState(null, '', window.location.pathname + window.location.search);
         }
-      } else if (isAdminAuthenticated && (view === 'admin' || view === 'kitchen')) {
-        if (!window.location.hash.includes('admin') && !window.location.pathname.startsWith('/admin')) {
-          window.location.hash = '#admin';
-        }
+      } else {
+        window.location.hash = `#${targetView}`;
       }
     }
   };
 
-  // Item 2.2: Authenticate strictly via server API with no client-side password bypass
+  // Authenticate strictly via server API with staff role identification
   const adminLogin = async (
     email: string,
     pass: string
@@ -427,16 +536,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const data = await res.json();
 
       if (res.ok && data && data.success && data.token) {
+        const role: StaffRole = data.role === 'balcao' ? 'balcao' : 'admin';
         setIsAdminAuthenticated(true);
+        setAdminRole(role);
         setAdminToken(data.token);
         try {
           localStorage.setItem('burger10_admin_auth', 'true');
           localStorage.setItem('burger10_admin_email', data.email || cleanEmail);
           localStorage.setItem('gamas_admin_token', data.token);
+          localStorage.setItem('gamas_admin_role', role);
         } catch {
           // local storage fallback
         }
-        return { success: true, message: 'Autenticado com sucesso!' };
+
+        if (role === 'balcao') {
+          handleSetCurrentView('balcao');
+        } else {
+          handleSetCurrentView('admin');
+        }
+
+        return { success: true, message: data.message || 'Autenticado com sucesso!' };
       }
 
       return {
@@ -459,11 +578,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }).catch(() => {});
     }
     setIsAdminAuthenticated(false);
+    setAdminRole(null);
     setAdminToken('');
     try {
       localStorage.removeItem('burger10_admin_auth');
       localStorage.removeItem('burger10_admin_email');
       localStorage.removeItem('gamas_admin_token');
+      localStorage.removeItem('gamas_admin_role');
     } catch {
       // ignore
     }
@@ -472,7 +593,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
       setOrders(saved ? JSON.parse(saved) : []);
     } catch {
-      setOrders([]);
+      // ignore
     }
     handleSetCurrentView('client');
   };
@@ -647,7 +768,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Function to fetch orders based on role or view
   const refreshOrders = useCallback(async () => {
     try {
-      const isStaffView = isAdminAuthenticated || currentView === 'kitchen' || currentView === 'admin';
+      const isStaffView =
+        isAdminAuthenticated ||
+        currentView === 'balcao' ||
+        currentView === 'kitchen' ||
+        currentView === 'admin';
       if (isStaffView) {
         // 1. Check cloud orders in Firestore directly
         if (firebaseService.isConfigured()) {
@@ -660,8 +785,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         }
 
-        // 2. Fetch from Express API (try kitchen endpoint first, or admin endpoint)
-        const res = await fetch('/api/orders?kitchen=true', {
+        // 2. Fetch from Express API (support balcao or admin)
+        const fetchUrl =
+          adminRole === 'balcao' || currentView === 'balcao' || currentView === 'kitchen'
+            ? '/api/orders?balcao=true'
+            : '/api/orders?kitchen=true';
+        const res = await fetch(fetchUrl, {
           headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : {},
         }).catch(() => null);
 
@@ -1643,6 +1772,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         currentView,
         setCurrentView: handleSetCurrentView,
+        adminRole,
+        userRole,
+        routeAccessDeniedMessage,
+        clearRouteAccessDeniedMessage,
         clientTab,
         setClientTab,
         adminTab,

@@ -16,7 +16,8 @@ import { useStore } from '../../context/StoreContext';
 import { AppNotification } from '../../types';
 
 export const AdminNotificationsManager: React.FC = () => {
-  const { sendBroadcastNotification } = useStore();
+  const { sendBroadcastNotification, theme } = useStore();
+  const isDark = theme === 'dark';
 
   const [title, setTitle] = useState('🔥 OFERTA ESPECIAL DE HOJE!');
   const [message, setMessage] = useState(
@@ -142,37 +143,85 @@ export const AdminNotificationsManager: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-amber-500/15 via-[#151518] to-amber-500/5 border border-amber-500/20 rounded-3xl p-6">
+      <div
+        className={`border rounded-3xl p-6 transition-colors ${
+          isDark
+            ? 'bg-gradient-to-r from-amber-500/15 via-[#151518] to-amber-500/5 border-amber-500/20'
+            : 'bg-gradient-to-r from-amber-100 via-white to-amber-50 border-amber-200 shadow-sm'
+        }`}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="p-1.5 rounded-xl bg-amber-500/20 text-amber-400">
+              <span
+                className={`p-1.5 rounded-xl ${
+                  isDark
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
                 <Bell className="w-5 h-5" />
               </span>
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+              <span
+                className={`text-[10px] font-black uppercase tracking-wider ${
+                  isDark ? 'text-amber-400' : 'text-amber-800'
+                }`}
+              >
                 Marketing Direto & Relacionamento
               </span>
             </div>
-            <h2 className="text-xl font-black text-white tracking-tight">
+            <h2
+              className={`text-xl font-black tracking-tight ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               Central de Notificações Push & Campanhas
             </h2>
-            <p className="text-xs text-white/50 mt-1 max-w-xl">
+            <p
+              className={`text-xs mt-1 max-w-xl ${
+                isDark ? 'text-white/50' : 'text-slate-600'
+              }`}
+            >
               Crie notificações promocionais para engajar seus clientes no celular, divulgar combos do dia e recuperar clientes inativos com respeito à privacidade.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#0A0A0B] border border-white/5 p-3 rounded-2xl">
-            <Smartphone className="w-5 h-5 text-amber-400" />
+          <div
+            className={`flex items-center gap-2 p-3 rounded-2xl border ${
+              isDark
+                ? 'bg-[#0A0A0B] border-white/5'
+                : 'bg-white border-amber-200/80 shadow-xs'
+            }`}
+          >
+            <Smartphone className="w-5 h-5 text-amber-500" />
             <div>
-              <p className="text-[10px] text-white/40 uppercase font-bold">Taxa de Abertura PWA</p>
-              <p className="text-sm font-black text-white">4.8x maior que e-mail</p>
+              <p
+                className={`text-[10px] uppercase font-bold ${
+                  isDark ? 'text-white/40' : 'text-slate-500'
+                }`}
+              >
+                Taxa de Abertura PWA
+              </p>
+              <p
+                className={`text-sm font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                4.8x maior que e-mail
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {feedbackMessage && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl text-xs font-bold flex items-center gap-2 animate-fade-in">
+        <div
+          className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 border ${
+            isDark
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          }`}
+        >
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{feedbackMessage}</span>
         </div>
@@ -181,16 +230,30 @@ export const AdminNotificationsManager: React.FC = () => {
       {/* Main Grid: Create Campaign + Live Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Column */}
-        <div className="lg:col-span-2 bg-[#151518] border border-white/5 rounded-3xl p-6 shadow-xl">
-          <h3 className="text-sm font-black text-white mb-4 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
+        <div
+          className={`lg:col-span-2 border rounded-3xl p-6 shadow-xl transition-colors ${
+            isDark
+              ? 'bg-[#151518] border-white/5'
+              : 'bg-white border-gray-200 shadow-sm'
+          }`}
+        >
+          <h3
+            className={`text-sm font-black mb-4 flex items-center gap-2 ${
+              isDark ? 'text-white' : 'text-slate-900'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" />
             <span>Criar Nova Notificação Promocional</span>
           </h3>
 
           <form onSubmit={handleSendNow} className="space-y-4">
             {/* Title */}
             <div>
-              <label className="block text-xs font-bold text-white/60 mb-1.5">
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
                 Título da Notificação (Curto e Atraente)
               </label>
               <input
@@ -199,13 +262,21 @@ export const AdminNotificationsManager: React.FC = () => {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: 🔥 OFERTA ESPECIAL DE HOJE!"
                 required
-                className="w-full bg-[#0A0A0B] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:border-amber-500 outline-none"
+                className={`w-full border rounded-2xl px-4 py-3 text-xs focus:border-amber-500 outline-none ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
             </div>
 
             {/* Message */}
             <div>
-              <label className="block text-xs font-bold text-white/60 mb-1.5">
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
                 Mensagem
               </label>
               <textarea
@@ -214,14 +285,22 @@ export const AdminNotificationsManager: React.FC = () => {
                 rows={3}
                 placeholder="Ex: Hoje o Combo Família está com preço especial. Aproveite!"
                 required
-                className="w-full bg-[#0A0A0B] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:border-amber-500 outline-none resize-none leading-relaxed"
+                className={`w-full border rounded-2xl px-4 py-3 text-xs focus:border-amber-500 outline-none resize-none leading-relaxed ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
             </div>
 
             {/* Image URL & Button Text */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-white/60 mb-1.5">
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
                   Imagem Opcional (URL)
                 </label>
                 <input
@@ -229,12 +308,20 @@ export const AdminNotificationsManager: React.FC = () => {
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-[#0A0A0B] border border-white/10 rounded-2xl px-3.5 py-2.5 text-xs text-white focus:border-amber-500 outline-none"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs focus:border-amber-500 outline-none ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white/60 mb-1.5">
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
                   Texto do Botão (CTA)
                 </label>
                 <input
@@ -242,14 +329,24 @@ export const AdminNotificationsManager: React.FC = () => {
                   value={ctaLabel}
                   onChange={(e) => setCtaLabel(e.target.value)}
                   placeholder="PEDIR AGORA"
-                  className="w-full bg-[#0A0A0B] border border-white/10 rounded-2xl px-3.5 py-2.5 text-xs text-white focus:border-amber-500 outline-none"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs focus:border-amber-500 outline-none ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
             </div>
 
             {/* Segmentation (Requirement 33) */}
-            <div className="p-4 bg-[#0A0A0B] border border-white/5 rounded-2xl space-y-3">
-              <label className="block text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div
+              className={`p-4 border rounded-2xl space-y-3 ${
+                isDark
+                  ? 'bg-[#0A0A0B] border-white/5'
+                  : 'bg-gray-50 border-gray-200'
+              }`}
+            >
+              <label className="block text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
                 <span>Segmentação de Público-Alvo</span>
               </label>
@@ -281,8 +378,12 @@ export const AdminNotificationsManager: React.FC = () => {
                     key={item.id}
                     className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors ${
                       targetAudience === item.id
-                        ? 'bg-amber-500/10 border-amber-500/50 text-white'
-                        : 'bg-[#151518] border-white/5 text-white/50 hover:text-white'
+                        ? isDark
+                          ? 'bg-amber-500/10 border-amber-500/50 text-white'
+                          : 'bg-amber-50 border-amber-400 text-slate-950'
+                        : isDark
+                        ? 'bg-[#151518] border-white/5 text-white/50 hover:text-white'
+                        : 'bg-white border-gray-200 text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <input
@@ -296,7 +397,13 @@ export const AdminNotificationsManager: React.FC = () => {
                     />
                     <div>
                       <p className="text-xs font-bold">{item.title}</p>
-                      <p className="text-[10px] text-white/40">{item.desc}</p>
+                      <p
+                        className={`text-[10px] ${
+                          isDark ? 'text-white/40' : 'text-slate-500'
+                        }`}
+                      >
+                        {item.desc}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -305,15 +412,29 @@ export const AdminNotificationsManager: React.FC = () => {
 
             {/* Schedule Option */}
             {isScheduled && (
-              <div className="p-4 bg-[#0A0A0B] border border-amber-500/30 rounded-2xl space-y-2">
-                <label className="block text-xs font-bold text-white">
+              <div
+                className={`p-4 border rounded-2xl space-y-2 ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-amber-500/30'
+                    : 'bg-amber-50/70 border-amber-300'
+                }`}
+              >
+                <label
+                  className={`block text-xs font-bold ${
+                    isDark ? 'text-white' : 'text-slate-900'
+                  }`}
+                >
                   Data e Horário de Envio
                 </label>
                 <input
                   type="datetime-local"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full bg-[#151518] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                  className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                    isDark
+                      ? 'bg-[#151518] border-white/10 text-white'
+                      : 'bg-white border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
             )}
@@ -332,9 +453,13 @@ export const AdminNotificationsManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsScheduled(true)}
-                  className="flex items-center gap-2 px-4 py-3.5 bg-[#0A0A0B] hover:bg-[#202024] text-white/70 hover:text-white border border-white/5 rounded-2xl text-xs font-bold transition-colors"
+                  className={`flex items-center gap-2 px-4 py-3.5 border rounded-2xl text-xs font-bold transition-colors ${
+                    isDark
+                      ? 'bg-[#0A0A0B] hover:bg-[#202024] text-white/70 hover:text-white border-white/5'
+                      : 'bg-gray-100 hover:bg-gray-200 text-slate-700 hover:text-slate-950 border-gray-300'
+                  }`}
                 >
-                  <Calendar className="w-4 h-4 text-amber-400" />
+                  <Calendar className="w-4 h-4 text-amber-500" />
                   <span>Agendar Envio</span>
                 </button>
               ) : (
@@ -349,7 +474,9 @@ export const AdminNotificationsManager: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsScheduled(false)}
-                    className="px-3 py-3.5 text-white/40 hover:text-white text-xs"
+                    className={`px-3 py-3.5 text-xs ${
+                      isDark ? 'text-white/40 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                    }`}
                   >
                     Cancelar
                   </button>
@@ -360,8 +487,18 @@ export const AdminNotificationsManager: React.FC = () => {
         </div>
 
         {/* Live Smartphone Preview */}
-        <div className="bg-[#151518] border border-white/5 rounded-3xl p-6 flex flex-col items-center justify-start text-center">
-          <span className="text-[10px] font-black uppercase tracking-wider text-white/40 mb-3 block">
+        <div
+          className={`border rounded-3xl p-6 flex flex-col items-center justify-start text-center transition-colors ${
+            isDark
+              ? 'bg-[#151518] border-white/5'
+              : 'bg-white border-gray-200 shadow-sm'
+          }`}
+        >
+          <span
+            className={`text-[10px] font-black uppercase tracking-wider mb-3 block ${
+              isDark ? 'text-white/40' : 'text-slate-500'
+            }`}
+          >
             Pré-visualização no Smartphone
           </span>
 
@@ -376,7 +513,7 @@ export const AdminNotificationsManager: React.FC = () => {
                 <div className="w-5 h-5 rounded-md bg-amber-500 text-black font-black text-[9px] flex items-center justify-center">
                   GB
                 </div>
-                <span className="text-[10px] font-bold text-white/80">GAMA'S BURGER</span>
+                <span className="text-[10px] font-bold text-white/80">GAMA&apos;S BURGER</span>
                 <span className="text-[9px] text-white/40 ml-auto">Agora</span>
               </div>
 
@@ -413,16 +550,32 @@ export const AdminNotificationsManager: React.FC = () => {
       </div>
 
       {/* History Table */}
-      <div className="bg-[#151518] border border-white/5 rounded-3xl p-6 shadow-xl">
-        <h3 className="text-sm font-black text-white mb-4 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-amber-400" />
+      <div
+        className={`border rounded-3xl p-6 shadow-xl transition-colors ${
+          isDark
+            ? 'bg-[#151518] border-white/5'
+            : 'bg-white border-gray-200 shadow-sm'
+        }`}
+      >
+        <h3
+          className={`text-sm font-black mb-4 flex items-center gap-2 ${
+            isDark ? 'text-white' : 'text-slate-900'
+          }`}
+        >
+          <Clock className="w-4 h-4 text-amber-500" />
           <span>Histórico de Disparos Recentes</span>
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-white/5 text-white/40 font-bold uppercase text-[10px] tracking-wider">
+              <tr
+                className={`border-b font-bold uppercase text-[10px] tracking-wider ${
+                  isDark
+                    ? 'border-white/5 text-white/40'
+                    : 'border-gray-200 text-slate-500'
+                }`}
+              >
                 <th className="pb-3">Campanha</th>
                 <th className="pb-3">Público-Alvo</th>
                 <th className="pb-3">Data/Hora</th>
@@ -430,27 +583,58 @@ export const AdminNotificationsManager: React.FC = () => {
                 <th className="pb-3 text-right">Cliques</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody
+              className={`divide-y ${
+                isDark ? 'divide-white/5' : 'divide-gray-100'
+              }`}
+            >
               {sentHistory.map((item) => (
-                <tr key={item.id} className="hover:bg-white/[0.02]">
+                <tr
+                  key={item.id}
+                  className={`transition-colors ${
+                    isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-gray-50'
+                  }`}
+                >
                   <td className="py-3">
-                    <p className="font-bold text-white leading-tight">{item.title}</p>
-                    <p className="text-[11px] text-white/50 truncate max-w-xs">{item.message}</p>
+                    <p
+                      className={`font-bold leading-tight ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}
+                    >
+                      {item.title}
+                    </p>
+                    <p
+                      className={`text-[11px] truncate max-w-xs ${
+                        isDark ? 'text-white/50' : 'text-slate-500'
+                      }`}
+                    >
+                      {item.message}
+                    </p>
                   </td>
-                  <td className="py-3 text-white/70">{item.audience}</td>
-                  <td className="py-3 text-white/50">{item.date}</td>
+                  <td className={`py-3 ${isDark ? 'text-white/70' : 'text-slate-700'}`}>
+                    {item.audience}
+                  </td>
+                  <td className={`py-3 ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
+                    {item.date}
+                  </td>
                   <td className="py-3">
                     <span
                       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         item.status === 'sent'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          ? isDark
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : isDark
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}
                     >
                       {item.status === 'sent' ? 'Enviado' : 'Agendado'}
                     </span>
                   </td>
-                  <td className="py-3 text-right font-black text-amber-400">{item.clicks}</td>
+                  <td className="py-3 text-right font-black text-amber-600 dark:text-amber-400">
+                    {item.clicks}
+                  </td>
                 </tr>
               ))}
             </tbody>

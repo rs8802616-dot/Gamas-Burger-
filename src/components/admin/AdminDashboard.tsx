@@ -60,7 +60,10 @@ export const AdminDashboard: React.FC = () => {
     simulateIncomingOrder,
     isServerConnected,
     setCurrentView,
+    theme,
   } = useStore();
+
+  const isDark = theme === 'dark';
 
   // Client menu share link (guaranteed clean client link without #admin or credentials)
   const [copiedClientUrl, setCopiedClientUrl] = useState(false);
@@ -219,10 +222,20 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6 pb-24">
       {/* Top Admin Header Bar */}
-      <div className="bg-[#151518] border border-white/5 rounded-3xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg">
+      <div
+        className={`border rounded-3xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors ${
+          isDark
+            ? 'bg-[#151518] border-white/5 text-white shadow-lg'
+            : 'bg-white border-gray-200 text-slate-900 shadow-sm'
+        }`}
+      >
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-black text-white tracking-tight">
+            <h1
+              className={`text-xl font-black tracking-tight ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               Painel do Proprietário
             </h1>
             <span className="bg-amber-500 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
@@ -231,20 +244,24 @@ export const AdminDashboard: React.FC = () => {
             <span
               className={`text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
                 isServerConnected
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30'
               }`}
               title="Sincronizado automaticamente com os pedidos feitos pelo celular dos clientes"
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isServerConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                  isServerConnected ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'
                 }`}
               />
               {isServerConnected ? 'Celular & PC Conectados' : 'Conectando Servidor...'}
             </span>
           </div>
-          <p className="text-xs text-white/40 mt-0.5">
+          <p
+            className={`text-xs mt-0.5 ${
+              isDark ? 'text-white/40' : 'text-slate-500'
+            }`}
+          >
             Gestão operacional, vendas, cardápio, pedidos e integrações
           </p>
         </div>
@@ -253,36 +270,64 @@ export const AdminDashboard: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={simulateIncomingOrder}
-            className="flex items-center gap-2 bg-[#0A0A0B] hover:bg-[#202024] text-amber-400 border border-white/5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm ${
+              isDark
+                ? 'bg-[#0A0A0B] hover:bg-[#202024] text-amber-400 border border-white/5'
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+            }`}
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>Simular Pedido</span>
           </button>
         </div>
       </div>
 
       {/* CARD DE COMPARTILHAMENTO DO CARDÁPIO PARA CLIENTES */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-[#151518] to-[#151518] border border-amber-500/30 rounded-3xl p-5 shadow-lg">
+      <div
+        className={`border rounded-3xl p-5 shadow-lg transition-colors ${
+          isDark
+            ? 'bg-gradient-to-r from-amber-500/10 via-[#151518] to-[#151518] border-amber-500/30'
+            : 'bg-gradient-to-r from-amber-50 via-white to-white border-amber-300 shadow-sm'
+        }`}
+      >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xl">📲</span>
-              <h2 className="text-base font-black text-white tracking-tight">
+              <h2
+                className={`text-base font-black tracking-tight ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
                 Link do Cardápio para seus Clientes
               </h2>
-              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                 Exclusivo para Pedidos
               </span>
             </div>
-            <p className="text-xs text-white/60 max-w-2xl leading-relaxed">
+            <p
+              className={`text-xs max-w-2xl leading-relaxed ${
+                isDark ? 'text-white/60' : 'text-slate-600'
+              }`}
+            >
               Divulgue este link no WhatsApp, Instagram e panfletos. Ele abre <strong>direto no cardápio de cliente</strong>, sem pedir senha e sem dar acesso à sua conta de administrador.
             </p>
-            <div className="inline-flex items-center gap-2 bg-[#0A0A0B] border border-white/10 rounded-xl px-3 py-1.5 mt-1 font-mono text-xs text-amber-400 select-all">
+            <div
+              className={`inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 mt-1 font-mono text-xs select-all ${
+                isDark
+                  ? 'bg-[#0A0A0B] border-white/10 text-amber-400'
+                  : 'bg-amber-50/80 border-amber-200 text-amber-900'
+              }`}
+            >
               <span>{clientShareUrl}</span>
               <button
                 type="button"
                 onClick={() => setAdminTab('settings')}
-                className="text-[10px] text-white/40 hover:text-white underline font-sans ml-2 transition-colors"
+                className={`text-[10px] underline font-sans ml-2 transition-colors ${
+                  isDark
+                    ? 'text-white/40 hover:text-white'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
                 title="Configurar URL oficial nas configurações"
               >
                 Alterar
@@ -312,9 +357,13 @@ export const AdminDashboard: React.FC = () => {
             <button
               id="preview-as-client-btn"
               onClick={() => setCurrentView('client')}
-              className="flex items-center gap-2 bg-[#202024] hover:bg-white/10 text-neutral-200 border border-white/10 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-95"
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-95 border ${
+                isDark
+                  ? 'bg-[#202024] hover:bg-white/10 text-neutral-200 border-white/10'
+                  : 'bg-gray-100 hover:bg-gray-200 text-slate-800 border-gray-300'
+              }`}
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4 text-slate-700 dark:text-neutral-200" />
               <span>Ver como Cliente</span>
             </button>
           </div>
@@ -343,10 +392,12 @@ export const AdminDashboard: React.FC = () => {
               className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all border shrink-0 ${
                 isSelected
                   ? 'bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/20'
-                  : 'bg-[#151518] text-white/50 border-white/5 hover:border-white/10 hover:text-white'
+                  : isDark
+                  ? 'bg-[#151518] text-white/60 border-white/5 hover:border-white/10 hover:text-white'
+                  : 'bg-white text-slate-700 border-gray-200 hover:bg-gray-50 hover:text-slate-950'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${isSelected ? 'text-black' : isDark ? 'text-neutral-400' : 'text-slate-700'}`} />
               <span>{tab.label}</span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
@@ -360,12 +411,28 @@ export const AdminDashboard: React.FC = () => {
 
       <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-6 items-start">
         {/* Desktop Sidebar (Requirement 25) */}
-        <aside className="hidden lg:block bg-[#151518] border border-white/5 rounded-3xl p-4 sticky top-4 shadow-xl space-y-2">
-          <div className="px-3 py-2 mb-2 border-b border-white/5">
-            <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">
+        <aside
+          className={`hidden lg:block border rounded-3xl p-4 sticky top-4 shadow-xl space-y-2 transition-colors ${
+            isDark
+              ? 'bg-[#151518] border-white/5 text-white'
+              : 'bg-white border-gray-200 text-slate-900 shadow-sm'
+          }`}
+        >
+          <div
+            className={`px-3 py-2 mb-2 border-b ${
+              isDark ? 'border-white/5' : 'border-gray-200'
+            }`}
+          >
+            <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
               Menu Administrativo
             </span>
-            <span className="text-xs text-white/40">Gestão integrada</span>
+            <span
+              className={`text-xs ${
+                isDark ? 'text-white/40' : 'text-slate-500'
+              }`}
+            >
+              Gestão integrada
+            </span>
           </div>
 
           {[
@@ -388,11 +455,13 @@ export const AdminDashboard: React.FC = () => {
                 className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${
                   isSelected
                     ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 font-black'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    : isDark
+                    ? 'text-white/70 hover:text-white hover:bg-white/5'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-gray-100'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-black' : isDark ? 'text-neutral-400' : 'text-slate-700'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.count !== undefined && item.count > 0 && (
@@ -417,44 +486,118 @@ export const AdminDashboard: React.FC = () => {
         <div className="space-y-6">
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-[#151518] border border-white/5 rounded-3xl p-5 shadow-lg">
-              <div className="flex items-center justify-between text-white/40 mb-2">
+            <div
+              className={`border rounded-3xl p-5 shadow-lg transition-colors ${
+                isDark
+                  ? 'bg-[#151518] border-white/5'
+                  : 'bg-white border-gray-200 shadow-sm'
+              }`}
+            >
+              <div
+                className={`flex items-center justify-between mb-2 ${
+                  isDark ? 'text-white/50' : 'text-slate-600'
+                }`}
+              >
                 <span className="text-xs font-bold uppercase tracking-wider">Vendas Hoje</span>
-                <DollarSign className="w-4 h-4 text-emerald-400" />
+                <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-2xl font-black text-white">{formatCurrency(totalSalesToday)}</div>
-              <span className="text-[11px] text-emerald-400 font-bold mt-1 block">
+              <div
+                className={`text-2xl font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                {formatCurrency(totalSalesToday)}
+              </div>
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 block">
                 +18% vs ontem
               </span>
             </div>
 
-            <div className="bg-[#151518] border border-white/5 rounded-3xl p-5 shadow-lg">
-              <div className="flex items-center justify-between text-white/40 mb-2">
+            <div
+              className={`border rounded-3xl p-5 shadow-lg transition-colors ${
+                isDark
+                  ? 'bg-[#151518] border-white/5'
+                  : 'bg-white border-gray-200 shadow-sm'
+              }`}
+            >
+              <div
+                className={`flex items-center justify-between mb-2 ${
+                  isDark ? 'text-white/50' : 'text-slate-600'
+                }`}
+              >
                 <span className="text-xs font-bold uppercase tracking-wider">Pedidos Feitos</span>
-                <ShoppingBag className="w-4 h-4 text-amber-400" />
+                <ShoppingBag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-2xl font-black text-white">{totalOrdersCount}</div>
-              <span className="text-[11px] text-white/40 mt-1 block">
+              <div
+                className={`text-2xl font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                {totalOrdersCount}
+              </div>
+              <span
+                className={`text-[11px] mt-1 block ${
+                  isDark ? 'text-white/40' : 'text-slate-500'
+                }`}
+              >
                 {activeOrdersCount} em andamento
               </span>
             </div>
 
-            <div className="bg-[#151518] border border-white/5 rounded-3xl p-5 shadow-lg">
-              <div className="flex items-center justify-between text-white/40 mb-2">
+            <div
+              className={`border rounded-3xl p-5 shadow-lg transition-colors ${
+                isDark
+                  ? 'bg-[#151518] border-white/5'
+                  : 'bg-white border-gray-200 shadow-sm'
+              }`}
+            >
+              <div
+                className={`flex items-center justify-between mb-2 ${
+                  isDark ? 'text-white/50' : 'text-slate-600'
+                }`}
+              >
                 <span className="text-xs font-bold uppercase tracking-wider">Ticket Médio</span>
-                <TrendingUp className="w-4 h-4 text-blue-400" />
+                <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="text-2xl font-black text-white">{formatCurrency(averageTicket)}</div>
-              <span className="text-[11px] text-white/40 mt-1 block">Por pedido</span>
+              <div
+                className={`text-2xl font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                {formatCurrency(averageTicket)}
+              </div>
+              <span
+                className={`text-[11px] mt-1 block ${
+                  isDark ? 'text-white/40' : 'text-slate-500'
+                }`}
+              >
+                Por pedido
+              </span>
             </div>
 
-            <div className="bg-[#151518] border border-white/5 rounded-3xl p-5 shadow-lg">
-              <div className="flex items-center justify-between text-white/40 mb-2">
+            <div
+              className={`border rounded-3xl p-5 shadow-lg transition-colors ${
+                isDark
+                  ? 'bg-[#151518] border-white/5'
+                  : 'bg-white border-gray-200 shadow-sm'
+              }`}
+            >
+              <div
+                className={`flex items-center justify-between mb-2 ${
+                  isDark ? 'text-white/50' : 'text-slate-600'
+                }`}
+              >
                 <span className="text-xs font-bold uppercase tracking-wider">Tempo Médio</span>
-                <Clock className="w-4 h-4 text-orange-400" />
+                <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
-              <div className="text-2xl font-black text-white">28 min</div>
-              <span className="text-[11px] text-emerald-400 font-bold mt-1 block">
+              <div
+                className={`text-2xl font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                28 min
+              </div>
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 block">
                 Dentro da meta (&lt;35m)
               </span>
             </div>
@@ -463,13 +606,31 @@ export const AdminDashboard: React.FC = () => {
           {/* Vendas por Horário (Visual Simulation) & Top Selling Items */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Sales Progression Chart */}
-            <div className="lg:col-span-2 bg-[#151518] border border-white/5 rounded-3xl p-6 shadow-lg space-y-4">
+            <div
+              className={`lg:col-span-2 border rounded-3xl p-6 shadow-lg space-y-4 transition-colors ${
+                isDark
+                  ? 'bg-[#151518] border-white/5 text-white'
+                  : 'bg-white border-gray-200 text-slate-900 shadow-sm'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-black text-white">Fluxo de Vendas por Hora</h3>
-                  <p className="text-xs text-white/40">Picos de pedidos no almoço e jantar</p>
+                  <h3
+                    className={`text-sm font-black ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    Fluxo de Vendas por Hora
+                  </h3>
+                  <p
+                    className={`text-xs ${
+                      isDark ? 'text-white/40' : 'text-slate-500'
+                    }`}
+                  >
+                    Picos de pedidos no almoço e jantar
+                  </p>
                 </div>
-                <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">Hoje</span>
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">Hoje</span>
               </div>
 
               {/* Visual Bars for Hourly Distribution */}
@@ -487,36 +648,75 @@ export const AdminDashboard: React.FC = () => {
                   { hour: '23h', val: 30, orders: 4 },
                 ].map((bar, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                    <span className="text-[9px] text-amber-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
                       {bar.orders} ped
                     </span>
                     <div
                       style={{ height: `${bar.val}%` }}
                       className="w-full bg-gradient-to-t from-amber-500/20 to-amber-500 rounded-t-xl group-hover:from-amber-400 group-hover:to-orange-400 transition-all cursor-pointer"
                     />
-                    <span className="text-[10px] text-white/40 font-medium">{bar.hour}</span>
+                    <span
+                      className={`text-[10px] font-medium ${
+                        isDark ? 'text-white/40' : 'text-slate-600'
+                      }`}
+                    >
+                      {bar.hour}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Top Selling Products */}
-            <div className="bg-[#151518] border border-white/5 rounded-3xl p-6 shadow-lg space-y-4">
-              <h3 className="text-sm font-black text-white">Produtos Mais Vendidos</h3>
+            <div
+              className={`border rounded-3xl p-6 shadow-lg space-y-4 transition-colors ${
+                isDark
+                  ? 'bg-[#151518] border-white/5 text-white'
+                  : 'bg-white border-gray-200 text-slate-900 shadow-sm'
+              }`}
+            >
+              <h3
+                className={`text-sm font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                Produtos Mais Vendidos
+              </h3>
               <div className="space-y-3">
                 {topSellingList.slice(0, 5).map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs pb-2 border-b border-white/5 last:border-0">
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between text-xs pb-2 border-b last:border-0 ${
+                      isDark ? 'border-white/5' : 'border-gray-100'
+                    }`}
+                  >
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-md bg-[#0A0A0B] text-amber-500 border border-white/5 flex items-center justify-center font-black text-[10px]">
+                      <span
+                        className={`w-5 h-5 rounded-md flex items-center justify-center font-black text-[10px] border ${
+                          isDark
+                            ? 'bg-[#0A0A0B] text-amber-500 border-white/5'
+                            : 'bg-amber-100 text-amber-900 border-amber-200'
+                        }`}
+                      >
                         {idx + 1}
                       </span>
-                      <span className="text-white/80 font-bold truncate max-w-[130px]">
+                      <span
+                        className={`font-bold truncate max-w-[130px] ${
+                          isDark ? 'text-white/80' : 'text-slate-800'
+                        }`}
+                      >
                         {item.name}
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-white font-bold block">{item.count} un</span>
-                      <span className="text-[10px] text-amber-500 font-black">
+                      <span
+                        className={`font-bold block ${
+                          isDark ? 'text-white' : 'text-slate-900'
+                        }`}
+                      >
+                        {item.count} un
+                      </span>
+                      <span className="text-[10px] text-amber-600 dark:text-amber-500 font-black">
                         {formatCurrency(item.revenue)}
                       </span>
                     </div>
@@ -532,7 +732,13 @@ export const AdminDashboard: React.FC = () => {
       {adminTab === 'orders' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <h2 className="text-base font-black text-white">Gestão Operacional de Pedidos</h2>
+            <h2
+              className={`text-base font-black ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              Gestão Operacional de Pedidos
+            </h2>
 
             {/* Order filter */}
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
@@ -551,7 +757,9 @@ export const AdminDashboard: React.FC = () => {
                   className={`px-3.5 py-2 rounded-2xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
                     orderFilter === f.id
                       ? 'bg-amber-500 text-black shadow-md'
-                      : 'bg-[#151518] text-white/50 hover:text-white border border-white/5'
+                      : isDark
+                      ? 'bg-[#151518] text-white/60 hover:text-white border border-white/5'
+                      : 'bg-white text-slate-700 hover:text-slate-950 border border-gray-200'
                   }`}
                 >
                   {f.label}
@@ -560,10 +768,22 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-[#151518] border border-white/5 rounded-3xl overflow-hidden shadow-lg">
+          <div
+            className={`border rounded-3xl overflow-hidden shadow-lg transition-colors ${
+              isDark
+                ? 'bg-[#151518] border-white/5'
+                : 'bg-white border-gray-200 shadow-sm'
+            }`}
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#0A0A0B] text-white/40 uppercase font-black tracking-wider border-b border-white/5">
+                <thead
+                  className={`uppercase font-black tracking-wider border-b ${
+                    isDark
+                      ? 'bg-[#0A0A0B] text-white/50 border-white/5'
+                      : 'bg-gray-50 text-slate-700 border-gray-200'
+                  }`}
+                >
                   <tr>
                     <th className="p-4">Pedido</th>
                     <th className="p-4">Cliente</th>
@@ -574,16 +794,32 @@ export const AdminDashboard: React.FC = () => {
                     <th className="p-4 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody
+                  className={`divide-y ${
+                    isDark ? 'divide-white/5' : 'divide-gray-100'
+                  }`}
+                >
                   {orders.filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter)).length === 0 ? (
                     <tr>
                       <td colSpan={7} className="p-10 text-center">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <ShoppingBag className="w-10 h-10 text-white/20" />
-                          <p className="text-sm font-bold text-white/70">
+                          <ShoppingBag
+                            className={`w-10 h-10 ${
+                              isDark ? 'text-white/20' : 'text-slate-300'
+                            }`}
+                          />
+                          <p
+                            className={`text-sm font-bold ${
+                              isDark ? 'text-white/70' : 'text-slate-700'
+                            }`}
+                          >
                             Nenhum pedido encontrado {orderFilter !== 'all' ? `com status "${orderFilter}"` : ''}
                           </p>
-                          <p className="text-xs text-white/40">
+                          <p
+                            className={`text-xs ${
+                              isDark ? 'text-white/40' : 'text-slate-500'
+                            }`}
+                          >
                             Assim que os clientes realizarem novos pedidos, eles aparecerão aqui em tempo real.
                           </p>
                         </div>
@@ -593,21 +829,50 @@ export const AdminDashboard: React.FC = () => {
                     orders
                       .filter((o) => (orderFilter === 'all' ? true : o.status === orderFilter))
                       .map((order) => (
-                        <tr key={order.id} className="hover:bg-[#202024]/40 transition-colors">
-                          <td className="p-4 font-black text-white whitespace-nowrap">
+                        <tr
+                          key={order.id}
+                          className={`transition-colors ${
+                            isDark ? 'hover:bg-[#202024]/40' : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <td
+                            className={`p-4 font-black whitespace-nowrap ${
+                              isDark ? 'text-white' : 'text-slate-900'
+                            }`}
+                          >
                             #{order.orderNumber}
-                            <span className="block text-[10px] text-white/40 font-normal">
+                            <span
+                              className={`block text-[10px] font-normal ${
+                                isDark ? 'text-white/40' : 'text-slate-500'
+                              }`}
+                            >
                               {order.createdAt}
                             </span>
                           </td>
 
                           <td className="p-4">
-                            <span className="font-bold text-white block">{order.customer.name}</span>
-                            <span className="text-[11px] text-white/40">{order.customer.phone}</span>
+                            <span
+                              className={`font-bold block ${
+                                isDark ? 'text-white' : 'text-slate-900'
+                              }`}
+                            >
+                              {order.customer.name}
+                            </span>
+                            <span
+                              className={`text-[11px] ${
+                                isDark ? 'text-white/40' : 'text-slate-500'
+                              }`}
+                            >
+                              {order.customer.phone}
+                            </span>
                           </td>
 
                           <td className="p-4 max-w-[200px]">
-                            <span className="text-white/80 font-medium block truncate">
+                            <span
+                              className={`font-medium block truncate ${
+                                isDark ? 'text-white/80' : 'text-slate-800'
+                              }`}
+                            >
                               {order.items
                                 .map((i) => `${i.quantity}x ${i.product.name}`)
                                 .join(', ')}
@@ -615,10 +880,14 @@ export const AdminDashboard: React.FC = () => {
                           </td>
 
                           <td className="p-4 whitespace-nowrap">
-                            <span className="font-black text-amber-500 block">
+                            <span className="font-black text-amber-600 dark:text-amber-500 block">
                               {formatCurrency(order.total)}
                             </span>
-                            <span className="text-[10px] uppercase text-white/40 font-bold">
+                            <span
+                              className={`text-[10px] uppercase font-bold ${
+                                isDark ? 'text-white/40' : 'text-slate-500'
+                              }`}
+                            >
                               {order.paymentMethod}
                             </span>
                           </td>
@@ -627,8 +896,8 @@ export const AdminDashboard: React.FC = () => {
                             <span
                               className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
                                 order.deliveryType === 'delivery'
-                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                               }`}
                             >
                               {order.deliveryType === 'delivery' ? '🛵 Entrega' : '🏪 Retirada'}
@@ -641,7 +910,11 @@ export const AdminDashboard: React.FC = () => {
                               onChange={(e) =>
                                 updateOrderStatus(order.id, e.target.value as OrderStatus)
                               }
-                              className="bg-[#0A0A0B] border border-white/5 text-white rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-amber-500"
+                              className={`border rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-amber-500 ${
+                                isDark
+                                  ? 'bg-[#0A0A0B] border-white/10 text-white'
+                                  : 'bg-white border-gray-300 text-slate-900'
+                              }`}
                             >
                               <option value="received">Recebido</option>
                               <option value="preparing">Preparando</option>
@@ -664,18 +937,26 @@ export const AdminDashboard: React.FC = () => {
                                   );
                                 }}
                                 title="Enviar WhatsApp"
-                                className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
+                                className={`p-2 rounded-xl transition-colors border ${
+                                  isDark
+                                    ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20'
+                                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200'
+                                }`}
                               >
-                                <MessageCircle className="w-3.5 h-3.5" />
+                                <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                               </button>
 
                               {/* Print */}
                               <button
                                 onClick={() => printThermalReceipt(order)}
                                 title="Imprimir comanda térmica"
-                                className="p-2 rounded-xl bg-[#0A0A0B] text-white/50 hover:text-white border border-white/5 transition-colors"
+                                className={`p-2 rounded-xl transition-colors border ${
+                                  isDark
+                                    ? 'bg-[#0A0A0B] text-neutral-300 hover:text-white border-white/5'
+                                    : 'bg-gray-100 text-slate-700 hover:text-slate-950 border-gray-300 hover:bg-gray-200'
+                                }`}
                               >
-                                <Printer className="w-3.5 h-3.5" />
+                                <Printer className="w-3.5 h-3.5 text-slate-700 dark:text-neutral-300" />
                               </button>
                             </div>
                           </td>
@@ -694,8 +975,20 @@ export const AdminDashboard: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-black text-white">Produtos do Cardápio ({products.length})</h2>
-              <p className="text-xs text-white/40">Adicione, edite preços ou pause produtos</p>
+              <h2
+                className={`text-base font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                Produtos do Cardápio ({products.length})
+              </h2>
+              <p
+                className={`text-xs ${
+                  isDark ? 'text-white/40' : 'text-slate-500'
+                }`}
+              >
+                Adicione, edite preços ou pause produtos
+              </p>
             </div>
 
             <button
@@ -712,17 +1005,31 @@ export const AdminDashboard: React.FC = () => {
             {products.map((prod) => (
               <div
                 key={prod.id}
-                className="bg-[#151518] border border-white/5 rounded-3xl p-4 flex gap-4 items-center justify-between shadow-lg"
+                className={`border rounded-3xl p-4 flex gap-4 items-center justify-between shadow-lg transition-colors ${
+                  isDark
+                    ? 'bg-[#151518] border-white/5'
+                    : 'bg-white border-gray-200 shadow-sm'
+                }`}
               >
                 <div className="flex items-center gap-3.5 min-w-0">
                   <img
                     src={prod.photo}
                     alt={prod.name}
-                    className="w-16 h-16 rounded-2xl object-cover bg-[#202024] shrink-0 border border-white/5"
+                    className={`w-16 h-16 rounded-2xl object-cover shrink-0 border ${
+                      isDark
+                        ? 'bg-[#202024] border-white/5'
+                        : 'bg-gray-100 border-gray-200'
+                    }`}
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-white truncate">{prod.name}</h4>
+                      <h4
+                        className={`text-sm font-bold truncate ${
+                          isDark ? 'text-white' : 'text-slate-900'
+                        }`}
+                      >
+                        {prod.name}
+                      </h4>
                       {prod.isDailyOffer && (
                         <span className="bg-amber-500 text-black text-[9px] font-black uppercase px-2 py-0.5 rounded-full">
                           Oferta
@@ -731,17 +1038,25 @@ export const AdminDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-xs font-black text-amber-500">
+                      <span className="text-xs font-black text-amber-600 dark:text-amber-500">
                         {formatCurrency(prod.promoPrice ?? prod.price)}
                       </span>
                       {prod.promoPrice && (
-                        <span className="text-[10px] text-white/40 line-through">
+                        <span
+                          className={`text-[10px] line-through ${
+                            isDark ? 'text-white/40' : 'text-slate-400'
+                          }`}
+                        >
                           {formatCurrency(prod.price)}
                         </span>
                       )}
                     </div>
 
-                    <span className="text-[11px] text-white/40 block truncate max-w-xs mt-0.5">
+                    <span
+                      className={`text-[11px] block truncate max-w-xs mt-0.5 ${
+                        isDark ? 'text-white/40' : 'text-slate-500'
+                      }`}
+                    >
                       {prod.description}
                     </span>
                   </div>
@@ -751,7 +1066,11 @@ export const AdminDashboard: React.FC = () => {
                   {/* Edit */}
                   <button
                     onClick={() => handleOpenEditProduct(prod)}
-                    className="p-2.5 rounded-2xl bg-[#0A0A0B] hover:bg-[#202024] text-white/60 hover:text-white border border-white/5 transition-colors"
+                    className={`p-2.5 rounded-2xl border transition-colors ${
+                      isDark
+                        ? 'bg-[#0A0A0B] hover:bg-[#202024] text-neutral-300 hover:text-white border-white/5'
+                        : 'bg-gray-100 hover:bg-gray-200 text-slate-700 hover:text-slate-950 border-gray-300'
+                    }`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
@@ -763,7 +1082,11 @@ export const AdminDashboard: React.FC = () => {
                         deleteProduct(prod.id);
                       }
                     }}
-                    className="p-2.5 rounded-2xl bg-[#0A0A0B] hover:bg-red-950/60 text-white/40 hover:text-red-400 border border-white/5 transition-colors"
+                    className={`p-2.5 rounded-2xl border transition-colors ${
+                      isDark
+                        ? 'bg-[#0A0A0B] hover:bg-red-950/60 text-white/40 hover:text-red-400 border-white/5'
+                        : 'bg-red-50 hover:bg-red-100 text-red-600 border-red-200'
+                    }`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -777,26 +1100,46 @@ export const AdminDashboard: React.FC = () => {
       {/* TAB 4: CATEGORIES (CRUD) */}
       {adminTab === 'categories' && (
         <div className="space-y-4">
-          <div className="bg-[#151518] border border-white/5 rounded-3xl p-6 shadow-lg">
-            <h3 className="text-sm font-black text-white mb-3">Adicionar Nova Categoria</h3>
+          <div
+            className={`border rounded-3xl p-6 shadow-lg transition-colors ${
+              isDark
+                ? 'bg-[#151518] border-white/5'
+                : 'bg-white border-gray-200 shadow-sm'
+            }`}
+          >
+            <h3
+              className={`text-sm font-black mb-3 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              Adicionar Nova Categoria
+            </h3>
             <form onSubmit={handleAddCategory} className="flex gap-2">
               <input
                 type="text"
                 value={newCatIcon}
                 onChange={(e) => setNewCatIcon(e.target.value)}
                 placeholder="Emoji (🍔)"
-                className="w-16 bg-[#0A0A0B] border border-white/5 rounded-2xl px-2 py-2.5 text-center text-sm text-white"
+                className={`w-16 border rounded-2xl px-2 py-2.5 text-center text-sm ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
               <input
                 type="text"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 placeholder="Nome da categoria (ex: Sobremesas Artesanais)"
-                className="flex-1 bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`flex-1 border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
               <button
                 type="submit"
-                className="bg-amber-500 hover:bg-amber-400 text-black font-black px-5 py-2.5 rounded-2xl text-xs uppercase tracking-wider"
+                className="bg-amber-500 hover:bg-amber-400 text-black font-black px-5 py-2.5 rounded-2xl text-xs uppercase tracking-wider shadow-sm"
               >
                 Adicionar
               </button>
@@ -807,16 +1150,30 @@ export const AdminDashboard: React.FC = () => {
             {categories.map((cat) => (
               <div
                 key={cat.id}
-                className="bg-[#151518] border border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-md"
+                className={`border rounded-2xl p-4 flex items-center justify-between shadow-md transition-colors ${
+                  isDark
+                    ? 'bg-[#151518] border-white/5'
+                    : 'bg-white border-gray-200 shadow-sm'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{cat.icon}</span>
-                  <span className="font-bold text-xs text-white">{cat.name}</span>
+                  <span
+                    className={`font-bold text-xs ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    {cat.name}
+                  </span>
                 </div>
                 {categories.length > 1 && (
                   <button
                     onClick={() => deleteCategory(cat.id)}
-                    className="text-white/30 hover:text-red-400 p-1.5 transition-colors"
+                    className={`p-1.5 transition-colors ${
+                      isDark
+                        ? 'text-white/30 hover:text-red-400'
+                        : 'text-slate-400 hover:text-red-600'
+                    }`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -832,8 +1189,20 @@ export const AdminDashboard: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-black text-white">Cupons de Desconto ({coupons.length})</h2>
-              <p className="text-xs text-white/40">Crie cupons promocionais para seus clientes</p>
+              <h2
+                className={`text-base font-black ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                Cupons de Desconto ({coupons.length})
+              </h2>
+              <p
+                className={`text-xs ${
+                  isDark ? 'text-white/40' : 'text-slate-500'
+                }`}
+              >
+                Crie cupons promocionais para seus clientes
+              </p>
             </div>
 
             <button
@@ -849,35 +1218,63 @@ export const AdminDashboard: React.FC = () => {
             {coupons.map((coupon) => (
               <div
                 key={coupon.id}
-                className="bg-[#151518] border border-white/5 rounded-3xl p-5 flex flex-col justify-between shadow-lg"
+                className={`border rounded-3xl p-5 flex flex-col justify-between shadow-lg transition-colors ${
+                  isDark
+                    ? 'bg-[#151518] border-white/5'
+                    : 'bg-white border-gray-200 shadow-sm'
+                }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-black text-amber-500 tracking-wider bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl">
+                    <span
+                      className={`text-sm font-black tracking-wider px-3 py-1 rounded-xl border ${
+                        isDark
+                          ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                          : 'text-amber-900 bg-amber-100 border-amber-300'
+                      }`}
+                    >
                       {coupon.code}
                     </span>
                     <button
                       onClick={() => deleteCoupon(coupon.id)}
-                      className="text-white/30 hover:text-red-400 p-1"
+                      className={`p-1 transition-colors ${
+                        isDark
+                          ? 'text-white/30 hover:text-red-400'
+                          : 'text-slate-400 hover:text-red-600'
+                      }`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <p className="text-xs text-white font-bold">
+                  <p
+                    className={`text-xs font-bold ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
                     Desconto:{' '}
                     {coupon.discountType === 'percentage'
                       ? `${coupon.value}%`
                       : formatCurrency(coupon.value)}
                   </p>
-                  <p className="text-[11px] text-white/40 mt-0.5">
+                  <p
+                    className={`text-[11px] mt-0.5 ${
+                      isDark ? 'text-white/40' : 'text-slate-500'
+                    }`}
+                  >
                     Pedido mínimo: {formatCurrency(coupon.minOrderValue)}
                   </p>
                 </div>
 
-                <div className="mt-3.5 pt-2.5 border-t border-white/5 flex justify-between text-[11px] text-white/40">
+                <div
+                  className={`mt-3.5 pt-2.5 border-t flex justify-between text-[11px] ${
+                    isDark
+                      ? 'border-white/5 text-white/40'
+                      : 'border-gray-100 text-slate-500'
+                  }`}
+                >
                   <span>Usos: {coupon.currentUses} vezes</span>
-                  <span className="text-emerald-400 font-bold">Ativo</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Ativo</span>
                 </div>
               </div>
             ))}
@@ -888,15 +1285,31 @@ export const AdminDashboard: React.FC = () => {
       {/* TAB 6: DELIVERY ZONES */}
       {adminTab === 'delivery' && (
         <div className="space-y-4">
-          <div className="bg-[#151518] border border-white/5 rounded-3xl p-6 shadow-lg">
-            <h3 className="text-sm font-black text-white mb-3">Cadastrar Novo Bairro e Taxa</h3>
+          <div
+            className={`border rounded-3xl p-6 shadow-lg transition-colors ${
+              isDark
+                ? 'bg-[#151518] border-white/5'
+                : 'bg-white border-gray-200 shadow-sm'
+            }`}
+          >
+            <h3
+              className={`text-sm font-black mb-3 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              Cadastrar Novo Bairro e Taxa
+            </h3>
             <form onSubmit={handleAddDeliveryZone} className="flex gap-2">
               <input
                 type="text"
                 value={newZoneNeighborhood}
                 onChange={(e) => setNewZoneNeighborhood(e.target.value)}
                 placeholder="Nome do Bairro (ex: Vila Mariana)"
-                className="flex-1 bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`flex-1 border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
               <input
                 type="number"
@@ -904,11 +1317,15 @@ export const AdminDashboard: React.FC = () => {
                 value={newZoneFee}
                 onChange={(e) => setNewZoneFee(e.target.value)}
                 placeholder="Taxa R$"
-                className="w-24 bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`w-24 border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
               <button
                 type="submit"
-                className="bg-amber-500 hover:bg-amber-400 text-black font-black px-5 py-2.5 rounded-2xl text-xs uppercase tracking-wider"
+                className="bg-amber-500 hover:bg-amber-400 text-black font-black px-5 py-2.5 rounded-2xl text-xs uppercase tracking-wider shadow-sm"
               >
                 Salvar Bairro
               </button>
@@ -919,17 +1336,31 @@ export const AdminDashboard: React.FC = () => {
             {deliveryZones.map((zone) => (
               <div
                 key={zone.id}
-                className="bg-[#151518] border border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-md"
+                className={`border rounded-2xl p-4 flex items-center justify-between shadow-md transition-colors ${
+                  isDark
+                    ? 'bg-[#151518] border-white/5'
+                    : 'bg-white border-gray-200 shadow-sm'
+                }`}
               >
                 <div>
-                  <span className="font-bold text-xs text-white block">{zone.neighborhood}</span>
-                  <span className="text-xs font-black text-amber-500">
+                  <span
+                    className={`font-bold text-xs block ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    {zone.neighborhood}
+                  </span>
+                  <span className="text-xs font-black text-amber-600 dark:text-amber-500">
                     Taxa: {formatCurrency(zone.fee)}
                   </span>
                 </div>
                 <button
                   onClick={() => deleteDeliveryZone(zone.id)}
-                  className="text-white/30 hover:text-red-400 p-1.5 transition-colors"
+                  className={`p-1.5 transition-colors ${
+                    isDark
+                      ? 'text-white/30 hover:text-red-400'
+                      : 'text-slate-400 hover:text-red-600'
+                  }`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -941,57 +1372,117 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 7: SETTINGS & THERMAL PRINTER */}
       {adminTab === 'settings' && (
-        <div className="bg-[#151518] border border-white/5 rounded-3xl p-6 sm:p-7 space-y-6 shadow-lg">
+        <div
+          className={`border rounded-3xl p-6 sm:p-7 space-y-6 shadow-lg transition-colors ${
+            isDark
+              ? 'bg-[#151518] border-white/5'
+              : 'bg-white border-gray-200 shadow-sm'
+          }`}
+        >
           <div>
-            <h2 className="text-base font-black text-white">Configurações Gerais da Loja</h2>
-            <p className="text-xs text-white/40">
+            <h2
+              className={`text-base font-black ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              Configurações Gerais da Loja
+            </h2>
+            <p
+              className={`text-xs ${
+                isDark ? 'text-white/40' : 'text-slate-500'
+              }`}
+            >
               Dados da empresa, WhatsApp de atendimento e impressora térmica
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-white/50 mb-1.5">Nome da Hamburgueria</label>
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
+                Nome da Hamburgueria
+              </label>
               <input
                 type="text"
                 value={storeSettings.name}
                 onChange={(e) => updateStoreSettings({ name: e.target.value })}
-                className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/50 mb-1.5">WhatsApp de Atendimento</label>
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
+                WhatsApp de Atendimento
+              </label>
               <input
                 type="text"
                 value={storeSettings.whatsapp}
                 onChange={(e) => updateStoreSettings({ whatsapp: e.target.value })}
-                className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/50 mb-1.5">Horário de Funcionamento</label>
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
+                Horário de Funcionamento
+              </label>
               <input
                 type="text"
                 value={storeSettings.openingHours}
                 onChange={(e) => updateStoreSettings({ openingHours: e.target.value })}
-                className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/50 mb-1.5">Endereço Físico</label>
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
+                Endereço Físico
+              </label>
               <input
                 type="text"
                 value={storeSettings.address}
                 onChange={(e) => updateStoreSettings({ address: e.target.value })}
-                className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                  isDark
+                    ? 'bg-[#0A0A0B] border-white/10 text-white'
+                    : 'bg-gray-50 border-gray-300 text-slate-900'
+                }`}
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-white/50 mb-1.5">
+              <label
+                className={`block text-xs font-bold mb-1.5 ${
+                  isDark ? 'text-white/60' : 'text-slate-700'
+                }`}
+              >
                 Link Oficial do Cardápio para Clientes (URL Pública / Vercel)
               </label>
               <div className="flex items-center gap-2">
@@ -1000,33 +1491,59 @@ export const AdminDashboard: React.FC = () => {
                   placeholder="https://gamas-burger.vercel.app"
                   value={storeSettings.publicStoreUrl || ''}
                   onChange={(e) => updateStoreSettings({ publicStoreUrl: e.target.value })}
-                  className="w-full bg-[#0A0A0B] border border-amber-500/30 rounded-2xl px-3.5 py-2.5 text-xs text-amber-300 font-mono focus:border-amber-500 focus:outline-none"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs font-mono focus:border-amber-500 focus:outline-none ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-amber-500/30 text-amber-300'
+                      : 'bg-amber-50/70 border-amber-300 text-amber-950'
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => updateStoreSettings({ publicStoreUrl: 'https://gamas-burger.vercel.app' })}
-                  className="shrink-0 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-2.5 rounded-2xl text-[11px] font-bold transition-colors border border-white/5"
+                  className={`shrink-0 px-3 py-2.5 rounded-2xl text-[11px] font-bold transition-colors border ${
+                    isDark
+                      ? 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border-white/5'
+                      : 'bg-gray-100 hover:bg-gray-200 text-slate-700 hover:text-slate-950 border-gray-300'
+                  }`}
                   title="Restaurar link oficial Vercel"
                 >
                   Usar Vercel
                 </button>
               </div>
-              <p className="text-[11px] text-white/40 mt-1.5">
-                Link divulgado aos clientes nos botões &quot;Copiar Link&quot; e &quot;Enviar no WhatsApp&quot;. Padrão: <strong className="text-amber-400 font-mono">https://gamas-burger.vercel.app</strong>.
+              <p
+                className={`text-[11px] mt-1.5 ${
+                  isDark ? 'text-white/40' : 'text-slate-500'
+                }`}
+              >
+                Link divulgado aos clientes nos botões &quot;Copiar Link&quot; e &quot;Enviar no WhatsApp&quot;. Padrão: <strong className="text-amber-600 dark:text-amber-400 font-mono">https://gamas-burger.vercel.app</strong>.
               </p>
             </div>
           </div>
 
           {/* Thermal Printer Settings Section */}
-          <div className="border-t border-white/5 pt-5 space-y-4">
-            <h3 className="text-sm font-black text-white flex items-center gap-2">
+          <div
+            className={`border-t pt-5 space-y-4 ${
+              isDark ? 'border-white/5' : 'border-gray-200'
+            }`}
+          >
+            <h3
+              className={`text-sm font-black flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               <Printer className="w-4 h-4 text-amber-500" />
               <span>Configuração da Impressora Térmica de Pedidos</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">Largura da Bobina</label>
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
+                  Largura da Bobina
+                </label>
                 <select
                   value={storeSettings?.printerSettings?.paperWidth || '80mm'}
                   onChange={(e) =>
@@ -1041,7 +1558,11 @@ export const AdminDashboard: React.FC = () => {
                       },
                     })
                   }
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 >
                   <option value="80mm">80mm (Padrão de Restaurantes e Delivery)</option>
                   <option value="58mm">58mm (Mini Impressoras Bluetooth / Portáteis)</option>
@@ -1049,7 +1570,13 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">Rodapé da Comanda</label>
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
+                  Rodapé da Comanda
+                </label>
                 <input
                   type="text"
                   value={storeSettings?.printerSettings?.customFooterText || ''}
@@ -1065,7 +1592,11 @@ export const AdminDashboard: React.FC = () => {
                       },
                     })
                   }
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
             </div>
@@ -1074,7 +1605,11 @@ export const AdminDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => printThermalReceipt(orders[0])}
-                className="bg-[#0A0A0B] hover:bg-[#202024] text-white/80 hover:text-white font-black px-5 py-3 rounded-2xl text-xs flex items-center gap-2 border border-white/5 transition-colors"
+                className={`font-black px-5 py-3 rounded-2xl text-xs flex items-center gap-2 border transition-colors ${
+                  isDark
+                    ? 'bg-[#0A0A0B] hover:bg-[#202024] text-neutral-200 hover:text-white border-white/5'
+                    : 'bg-gray-100 hover:bg-gray-200 text-slate-800 hover:text-slate-950 border-gray-300'
+                }`}
               >
                 <Printer className="w-4 h-4" />
                 <span>Testar Impressão da Comanda Térmica</span>
@@ -1096,31 +1631,61 @@ export const AdminDashboard: React.FC = () => {
       {/* CREATE / EDIT PRODUCT MODAL */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="w-full max-w-lg bg-[#151518] border border-white/10 rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base font-black text-white">
+          <div
+            className={`w-full max-w-lg border rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto transition-colors ${
+              isDark
+                ? 'bg-[#151518] border-white/10 text-white'
+                : 'bg-white border-gray-200 text-slate-900'
+            }`}
+          >
+            <h3
+              className={`text-base font-black ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
               {editingProduct ? 'Editar Produto' : 'Cadastrar Novo Produto'}
             </h3>
 
             <form onSubmit={handleSaveProduct} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">Nome do Produto</label>
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
+                  Nome do Produto
+                </label>
                 <input
                   type="text"
                   value={prodName}
                   onChange={(e) => setProdName(e.target.value)}
                   placeholder="Ex: X-Bacon Artesanal Duplo"
                   required
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-white/50 mb-1.5">Categoria</label>
+                  <label
+                    className={`block text-xs font-bold mb-1.5 ${
+                      isDark ? 'text-white/60' : 'text-slate-700'
+                    }`}
+                  >
+                    Categoria
+                  </label>
                   <select
                     value={prodCategoryId}
                     onChange={(e) => setProdCategoryId(e.target.value)}
-                    className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                    className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                      isDark
+                        ? 'bg-[#0A0A0B] border-white/10 text-white'
+                        : 'bg-gray-50 border-gray-300 text-slate-900'
+                    }`}
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -1131,56 +1696,100 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/50 mb-1.5">Preço Normal (R$)</label>
+                  <label
+                    className={`block text-xs font-bold mb-1.5 ${
+                      isDark ? 'text-white/60' : 'text-slate-700'
+                    }`}
+                  >
+                    Preço Normal (R$)
+                  </label>
                   <input
                     type="number"
                     step="0.10"
                     value={prodPrice}
                     onChange={(e) => setProdPrice(e.target.value)}
                     required
-                    className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                    className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                      isDark
+                        ? 'bg-[#0A0A0B] border-white/10 text-white'
+                        : 'bg-gray-50 border-gray-300 text-slate-900'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-white/50 mb-1.5">Preço Promocional (Opcional)</label>
+                  <label
+                    className={`block text-xs font-bold mb-1.5 ${
+                      isDark ? 'text-white/60' : 'text-slate-700'
+                    }`}
+                  >
+                    Preço Promocional (Opcional)
+                  </label>
                   <input
                     type="number"
                     step="0.10"
                     value={prodPromoPrice}
                     onChange={(e) => setProdPromoPrice(e.target.value)}
                     placeholder="Ex: 24.90"
-                    className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                    className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                      isDark
+                        ? 'bg-[#0A0A0B] border-white/10 text-white'
+                        : 'bg-gray-50 border-gray-300 text-slate-900'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/50 mb-1.5">URL da Foto</label>
+                  <label
+                    className={`block text-xs font-bold mb-1.5 ${
+                      isDark ? 'text-white/60' : 'text-slate-700'
+                    }`}
+                  >
+                    URL da Foto
+                  </label>
                   <input
                     type="text"
                     value={prodPhoto}
                     onChange={(e) => setProdPhoto(e.target.value)}
                     placeholder="https://..."
-                    className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                    className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                      isDark
+                        ? 'bg-[#0A0A0B] border-white/10 text-white'
+                        : 'bg-gray-50 border-gray-300 text-slate-900'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">Descrição</label>
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
+                  Descrição
+                </label>
                 <textarea
                   rows={2}
                   value={prodDescription}
                   onChange={(e) => setProdDescription(e.target.value)}
                   placeholder="Descrição apetitosa do produto..."
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl p-3 text-xs text-white resize-none focus:outline-none focus:border-amber-500"
+                  className={`w-full border rounded-2xl p-3 text-xs resize-none focus:outline-none focus:border-amber-500 ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
                   Ingredientes (separados por vírgula)
                 </label>
                 <input
@@ -1188,12 +1797,20 @@ export const AdminDashboard: React.FC = () => {
                   value={prodIngredients}
                   onChange={(e) => setProdIngredients(e.target.value)}
                   placeholder="Pão brioche, hambúrguer 160g, queijo cheddar"
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
 
               <div className="flex gap-4 pt-1">
-                <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer">
+                <label
+                  className={`flex items-center gap-2 text-xs cursor-pointer ${
+                    isDark ? 'text-white/70' : 'text-slate-700'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={prodIsDailyOffer}
@@ -1203,7 +1820,11 @@ export const AdminDashboard: React.FC = () => {
                   <span>Destacar como Oferta do Dia 🔥</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer">
+                <label
+                  className={`flex items-center gap-2 text-xs cursor-pointer ${
+                    isDark ? 'text-white/70' : 'text-slate-700'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={prodIsBestSeller}
@@ -1224,7 +1845,11 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsProductModalOpen(false)}
-                  className="px-5 bg-[#0A0A0B] hover:bg-[#202024] text-white/60 font-bold py-3 rounded-2xl text-xs border border-white/5"
+                  className={`px-5 font-bold py-3 rounded-2xl text-xs border transition-colors ${
+                    isDark
+                      ? 'bg-[#0A0A0B] hover:bg-[#202024] text-white/60 hover:text-white border-white/5'
+                      : 'bg-gray-100 hover:bg-gray-200 text-slate-700 hover:text-slate-950 border-gray-300'
+                  }`}
                 >
                   Cancelar
                 </button>
@@ -1237,28 +1862,60 @@ export const AdminDashboard: React.FC = () => {
       {/* CREATE COUPON MODAL */}
       {isCouponModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-sm bg-[#151518] border border-white/10 rounded-3xl p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-black text-white">Criar Novo Cupom</h3>
+          <div
+            className={`w-full max-w-sm border rounded-3xl p-6 space-y-4 shadow-2xl transition-colors ${
+              isDark
+                ? 'bg-[#151518] border-white/10 text-white'
+                : 'bg-white border-gray-200 text-slate-900'
+            }`}
+          >
+            <h3
+              className={`text-base font-black ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              Criar Novo Cupom
+            </h3>
             <form onSubmit={handleSaveCoupon} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">Código do Cupom</label>
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
+                  Código do Cupom
+                </label>
                 <input
                   type="text"
                   value={coupCode}
                   onChange={(e) => setCoupCode(e.target.value.toUpperCase())}
                   placeholder="Ex: QUERO10"
                   required
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-amber-500"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs uppercase focus:outline-none focus:border-amber-500 ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-bold text-white/50 mb-1.5">Tipo de Desconto</label>
+                  <label
+                    className={`block text-xs font-bold mb-1.5 ${
+                      isDark ? 'text-white/60' : 'text-slate-700'
+                    }`}
+                  >
+                    Tipo de Desconto
+                  </label>
                   <select
                     value={coupType}
                     onChange={(e) => setCoupType(e.target.value as 'percentage' | 'fixed')}
-                    className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3 py-2.5 text-xs text-white"
+                    className={`w-full border rounded-2xl px-3 py-2.5 text-xs ${
+                      isDark
+                        ? 'bg-[#0A0A0B] border-white/10 text-white'
+                        : 'bg-gray-50 border-gray-300 text-slate-900'
+                    }`}
                   >
                     <option value="percentage">Porcentagem (%)</option>
                     <option value="fixed">Fixo em Reais (R$)</option>
@@ -1266,24 +1923,44 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/50 mb-1.5">Valor do Desconto</label>
+                  <label
+                    className={`block text-xs font-bold mb-1.5 ${
+                      isDark ? 'text-white/60' : 'text-slate-700'
+                    }`}
+                  >
+                    Valor do Desconto
+                  </label>
                   <input
                     type="number"
                     value={coupValue}
                     onChange={(e) => setCoupValue(e.target.value)}
                     required
-                    className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3 py-2.5 text-xs text-white"
+                    className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                      isDark
+                        ? 'bg-[#0A0A0B] border-white/10 text-white'
+                        : 'bg-gray-50 border-gray-300 text-slate-900'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white/50 mb-1.5">Pedido Mínimo (R$)</label>
+                <label
+                  className={`block text-xs font-bold mb-1.5 ${
+                    isDark ? 'text-white/60' : 'text-slate-700'
+                  }`}
+                >
+                  Pedido Mínimo (R$)
+                </label>
                 <input
                   type="number"
                   value={coupMin}
                   onChange={(e) => setCoupMin(e.target.value)}
-                  className="w-full bg-[#0A0A0B] border border-white/5 rounded-2xl px-3.5 py-2.5 text-xs text-white"
+                  className={`w-full border rounded-2xl px-3.5 py-2.5 text-xs ${
+                    isDark
+                      ? 'bg-[#0A0A0B] border-white/10 text-white'
+                      : 'bg-gray-50 border-gray-300 text-slate-900'
+                  }`}
                 />
               </div>
 
@@ -1297,7 +1974,11 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCouponModalOpen(false)}
-                  className="px-4 bg-[#0A0A0B] hover:bg-[#202024] text-white/60 font-bold py-3 rounded-2xl text-xs border border-white/5"
+                  className={`px-4 font-bold py-3 rounded-2xl text-xs border transition-colors ${
+                    isDark
+                      ? 'bg-[#0A0A0B] hover:bg-[#202024] text-white/60 hover:text-white border-white/5'
+                      : 'bg-gray-100 hover:bg-gray-200 text-slate-700 hover:text-slate-950 border-gray-300'
+                  }`}
                 >
                   Cancelar
                 </button>

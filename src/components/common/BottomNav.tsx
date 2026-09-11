@@ -55,7 +55,7 @@ export const BottomNav: React.FC = () => {
                 ? 'text-amber-500 font-bold'
                 : isDark
                 ? 'text-neutral-400 hover:text-white'
-                : 'text-gray-500 hover:text-gray-900'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             <Home className="w-5 h-5 mb-0.5" />
@@ -71,7 +71,7 @@ export const BottomNav: React.FC = () => {
                 ? 'text-amber-500 font-bold'
                 : isDark
                 ? 'text-neutral-400 hover:text-white'
-                : 'text-gray-500 hover:text-gray-900'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             <UtensilsCrossed className="w-5 h-5 mb-0.5" />
@@ -87,7 +87,7 @@ export const BottomNav: React.FC = () => {
                 ? 'text-amber-500 font-bold'
                 : isDark
                 ? 'text-neutral-400 hover:text-white'
-                : 'text-gray-500 hover:text-gray-900'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             <FileText className="w-5 h-5 mb-0.5" />
@@ -106,7 +106,7 @@ export const BottomNav: React.FC = () => {
                 ? 'text-amber-500 font-bold'
                 : isDark
                 ? 'text-neutral-400 hover:text-white'
-                : 'text-gray-500 hover:text-gray-900'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             <Heart className="w-5 h-5 mb-0.5" />
@@ -122,7 +122,7 @@ export const BottomNav: React.FC = () => {
                 ? 'text-amber-500 font-bold'
                 : isDark
                 ? 'text-neutral-400 hover:text-white'
-                : 'text-gray-500 hover:text-gray-900'
+                : 'text-slate-600 hover:text-slate-950'
             }`}
           >
             <User className="w-5 h-5 mb-0.5" />

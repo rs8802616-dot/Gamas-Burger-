@@ -1,4 +1,35 @@
-import { Category, Product, AddonOption, Combo, Coupon, DeliveryZone, StoreSettings, Order, CustomerInfo } from '../types';
+import { Category, Product, AddonOption, Combo, Coupon, DeliveryZone, StoreSettings, Order, CustomerInfo, Tenant } from '../types';
+
+export const INITIAL_TENANTS: Tenant[] = [
+  {
+    id: 'tenant-gamas',
+    nome: "Gama's Burger",
+    slug: 'gamas-burger',
+    email_admin: 'rs8802616@gmail.com',
+    status: 'ativo',
+    createdAt: '2026-09-01T10:00:00.000Z',
+    updatedAt: '2026-09-01T10:00:00.000Z',
+    logo: '🍔🔥',
+    tagline: 'Hamburgueria Artesanal & Delivery',
+    phone: '(11) 98765-4321',
+    whatsapp: '5511987654321',
+    address: 'Rua dos Burgers, 100 - Centro',
+  },
+  {
+    id: 'tenant-burger-house',
+    nome: 'Burger House Artesanal',
+    slug: 'burger-house',
+    email_admin: 'admin@burgerhouse.com',
+    status: 'ativo',
+    createdAt: '2026-09-05T12:00:00.000Z',
+    updatedAt: '2026-09-05T12:00:00.000Z',
+    logo: '👑🍔',
+    tagline: 'O Verdadeiro Burger Defumado na Brasa',
+    phone: '(11) 91234-5678',
+    whatsapp: '5511912345678',
+    address: 'Av. Paulista, 1500 - Bela Vista',
+  },
+];
 
 export const INITIAL_CATEGORIES: Category[] = [
   { id: 'promocoes', name: 'Promoções', icon: '🔥', order: 1 },
@@ -301,6 +332,7 @@ export const INITIAL_DELIVERY_ZONES: DeliveryZone[] = [
 ];
 
 export const INITIAL_SETTINGS: StoreSettings = {
+  tenant_id: 'tenant-gamas',
   name: "GAMA'S BURGER",
   tagline: 'Hamburgueria Artesanal & Delivery',
   logo: '🍔🔥',

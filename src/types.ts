@@ -16,8 +16,35 @@ export interface AddonOption {
   category?: string;
 }
 
+export interface Tenant {
+  id: string;
+  nome: string;
+  slug: string;
+  email_admin: string;
+  status: 'ativo' | 'inativo';
+  createdAt: string;
+  updatedAt: string;
+  logo?: string;
+  tagline?: string;
+  phone?: string;
+  whatsapp?: string;
+  address?: string;
+  primaryColor?: string;
+}
+
+export interface StaffUser {
+  id: string;
+  tenant_id: string | null;
+  name: string;
+  email: string;
+  role: StaffRole;
+  status: 'ativo' | 'inativo';
+  createdAt: string;
+}
+
 export interface Product {
   id: string;
+  tenant_id?: string;
   name: string;
   description: string;
   ingredients: string[];
@@ -38,6 +65,7 @@ export interface Product {
 
 export interface Category {
   id: string;
+  tenant_id?: string;
   name: string;
   icon: string;
   order: number;
@@ -45,6 +73,7 @@ export interface Category {
 
 export interface Combo {
   id: string;
+  tenant_id?: string;
   name: string;
   description: string;
   photo: string;
@@ -71,6 +100,7 @@ export interface CartItem {
 
 export interface Coupon {
   id: string;
+  tenant_id?: string;
   code: string;
   discountType: 'percentage' | 'fixed';
   value: number;
@@ -135,6 +165,7 @@ export interface OrderTimelineEvent {
 
 export interface Order {
   id: string;
+  tenant_id: string;
   orderNumber: string;
   createdAt: string;
   customer: CustomerInfo;
@@ -158,6 +189,7 @@ export interface Order {
 
 export interface DeliveryZone {
   id: string;
+  tenant_id?: string;
   neighborhood: string;
   fee: number;
   estimatedMinutes: string;
@@ -172,6 +204,7 @@ export interface DaySchedule {
 }
 
 export interface StoreSettings {
+  tenant_id?: string;
   name: string;
   tagline: string;
   logo: string;
@@ -202,7 +235,12 @@ export interface StoreSettings {
 
 export interface AdminUser {
   id: string;
+  tenant_id?: string;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'kitchen' | 'attendant';
+  role: 'super_admin' | 'admin' | 'manager' | 'kitchen' | 'attendant';
 }
+
+export type StaffRole = 'super_admin' | 'admin' | 'balcao';
+export type UserRole = 'cliente' | 'balcao' | 'admin' | 'super_admin';
+export type AppView = 'client' | 'balcao' | 'admin' | 'kitchen' | 'master';
