@@ -1,6 +1,10 @@
 # Documentação do Projeto: Gama's Burger (Cardápio Digital / Delivery)
 
-Este documento registra o estado oficial do projeto, o status de cada item apontado no PRD de Segurança e Bugs Funcionais, o histórico de alterações realizadas e as decisões técnicas arquiteturais tomadas.
+> ⚠️ **AVISO OBRIGATÓRIO PARA A IA (ASSISTENTE DE CÓDIGO):**
+> Esta documentação **DEVE SER LIDA OBRIGATORIAMENTE** por você antes de executar qualquer nova alteração solicitada pelo usuário no código.
+> - Parta sempre do **estado real do projeto** documentado aqui, nunca de suposições.
+> - Não altere nada fora do escopo expressamente solicitado.
+> - Depois de cada alteração, **atualize este arquivo** com a data, o item, os arquivos e linhas modificados e a justificativa técnica antes de encerrar o turno.
 
 ---
 
@@ -9,8 +13,8 @@ Este documento registra o estado oficial do projeto, o status de cada item apont
 - **Nome:** Gama's Burger
 - **Repositório:** Gamas-Burger--main
 - **Stack:** React 19 + TypeScript + Vite + Tailwind CSS + Express (`server.ts`) + Firebase (Firestore / Auth)
-- **Data de Inicialização da Auditoria:** 11 de Setembro de 2026
-- **Status Geral:** Documentação inicial criada; aguardando instrução do usuário para início das correções pontuais.
+- **Data da Auditoria e Correções:** 11 de Setembro de 2026
+- **Status Geral:** Todas as correções críticas de segurança (2.1 a 2.5), integridade de dados (2.6, 3.1) e privacidade (3.2) foram implementadas, testadas e documentadas.
 
 ---
 
