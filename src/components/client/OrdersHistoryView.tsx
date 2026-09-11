@@ -67,14 +67,6 @@ export const OrdersHistoryView: React.FC = () => {
       return true;
     }
 
-    // If not logged in as admin, any real order currently in client state was scoped for this client
-    if (!isAdminAuthenticated) {
-      // Exclude legacy template demo seed orders
-      if (!['ord-1045', 'ord-1044', 'ord-1043', 'ord-1042'].includes(order.id)) {
-        return true;
-      }
-    }
-
     return false;
   });
 

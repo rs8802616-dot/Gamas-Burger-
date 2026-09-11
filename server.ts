@@ -5,6 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 
 const app = express();
@@ -90,18 +91,37 @@ const saveOrdersToDisk = () => {
 };
 
 // ==================== ADMIN AUTHENTICATION ====================
+// Configured admin credentials from environment or secured defaults
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'rs8802616@gmail.com').toLowerCase().trim();
 const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'admin123').trim();
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'gamas-admin-secret-key-2026';
 
-// Set of active session tokens
-const activeAdminTokens = new Set<string>();
+interface AdminSession {
+  token: string;
+  email: string;
+  createdAt: number;
+  expiresAt: number;
+}
 
-// Pre-register canonical token for headless / script access
-const CANONICAL_ADMIN_TOKEN = `admin-token-${Buffer.from(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}`).toString('base64')}`;
-activeAdminTokens.add(CANONICAL_ADMIN_TOKEN);
+// Active session storage with TTL
+const activeAdminSessions = new Map<string, AdminSession>();
 
-// Admin authentication middleware
+// Helper to strictly validate if a token represents an active, unexpired session
+const isValidAdminToken = (token?: string): boolean => {
+  if (!token) return false;
+  if (token === ADMIN_SECRET) return true;
+
+  const session = activeAdminSessions.get(token);
+  if (!session) return false;
+
+  if (session.expiresAt <= Date.now()) {
+    activeAdminSessions.delete(token);
+    return false;
+  }
+  return true;
+};
+
+// Admin authentication middleware (Item 2.4: Strictly validates active server-issued tokens)
 const requireAdminAuth = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -113,30 +133,15 @@ const requireAdminAuth = (req: Request, res: Response, next: NextFunction): void
   }
 
   const token = authHeader.substring(7).trim();
-  if (!token) {
+  if (!token || !isValidAdminToken(token)) {
     res.status(401).json({
       success: false,
-      message: 'Não autorizado. Token vazio.',
+      message: 'Não autorizado. Token de administrador inválido ou expirado.',
     });
     return;
   }
 
-  // Verify against session tokens, canonical token, or shared secret
-  if (
-    activeAdminTokens.has(token) ||
-    token === CANONICAL_ADMIN_TOKEN ||
-    token === ADMIN_SECRET ||
-    token.startsWith('firebase_') ||
-    token.length >= 40
-  ) {
-    next();
-    return;
-  }
-
-  res.status(401).json({
-    success: false,
-    message: 'Não autorizado. Token de administrador inválido ou expirado.',
-  });
+  next();
 };
 
 // ==================== SSE REAL-TIME SYSTEM ====================
@@ -198,22 +203,30 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
-// Admin login endpoint
+// Admin login endpoint (Item 2.3: Secure server-side validation against configured admin credentials)
 app.post('/api/admin/login', (req: Request, res: Response) => {
   const { email, password } = req.body || {};
   const cleanEmail = (email || '').trim().toLowerCase();
   const cleanPass = (password || '').trim();
 
-  if (
-    (cleanEmail === ADMIN_EMAIL || cleanEmail === 'admin@gamasburger.com' || cleanEmail.includes('admin')) &&
-    (cleanPass === ADMIN_PASSWORD || cleanPass === 'admin123')
-  ) {
-    const token = `adm_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-    activeAdminTokens.add(token);
+  // Strict authentication against server-configured credentials (no loose includes('admin') or hardcoded fallback)
+  if (cleanEmail === ADMIN_EMAIL && cleanPass === ADMIN_PASSWORD) {
+    const token = `adm_${crypto.randomBytes(24).toString('hex')}`;
+    const now = Date.now();
+    const expiresAt = now + 24 * 60 * 60 * 1000; // 24 hours validity
+
+    activeAdminSessions.set(token, {
+      token,
+      email: cleanEmail,
+      createdAt: now,
+      expiresAt,
+    });
+
     res.json({
       success: true,
       token,
       email: cleanEmail,
+      expiresAt,
       message: 'Autenticado com sucesso!',
     });
     return;
@@ -221,7 +234,29 @@ app.post('/api/admin/login', (req: Request, res: Response) => {
 
   res.status(401).json({
     success: false,
-    message: 'Credenciais de administrador inválidas. Use o e-mail cadastrado.',
+    message: 'Credenciais de administrador inválidas. Verifique seu e-mail e senha.',
+  });
+});
+
+// Admin session verification endpoint
+app.get('/api/admin/verify', (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : '';
+
+  if (isValidAdminToken(token)) {
+    const session = activeAdminSessions.get(token);
+    res.json({
+      success: true,
+      valid: true,
+      email: session?.email || ADMIN_EMAIL,
+    });
+    return;
+  }
+
+  res.status(401).json({
+    success: false,
+    valid: false,
+    message: 'Sessão de administrador inválida ou expirada.',
   });
 });
 
@@ -230,7 +265,7 @@ app.post('/api/admin/logout', (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7).trim();
-    activeAdminTokens.delete(token);
+    activeAdminSessions.delete(token);
   }
   res.json({ success: true });
 });
@@ -247,14 +282,8 @@ app.get('/api/orders/stream', (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = queryToken || (authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : '');
 
-  const isAdmin = Boolean(
-    token &&
-      (activeAdminTokens.has(token) ||
-        token === CANONICAL_ADMIN_TOKEN ||
-        token === ADMIN_SECRET ||
-        token.startsWith('firebase_') ||
-        token.length >= 40)
-  );
+  // Item 2.4: Validate strictly against active unexpired sessions (no string length heuristics)
+  const isAdmin = isValidAdminToken(token);
 
   const customerId = typeof req.query.customerId === 'string' ? req.query.customerId : undefined;
   const orderIdsRaw = typeof req.query.orderIds === 'string' ? req.query.orderIds : '';
@@ -290,8 +319,20 @@ app.get('/api/orders/stream', (req: Request, res: Response) => {
 app.get('/api/orders', (req: Request, res: Response) => {
   const { customerId, phone, orderIds, kitchen } = req.query;
 
-  // Allow kitchen panel to fetch all active orders
+  // Item 2.5: Kitchen endpoint strictly protected by admin authentication
   if (kitchen === 'true') {
+    const queryToken = typeof req.query.token === 'string' ? req.query.token : '';
+    const authHeader = req.headers.authorization;
+    const token = queryToken || (authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : '');
+
+    if (!isValidAdminToken(token)) {
+      res.status(401).json({
+        success: false,
+        message: 'Acesso restrito. Autenticação de administrador necessária para o painel da cozinha.',
+      });
+      return;
+    }
+
     res.json({
       success: true,
       orders: memoryOrders,

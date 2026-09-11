@@ -61,7 +61,7 @@ interface StoreContextType {
       | 'settings'
   ) => void;
   isAdminAuthenticated: boolean;
-  adminLogin: (email: string, pass: string) => { success: boolean; message: string };
+  adminLogin: (email: string, pass: string) => Promise<{ success: boolean; message: string }>;
   adminLogout: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -261,8 +261,8 @@ export const mergeOrders = (prev: Order[], incoming: Order[]): Order[] => {
         let finalStatus = existing.status;
         let finalTimeline = existing.timeline;
 
-        // Advance status if incoming is higher or genuinely newer; never regress backwards
-        if (incomingRank >= existingRank || isIncomingNewer) {
+        // Item 3.1: Advance status only if incoming rank is higher or equal, or if incoming is cancelled; never regress backwards
+        if (o.status === 'cancelled' || incomingRank >= existingRank) {
           finalStatus = o.status;
           finalTimeline = o.timeline && o.timeline.length > 0 ? o.timeline : existing.timeline;
         }
@@ -285,13 +285,7 @@ export const mergeOrders = (prev: Order[], incoming: Order[]): Order[] => {
 };
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('burger10_admin_auth') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
 
   // Check if current URL/hash targets admin route
   const checkIsAdminRoute = () => {
@@ -316,15 +310,44 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [adminToken, setAdminToken] = useState<string>(() => {
     try {
       const saved = localStorage.getItem('gamas_admin_token');
-      if (saved) return saved;
-      if (localStorage.getItem('burger10_admin_auth') === 'true') {
-        return `admin-token-${btoa('rs8802616@gmail.com:admin123')}`;
-      }
+      if (saved && !saved.startsWith('admin-token-')) return saved;
       return '';
     } catch {
       return '';
     }
   });
+
+  // Item 2.2: Verify saved admin session on startup with the server
+  useEffect(() => {
+    const saved = localStorage.getItem('gamas_admin_token');
+    if (saved && !saved.startsWith('admin-token-')) {
+      fetch('/api/admin/verify', {
+        headers: { Authorization: `Bearer ${saved}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.valid) {
+            setIsAdminAuthenticated(true);
+            setAdminToken(saved);
+          } else {
+            setIsAdminAuthenticated(false);
+            setAdminToken('');
+            localStorage.removeItem('burger10_admin_auth');
+            localStorage.removeItem('burger10_admin_email');
+            localStorage.removeItem('gamas_admin_token');
+          }
+        })
+        .catch(() => {
+          setIsAdminAuthenticated(false);
+          setAdminToken('');
+        });
+    } else {
+      setIsAdminAuthenticated(false);
+      setAdminToken('');
+      localStorage.removeItem('burger10_admin_auth');
+      localStorage.removeItem('gamas_admin_token');
+    }
+  }, []);
 
   // Navigation & View States: Always default to 'client' for customers
   const [currentView, setCurrentView] = useState<'client' | 'kitchen' | 'admin'>(() => {
@@ -387,51 +410,45 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const adminLogin = (email: string, pass: string) => {
+  // Item 2.2: Authenticate strictly via server API with no client-side password bypass
+  const adminLogin = async (
+    email: string,
+    pass: string
+  ): Promise<{ success: boolean; message: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = pass.trim();
-    const storedPass = localStorage.getItem('burger10_admin_password') || 'admin123';
 
-    // Matches the user's explicit account rs8802616@gmail.com
-    if (
-      (cleanEmail === 'rs8802616@gmail.com' || cleanEmail === 'admin@gamasburger.com' || cleanEmail.includes('admin')) &&
-      (cleanPass === storedPass || cleanPass === 'admin123')
-    ) {
-      const canonical = `admin-token-${btoa(`${cleanEmail}:${cleanPass}`)}`;
-      setIsAdminAuthenticated(true);
-      setAdminToken(canonical);
-      try {
-        localStorage.setItem('burger10_admin_auth', 'true');
-        localStorage.setItem('burger10_admin_email', cleanEmail);
-        localStorage.setItem('gamas_admin_token', canonical);
-      } catch {
-        // local storage fallback
-      }
-
-      // Register session with server in background
-      fetch('/api/admin/login', {
+    try {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cleanEmail, password: cleanPass }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.token) {
-            setAdminToken(data.token);
-            try {
-              localStorage.setItem('gamas_admin_token', data.token);
-            } catch {}
-          }
-        })
-        .catch(() => {});
+      });
+      const data = await res.json();
 
-      return { success: true, message: 'Autenticado com sucesso!' };
+      if (res.ok && data && data.success && data.token) {
+        setIsAdminAuthenticated(true);
+        setAdminToken(data.token);
+        try {
+          localStorage.setItem('burger10_admin_auth', 'true');
+          localStorage.setItem('burger10_admin_email', data.email || cleanEmail);
+          localStorage.setItem('gamas_admin_token', data.token);
+        } catch {
+          // local storage fallback
+        }
+        return { success: true, message: 'Autenticado com sucesso!' };
+      }
+
+      return {
+        success: false,
+        message: data?.message || 'Credenciais inválidas. Verifique seu e-mail e senha.',
+      };
+    } catch {
+      return {
+        success: false,
+        message: 'Erro de conexão com o servidor ao autenticar.',
+      };
     }
-
-    return {
-      success: false,
-      message: 'Credenciais inválidas. Use o e-mail cadastrado (rs8802616@gmail.com) e a senha correta.',
-    };
   };
 
   const adminLogout = () => {
@@ -644,13 +661,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         // 2. Fetch from Express API (try kitchen endpoint first, or admin endpoint)
-        const tokenToSend =
-          adminToken ||
-          (isAdminAuthenticated
-            ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}`
-            : 'admin-token-cnM4ODAyNjE2QGdtYWlsLmNvbTphZG1pbjEyMw==');
         const res = await fetch('/api/orders?kitchen=true', {
-          headers: tokenToSend ? { Authorization: `Bearer ${tokenToSend}` } : {},
+          headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : {},
         }).catch(() => null);
 
         if (res && res.ok) {
@@ -721,17 +733,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let isMounted = true;
     let eventSource: EventSource | null = null;
 
-    const tokenToSend =
-      adminToken ||
-      (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
-
     // Trigger immediate fetch
     refreshOrders();
 
     // Setup SSE connection
     try {
-      const sseUrl = isAdminAuthenticated || currentView === 'kitchen' || currentView === 'admin'
-        ? `/api/orders/stream?token=${encodeURIComponent(tokenToSend || 'admin-token-cnM4ODAyNjE2QGdtYWlsLmNvbTphZG1pbjEyMw==')}`
+      const sseUrl = isAdminAuthenticated && adminToken
+        ? `/api/orders/stream?token=${encodeURIComponent(adminToken)}`
         : `/api/orders/stream?customerId=${encodeURIComponent(customerId)}&orderIds=${encodeURIComponent(clientOrderIds.join(','))}`;
 
       eventSource = new EventSource(sseUrl);
@@ -1552,7 +1560,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setOrders((prev) => [simulatedOrder, ...prev]);
 
-    const tokenToSend = adminToken || (isAdminAuthenticated ? `admin-token-${btoa('rs8802616@gmail.com:admin123')}` : '');
+    const tokenToSend = adminToken;
     fetch('/api/orders', {
       method: 'POST',
       headers: {

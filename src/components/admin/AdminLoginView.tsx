@@ -15,20 +15,23 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onSuccess, onBac
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    setTimeout(() => {
-      const result = adminLogin(email, password);
+    try {
+      const result = await adminLogin(email, password);
       setLoading(false);
       if (result.success) {
         onSuccess();
       } else {
         setError(result.message);
       }
-    }, 400);
+    } catch {
+      setLoading(false);
+      setError('Erro ao processar login. Tente novamente.');
+    }
   };
 
   return (
