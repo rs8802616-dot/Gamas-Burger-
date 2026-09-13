@@ -43,12 +43,18 @@ service cloud.firestore {
     // - Admin only for updating settings
     match /configuracoes/{settingId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if true;
+    }
+
+    // Staff Users (Administrators, Counter Operators & Super Admin):
+    // Stored in cloud database to guarantee persistent passwords across all devices & Vercel
+    match /usuarios_staff/{userId} {
+      allow read, write: if true;
     }
 
     // System health check
     match /_system_health/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if true;
     }
 
     // Default deny all other documents

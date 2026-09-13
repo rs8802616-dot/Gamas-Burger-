@@ -37,6 +37,22 @@
         "name": { "type": "string" },
         "isOpen": { "type": "boolean" }
       }
+    },
+    "StaffUser": {
+      "title": "StaffUser",
+      "description": "Administrators and staff credentials stored in the cloud database",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "status": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "email", "password", "role"]
     }
   },
   "firestore": {
@@ -51,6 +67,10 @@
     "/configuracoes/{settingId}": {
       "schema": "StoreSettings",
       "description": "Global store settings"
+    },
+    "/usuarios_staff/{userId}": {
+      "schema": "StaffUser",
+      "description": "Store and platform staff credentials"
     }
   }
 }

@@ -90,6 +90,7 @@ interface StoreContextType {
   ) => void;
   isAdminAuthenticated: boolean;
   adminLogin: (email: string, pass: string) => Promise<{ success: boolean; message: string }>;
+  changeAdminPassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   adminLogout: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -530,6 +531,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     refreshTenants();
+
+    // Synchronize Firestore Staff credentials with backend server & seed defaults
+    const syncStaffWithDatabase = async () => {
+      try {
+        await firebaseService.initDefaultStaffUsers();
+        const firestoreUsers = await firebaseService.getStaffUsersFromFirestore();
+        if (firestoreUsers && firestoreUsers.length > 0) {
+          await fetch('/api/admin/sync-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ users: firestoreUsers }),
+          });
+        }
+      } catch (err) {
+        console.warn('Sync staff credentials notice:', err);
+      }
+    };
+
+    syncStaffWithDatabase();
   }, []);
 
   const selectStoreBySlug = async (slug: string): Promise<boolean> => {
@@ -825,6 +845,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // ignore
     }
     handleSetCurrentView('client');
+  };
+
+  const changeAdminPassword = async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const email = localStorage.getItem('burger10_admin_email') || 'rs8802616@gmail.com';
+
+      // 1. Update on server memory & disk
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+        },
+        body: JSON.stringify({
+          email,
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // 2. Persist to Firestore database directly
+        try {
+          await firebaseService.updateStaffPasswordInFirestore(email, newPassword);
+        } catch (fErr) {
+          console.warn('[Firestore] Error syncing updated password to Firestore:', fErr);
+        }
+
+        return {
+          success: true,
+          message: data.message || 'Senha atualizada com sucesso no banco de dados!',
+        };
+      }
+
+      return {
+        success: false,
+        message: data.message || 'Não foi possível atualizar a senha.',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Erro de conexão ao atualizar senha.',
+      };
+    }
   };
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -2031,6 +2100,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAdminTab,
         isAdminAuthenticated,
         adminLogin,
+        changeAdminPassword,
         adminLogout,
         simulateIncomingOrder,
         sendBroadcastNotification,

@@ -8,7 +8,7 @@ import {
   onSnapshot,
   Firestore,
 } from 'firebase/firestore';
-import { Order, Product, Category, StoreSettings } from '../types';
+import { Order, Product, Category, StoreSettings, StaffUserRecord } from '../types';
 
 export interface FirebaseConfig {
   apiKey: string;
@@ -353,6 +353,174 @@ class FirebaseService {
     } catch (error) {
       console.warn('Sync settings to Firestore:', error);
       return false;
+    }
+  }
+
+  // Fetch all staff users from Firestore collection 'usuarios_staff'
+  public async getStaffUsersFromFirestore(): Promise<StaffUserRecord[]> {
+    if (!this.db) {
+      this.initialize();
+    }
+    if (!this.isConfigured() || !this.db) {
+      return [];
+    }
+    try {
+      const col = collection(this.db, 'usuarios_staff');
+      const snapshot = await getDocs(col);
+      const fetched: StaffUserRecord[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data && data.id && data.email) {
+          fetched.push(data as StaffUserRecord);
+        }
+      });
+      return fetched;
+    } catch (error) {
+      console.warn('Error fetching staff users from Firestore:', error);
+      return [];
+    }
+  }
+
+  // Save or update a staff user in Firestore collection 'usuarios_staff'
+  public async saveStaffUserToFirestore(user: StaffUserRecord): Promise<boolean> {
+    try {
+      if (!this.db) {
+        this.initialize();
+      }
+      if (this.db) {
+        const userRef = doc(this.db, 'usuarios_staff', user.id);
+        const sanitized = sanitizeForFirestore({
+          ...user,
+          updatedAt: new Date().toISOString(),
+          ownerAccount: this.config.ownerEmail,
+        });
+        await setDoc(userRef, sanitized, { merge: true });
+        this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
+        this.notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.warn('Error saving staff user to Firestore:', error);
+      return false;
+    }
+  }
+
+  // Directly update password in Firestore for given user id or email
+  public async updateStaffPasswordInFirestore(userIdOrEmail: string, newPassword: string): Promise<boolean> {
+    try {
+      if (!this.db) {
+        this.initialize();
+      }
+      if (!this.db) return false;
+
+      const users = await this.getStaffUsersFromFirestore();
+      const targetUser = users.find(
+        (u) => u.id === userIdOrEmail || u.email.toLowerCase() === userIdOrEmail.trim().toLowerCase()
+      );
+
+      if (targetUser) {
+        const userRef = doc(this.db, 'usuarios_staff', targetUser.id);
+        await setDoc(
+          userRef,
+          sanitizeForFirestore({
+            ...targetUser,
+            password: newPassword,
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+        this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
+        this.notifyListeners();
+        return true;
+      } else {
+        // If not found in Firestore yet, create the user doc with the new password
+        const docId = userIdOrEmail.startsWith('usr-') ? userIdOrEmail : `usr-${Date.now()}`;
+        const userRef = doc(this.db, 'usuarios_staff', docId);
+        await setDoc(
+          userRef,
+          sanitizeForFirestore({
+            id: docId,
+            email: userIdOrEmail.toLowerCase().trim(),
+            password: newPassword,
+            role: 'admin',
+            tenant_id: 'tenant-gamas',
+            name: "Admin Gama's Burger",
+            status: 'ativo',
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+        this.lastSyncTime = new Date().toLocaleTimeString('pt-BR');
+        this.notifyListeners();
+        return true;
+      }
+    } catch (error) {
+      console.warn('Error updating staff password in Firestore:', error);
+      return false;
+    }
+  }
+
+  // Seed default staff users in Firestore if collection is empty or missing primary admin
+  public async initDefaultStaffUsers(): Promise<StaffUserRecord[]> {
+    try {
+      if (!this.db) {
+        this.initialize();
+      }
+      if (!this.db) return [];
+
+      const current = await this.getStaffUsersFromFirestore();
+      
+      const defaults: StaffUserRecord[] = [
+        {
+          id: 'usr-gamas-admin',
+          tenant_id: 'tenant-gamas',
+          name: "Admin Gama's Burger",
+          email: 'rs8802616@gmail.com',
+          password: 'rs20061991@',
+          role: 'admin',
+          status: 'ativo',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: 'usr-superadmin',
+          tenant_id: null,
+          name: 'Super Administrador (Plataforma)',
+          email: 'superadmin@plataforma.com',
+          password: 'admin123',
+          role: 'super_admin',
+          status: 'ativo',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: 'usr-gamas-balcao',
+          tenant_id: 'tenant-gamas',
+          name: "Balcão Gama's Burger",
+          email: 'balcao@gamasburger.com',
+          password: 'balcao123',
+          role: 'balcao',
+          status: 'ativo',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+
+      const mergedUsers: StaffUserRecord[] = [...current];
+
+      for (const def of defaults) {
+        const exists = current.find((u) => u.email.toLowerCase() === def.email.toLowerCase());
+        if (!exists) {
+          await this.saveStaffUserToFirestore(def);
+          mergedUsers.push(def);
+        }
+      }
+
+      return mergedUsers;
+    } catch (err) {
+      console.warn('Error initializing staff users in Firestore:', err);
+      return [];
     }
   }
 

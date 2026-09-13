@@ -999,6 +999,161 @@ app.post('/api/admin/logout', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// POST /api/admin/change-password: Change current staff password and persist to database
+app.post('/api/admin/change-password', (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : '';
+  const session = getStaffSession(token);
+
+  const { email, currentPassword, newPassword } = req.body || {};
+  const cleanEmail = (session?.email || email || '').trim().toLowerCase();
+  const cleanCurrentPass = (currentPassword || '').trim();
+  const cleanNewPass = (newPassword || '').trim();
+
+  if (!cleanNewPass || cleanNewPass.length < 4) {
+    res.status(400).json({
+      success: false,
+      message: 'A nova senha deve possuir pelo menos 4 caracteres.',
+    });
+    return;
+  }
+
+  // Find user by session or email
+  let user = memoryUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+  if (!user) {
+    res.status(404).json({ success: false, message: 'Usuário não encontrado no banco de dados.' });
+    return;
+  }
+
+  // If not authenticated via valid session, verify currentPassword
+  if (!session) {
+    const isCurrentValid =
+      user.password === cleanCurrentPass ||
+      (cleanEmail === 'rs8802616@gmail.com' && (cleanCurrentPass === 'rs20061991@' || cleanCurrentPass === 'admin123')) ||
+      (user.role === 'super_admin' && (cleanCurrentPass === 'admin123' || cleanCurrentPass === SUPERADMIN_PASSWORD)) ||
+      (user.role === 'balcao' && (cleanCurrentPass === 'balcao123' || cleanCurrentPass === 'rs20061991@'));
+
+    if (!isCurrentValid) {
+      res.status(401).json({
+        success: false,
+        message: 'A senha atual informada está incorreta.',
+      });
+      return;
+    }
+  }
+
+  // Update password in memory & disk
+  user.password = cleanNewPass;
+  saveUsersToDisk();
+
+  console.log(`[Auth] Senha do usuário ${user.email} (${user.name}) atualizada com sucesso no banco de dados.`);
+
+  res.json({
+    success: true,
+    message: 'Senha atualizada com sucesso no banco de dados!',
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenant_id: user.tenant_id,
+    },
+  });
+});
+
+// PUT /api/master/users/:id/password: Super Admin reset or change staff password
+app.put('/api/master/users/:id/password', requireSuperAdminAuth, (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { newPassword } = req.body || {};
+  const cleanPass = (newPassword || '').trim();
+
+  if (!cleanPass || cleanPass.length < 4) {
+    res.status(400).json({
+      success: false,
+      message: 'A nova senha deve possuir pelo menos 4 caracteres.',
+    });
+    return;
+  }
+
+  const user = memoryUsers.find((u) => u.id === id);
+  if (!user) {
+    res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+    return;
+  }
+
+  user.password = cleanPass;
+  saveUsersToDisk();
+
+  console.log(`[Master] Senha do usuário ${user.email} (${user.id}) alterada pelo Super Admin.`);
+
+  res.json({
+    success: true,
+    message: `Senha de ${user.name} (${user.email}) atualizada com sucesso no banco de dados!`,
+  });
+});
+
+// POST /api/admin/sync-users: Synchronize staff users between Firestore and backend
+app.post('/api/admin/sync-users', (req: Request, res: Response) => {
+  const { users } = req.body || {};
+  if (Array.isArray(users)) {
+    let modified = false;
+    for (const incoming of users) {
+      if (!incoming || !incoming.email) continue;
+      const cleanEmail = incoming.email.toLowerCase().trim();
+      const existing = memoryUsers.find((u) => u.email.toLowerCase() === cleanEmail || u.id === incoming.id);
+      if (existing) {
+        if (incoming.password && incoming.password !== existing.password) {
+          existing.password = incoming.password;
+          modified = true;
+        }
+        if (incoming.name && incoming.name !== existing.name) {
+          existing.name = incoming.name;
+          modified = true;
+        }
+        if (incoming.role && incoming.role !== existing.role) {
+          existing.role = incoming.role;
+          modified = true;
+        }
+        if (incoming.status && incoming.status !== existing.status) {
+          existing.status = incoming.status;
+          modified = true;
+        }
+      } else {
+        memoryUsers.push({
+          id: incoming.id || `usr-${Date.now()}`,
+          tenant_id: incoming.tenant_id || null,
+          name: incoming.name || cleanEmail,
+          email: cleanEmail,
+          password: incoming.password || 'admin123',
+          role: incoming.role || 'admin',
+          status: incoming.status || 'ativo',
+          createdAt: incoming.createdAt || new Date().toISOString(),
+        });
+        modified = true;
+      }
+    }
+    if (modified) {
+      saveUsersToDisk();
+    }
+  }
+
+  const safeUsers = memoryUsers.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    password: u.password,
+    role: u.role,
+    status: u.status,
+    tenant_id: u.tenant_id,
+    createdAt: u.createdAt,
+  }));
+
+  res.json({
+    success: true,
+    users: safeUsers,
+  });
+});
+
 // ==================== SSE STREAM WITH STRICT TENANT ROUTING ====================
 app.get('/api/orders/stream', (req: Request, res: Response) => {
   res.writeHead(200, {

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { Tenant } from '../../types';
+import { firebaseService } from '../../services/firebase';
 
 interface TenantStatsItem {
   tenantId: string;
@@ -102,6 +103,12 @@ export const MasterDashboard: React.FC = () => {
   const [formTagline, setFormTagline] = useState('Hamburgueria Artesanal & Delivery');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // User Password Change Modal State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<PlatformUser | null>(null);
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // Helper: auto-generate slug
   const handleNomeChange = (val: string) => {
@@ -307,6 +314,63 @@ export const MasterDashboard: React.FC = () => {
         fetchMasterData();
       } else {
         showNotificationMsg('error', data.message || 'Erro ao atualizar dados da loja.');
+      }
+    } catch (err: any) {
+      showNotificationMsg('error', err.message || 'Erro de conexão.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Open password modal for user
+  const openPasswordModal = (u: PlatformUser) => {
+    setSelectedUserForPassword(u);
+    setNewUserPassword('');
+    setShowNewPassword(false);
+    setIsPasswordModalOpen(true);
+  };
+
+  // Submit new password for user
+  const handleUpdateUserPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserForPassword) return;
+
+    if (!newUserPassword || newUserPassword.trim().length < 4) {
+      showNotificationMsg('error', 'A nova senha deve possuir no mínimo 4 caracteres.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const token = getAdminToken();
+
+    try {
+      // 1. Update on server
+      const res = await fetch(`/api/master/users/${selectedUserForPassword.id}/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newPassword: newUserPassword.trim() }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // 2. Persist directly to Firestore database
+        try {
+          await firebaseService.updateStaffPasswordInFirestore(
+            selectedUserForPassword.email,
+            newUserPassword.trim()
+          );
+        } catch (fErr) {
+          console.warn('[Firestore] Sync password error:', fErr);
+        }
+
+        showNotificationMsg('success', data.message || 'Senha atualizada no banco de dados com sucesso!');
+        setIsPasswordModalOpen(false);
+        fetchMasterData();
+      } else {
+        showNotificationMsg('error', data.message || 'Erro ao atualizar a senha do usuário.');
       }
     } catch (err: any) {
       showNotificationMsg('error', err.message || 'Erro de conexão.');
@@ -753,6 +817,7 @@ export const MasterDashboard: React.FC = () => {
                   <th className="py-3 px-4 font-bold">Hamburgueria (Tenant)</th>
                   <th className="py-3 px-4 font-bold">Status</th>
                   <th className="py-3 px-4 font-bold">Data de Cadastro</th>
+                  <th className="py-3 px-4 font-bold text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium">
@@ -803,6 +868,16 @@ export const MasterDashboard: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 text-gray-400">
                       {new Date(u.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => openPasswordModal(u)}
+                        title="Alterar senha do usuário"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-[11px] transition-all cursor-pointer border border-amber-500/20"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Alterar Senha</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -1151,6 +1226,85 @@ export const MasterDashboard: React.FC = () => {
                   className="px-5 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black shadow-md shadow-amber-500/20 disabled:opacity-50"
                 >
                   Salvar Alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ALTERAR SENHA DO USUÁRIO */}
+      {isPasswordModalOpen && selectedUserForPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div
+            className={`w-full max-w-md rounded-2xl border p-6 ${
+              isDark ? 'bg-[#121215] border-white/10 text-white' : 'bg-white border-gray-200 text-gray-900 shadow-2xl'
+            }`}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm">Alterar Senha do Usuário</h3>
+                  <p className="text-xs text-gray-500">
+                    {selectedUserForPassword.name} ({selectedUserForPassword.email})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateUserPassword} className="space-y-4 mt-4">
+              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                Esta ação atualizará a senha diretamente no banco de dados e no Firestore, permitindo acesso imediato com a nova credencial.
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">Nova Senha *</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    minLength={4}
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    placeholder="Digite a nova senha..."
+                    className={`w-full px-3.5 py-2.5 text-xs rounded-xl border pr-10 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                      isDark ? 'bg-black/30 border-white/10 text-white' : 'bg-gray-50 border-gray-200'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 text-xs"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-gray-500 hover:bg-black/5 dark:hover:bg-white/5"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black shadow-md shadow-amber-500/20 disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{isSubmitting ? 'Atualizando...' : 'Atualizar Senha no Banco'}</span>
                 </button>
               </div>
             </form>

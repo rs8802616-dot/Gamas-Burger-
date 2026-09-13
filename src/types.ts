@@ -242,5 +242,18 @@ export interface AdminUser {
 }
 
 export type StaffRole = 'super_admin' | 'admin' | 'balcao';
+
+export interface StaffUserRecord {
+  id: string;
+  tenant_id: string | null;
+  name: string;
+  email: string;
+  password?: string;
+  role: StaffRole;
+  status: 'ativo' | 'inativo';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type UserRole = 'cliente' | 'balcao' | 'admin' | 'super_admin';
 export type AppView = 'client' | 'balcao' | 'admin' | 'kitchen' | 'master';
