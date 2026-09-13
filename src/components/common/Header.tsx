@@ -21,6 +21,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Shield,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { NotificationCenterModal } from '../notifications/NotificationCenterModal';
@@ -46,6 +47,10 @@ export const Header: React.FC = () => {
     adminLogout,
     theme,
     toggleTheme,
+    currentTenant,
+    setIsStoreSelectorOpen,
+    isSuperAdmin,
+    adminTenantName,
   } = useStore();
 
   const isDark = theme === 'dark';
@@ -139,7 +144,25 @@ export const Header: React.FC = () => {
                 }`}
               >
                 <LayoutDashboard className="w-3.5 h-3.5 text-slate-700 dark:text-neutral-200" />
-                <span>Painel Admin</span>
+                <span>Painel Loja</span>
+              </button>
+            )}
+
+            {/* Super Admin Master Platform Button */}
+            {isSuperAdmin && (
+              <button
+                id="view-master-btn"
+                onClick={() => setCurrentView('master')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all text-xs ${
+                  currentView === 'master'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                    : isDark
+                    ? 'text-amber-400 hover:text-white hover:bg-white/5 border border-amber-500/30'
+                    : 'text-amber-700 hover:text-amber-900 hover:bg-amber-100 border border-amber-600/30'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 text-amber-500" />
+                <span>Master Admin</span>
               </button>
             )}
 
@@ -156,7 +179,11 @@ export const Header: React.FC = () => {
 
           <div className="flex items-center gap-2.5">
             <span className="hidden sm:inline text-[11px] font-mono text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-bold">
-              {adminRole === 'balcao' ? 'Perfil: Balcão' : 'Perfil: Gerência'}
+              {isSuperAdmin
+                ? 'Perfil: Super Admin'
+                : adminRole === 'balcao'
+                ? 'Perfil: Balcão'
+                : `Perfil: Gerência ${adminTenantName ? `(${adminTenantName})` : ''}`}
             </span>
             <button
               onClick={toggleSound}
@@ -204,13 +231,34 @@ export const Header: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <span className="text-xl">🍔</span>
                 <h1 className={`text-xl sm:text-2xl font-black tracking-tight flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  GAMA'S<span className="text-amber-500 ml-1">BURGER</span>
+                  {currentTenant ? (
+                    <span>{currentTenant.nome}</span>
+                  ) : (
+                    <>
+                      GAMA'S<span className="text-amber-500 ml-1">BURGER</span>
+                    </>
+                  )}
                 </h1>
               </div>
               <span className={`text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.25em] -mt-0.5 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                HAMBURGUERIA ARTESANAL
+                {currentTenant ? 'HAMBURGUERIA ARTESANAL' : 'HAMBURGUERIA ARTESANAL'}
               </span>
             </div>
+
+            {/* Store Switcher Pill */}
+            <button
+              id="store-switcher-pill-btn"
+              onClick={() => setIsStoreSelectorOpen(true)}
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border transition-all ${
+                isDark
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+                  : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+              }`}
+              title="Trocar de hamburgueria"
+            >
+              <Store className="w-3.5 h-3.5 text-amber-500" />
+              <span>Trocar Loja</span>
+            </button>
 
             {/* Desktop Navigation Links for PC Hamburgueria usage */}
             {currentView === 'client' && (
@@ -448,6 +496,30 @@ export const Header: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5 text-sm font-semibold">
+                  {/* Quick Store Switcher inside Drawer */}
+                  <button
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      setIsStoreSelectorOpen(true);
+                    }}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors border ${
+                      isDark
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+                        : 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Store className="w-4 h-4 text-amber-500" />
+                      <div>
+                        <div className="text-xs font-bold">{currentTenant?.nome || 'Trocar Hamburgueria'}</div>
+                        <div className="text-[10px] opacity-75">Ver lojas disponíveis</div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20">
+                      Trocar
+                    </span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setCurrentView('client');
@@ -568,6 +640,26 @@ export const Header: React.FC = () => {
                       >
                         <LayoutDashboard className="w-4 h-4 text-amber-500" />
                         <span>Painel da Hamburgueria (Admin)</span>
+                      </button>
+                    )}
+
+                    {/* Master panel for super admin */}
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => {
+                          setCurrentView('master');
+                          setIsDrawerOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                          currentView === 'master'
+                            ? 'bg-amber-500 text-black font-bold'
+                            : isDark
+                            ? 'hover:bg-amber-500/10 text-amber-400 font-bold'
+                            : 'hover:bg-amber-50 text-amber-800 font-bold'
+                        }`}
+                      >
+                        <Shield className="w-4 h-4 text-amber-500" />
+                        <span>Master Admin (Plataforma)</span>
                       </button>
                     )}
 

@@ -33,6 +33,7 @@
 | **4.1** | Restrição de acessos e ocultação de links administrativos para clientes | Segurança / UI | 🟠 Alta | ✅ **Implementado e Testado** |
 | **4.2** | Criação da Visão de Balcão / Operação (`BalcaoPanel.tsx`) e controle RBAC | Feature Operacional | 🟠 Alta | ✅ **Implementado e Testado** |
 | **4.3** | Auditoria e correção de contraste no Tema Claro (Light Mode) em todo o Admin e Navegações | UI / Acessibilidade | 🟡 Média | ✅ **Implementado e Testado** |
+| **5.0** | Arquitetura Multi-Tenant (Múltiplas Hamburguerias), Painel Master e Isolamento por Slug | Arquitetura / Multi-Tenant | 🔴 Crítica | ✅ **Implementado e Testado** |
 
 ---
 
@@ -116,6 +117,22 @@
   - Padronizada a leitura de `isDark = theme === 'dark'` com aplicação de classes de contraste Tailwind adaptativas (ex.: `isDark ? 'text-white bg-[#151518]' : 'text-slate-900 bg-white border-gray-200'`).
   - Corrigida a legibilidade em inputs, botões secundários, tabelas, badges e modais em todas as abas do painel administrativo.
 
+### Item 5.0 — Arquitetura Multi-Tenant (Múltiplas Hamburguerias) e Painel Super Admin (Master)
+- **Arquivos:** `src/types.ts`, `server.ts`, `src/context/StoreContext.tsx`, `src/App.tsx`, `src/components/master/MasterDashboard.tsx`, `src/components/client/StoreUnavailableView.tsx`, `src/components/common/StoreSelectorModal.tsx`, `src/components/common/Header.tsx`
+- **Solução Implementada:**
+  - **Modelagem e Tenancy:** Introduzida a interface `Tenant` e a coluna obrigatória `tenant_id` em pedidos (`Order`), produtos (`Product`), categorias (`Category`), usuários staff e configurações de loja.
+  - **Endpoints do Backend (`server.ts`):** 
+    - `GET /api/tenants` (listagem pública de lojas ativas)
+    - `GET /api/tenants/:slug` (busca de loja por slug com validação de status ativo/inativo)
+    - `GET /api/master/stats` (métricas consolidadas da plataforma: faturamento total, total de pedidos, lojas ativas/inativas)
+    - `POST /api/master/tenants` (criação de nova loja com geração automática do usuário admin vinculado)
+    - `PUT /api/master/tenants/:id` (edição de dados da loja)
+    - `PATCH /api/master/tenants/:id/status` (ativação/desativação instantânea de lojas)
+    - Endpoints de gerenciamento de usuários de plataforma e suporte "Acessar Loja" direto pelo Super Admin.
+  - **Roteamento por Slug:** Resolução dinâmica de lojas via URL (`/loja/:slug`, `?loja=:slug` ou `#loja/:slug`), com exibição de tela dedicada `StoreUnavailableView` para lojas inativas ou não encontradas.
+  - **Painel Master Super Admin:** Rota protegida `/master` acessível exclusivamente para `super_admin`, com métricas da plataforma, CRUD completo de hamburguerias, listagem de usuários e atalho de suporte para personificação segura da loja.
+  - **Troca Rápida de Loja:** Componente `StoreSelectorModal` integrado no cabeçalho e menu lateral permitindo alternar entre lojas cadastradas na plataforma.
+
 ---
 
 ## 4. Log Histórico de Alterações
@@ -131,3 +148,4 @@
 | 11/09/2026 | 4.1 | `Header.tsx`, `Drawer.tsx`, `BottomNav.tsx`, `App.tsx` | Ocultação de links administrativos no fluxo do cliente e proteção de rotas. |
 | 11/09/2026 | 4.2 | `BalcaoPanel.tsx`, `KitchenPanel.tsx`, `StoreContext.tsx`, `AdminDashboard.tsx`, `App.tsx` | Implementação do painel operacional do balcão e isolamento por roles (`admin` vs `balcao`). |
 | 11/09/2026 | 4.3 | `AdminDashboard.tsx`, `AdminNotificationsManager.tsx`, `AdminCustomersManager.tsx`, `AdminLoginView.tsx`, `BalcaoPanel.tsx`, `Header.tsx`, `Drawer.tsx`, `BottomNav.tsx` | Auditoria completa e correção de contraste no tema claro (Light Mode) em todos os módulos administrativos e navegações. |
+| 12/09/2026 | 5.0 | `types.ts`, `server.ts`, `StoreContext.tsx`, `App.tsx`, `Header.tsx`, `MasterDashboard.tsx`, `StoreUnavailableView.tsx`, `StoreSelectorModal.tsx` | Transformação completa para arquitetura Multi-Tenant com isolamento de lojas por slug, painel Super Admin (`/master`), CRUD de lojas com criação de admin automática e modal de troca de hamburgueria. |

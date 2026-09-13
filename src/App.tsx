@@ -13,7 +13,10 @@ import { OrderTrackingModal } from './components/client/OrderTrackingModal';
 import { ThermalReceiptModal } from './components/thermal/ThermalReceiptModal';
 import { BalcaoPanel } from './components/balcao/BalcaoPanel';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { MasterDashboard } from './components/master/MasterDashboard';
 import { AdminLoginView } from './components/admin/AdminLoginView';
+import { StoreUnavailableView } from './components/client/StoreUnavailableView';
+import { StoreSelectorModal } from './components/common/StoreSelectorModal';
 import { InAppNotificationBanner } from './components/notifications/InAppNotificationBanner';
 import { PWAInstallModal } from './components/pwa/PWAInstallModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
@@ -30,6 +33,10 @@ const MainLayout: React.FC = () => {
     products,
     setSelectedProductForModal,
     theme,
+    isStoreNotFound,
+    isStoreInactive,
+    isStoreSelectorOpen,
+    setIsStoreSelectorOpen,
   } = useStore();
   const {
     isIOS,
@@ -73,14 +80,20 @@ const MainLayout: React.FC = () => {
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24">
         {/* CLIENT VIEWS - Completely isolated from Admin */}
         {currentView === 'client' && (
-          <>
-            {(clientTab === 'home' || clientTab === 'menu' || clientTab === 'cart') && (
-              <HomeView />
-            )}
-            {clientTab === 'orders' && <OrdersHistoryView />}
-            {clientTab === 'favorites' && <FavoritesView />}
-            {clientTab === 'profile' && <ProfileView />}
-          </>
+          isStoreNotFound ? (
+            <StoreUnavailableView reason="not_found" />
+          ) : isStoreInactive ? (
+            <StoreUnavailableView reason="inactive" />
+          ) : (
+            <>
+              {(clientTab === 'home' || clientTab === 'menu' || clientTab === 'cart') && (
+                <HomeView />
+              )}
+              {clientTab === 'orders' && <OrdersHistoryView />}
+              {clientTab === 'favorites' && <FavoritesView />}
+              {clientTab === 'profile' && <ProfileView />}
+            </>
+          )
         )}
 
         {/* BALCAO & KITCHEN OPERATIONAL VIEW - Protected by Authentication */}
@@ -110,6 +123,18 @@ const MainLayout: React.FC = () => {
             />
           )
         )}
+
+        {/* SUPER ADMIN MASTER VIEW - Protected by Authentication & super_admin role */}
+        {currentView === 'master' && (
+          isAdminAuthenticated && adminRole === 'super_admin' ? (
+            <MasterDashboard />
+          ) : (
+            <AdminLoginView
+              onSuccess={() => setCurrentView('master')}
+              onBackToClient={() => setCurrentView('client')}
+            />
+          )
+        )}
       </main>
 
       {/* Mobile Bottom Navigation (Client only - hidden in Admin & Balcão) */}
@@ -121,6 +146,10 @@ const MainLayout: React.FC = () => {
       <CheckoutModal />
       <OrderTrackingModal />
       <ThermalReceiptModal />
+      <StoreSelectorModal
+        isOpen={isStoreSelectorOpen}
+        onClose={() => setIsStoreSelectorOpen(false)}
+      />
 
       {/* PWA Install Modal / iOS Step-by-Step Guide */}
       <PWAInstallModal

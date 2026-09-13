@@ -332,6 +332,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const checkIsMasterRoute = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.location.pathname.startsWith('/master') ||
+      window.location.hash.startsWith('#/master') ||
+      window.location.hash === '#master' ||
+      window.location.search.includes('view=master')
+    );
+  };
+
   const checkIsBalcaoRoute = () => {
     if (typeof window === 'undefined') return false;
     return (
@@ -359,18 +369,82 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [adminRole, setAdminRole] = useState<StaffRole | null>(() => {
     try {
       const savedRole = localStorage.getItem('gamas_admin_role');
-      if (savedRole === 'balcao' || savedRole === 'admin') return savedRole;
+      if (savedRole === 'super_admin' || savedRole === 'balcao' || savedRole === 'admin') return savedRole;
       return null;
     } catch {
       return null;
     }
   });
 
+  const [adminTenantId, setAdminTenantId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('gamas_admin_tenant_id');
+    } catch {
+      return null;
+    }
+  });
+  const [adminTenantName, setAdminTenantName] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('gamas_admin_tenant_name');
+    } catch {
+      return null;
+    }
+  });
+  const [adminTenantSlug, setAdminTenantSlug] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('gamas_admin_tenant_slug');
+    } catch {
+      return null;
+    }
+  });
+
+  const [superAdminSelectedTenantId, setSuperAdminSelectedTenantId] = useState<string | null>(null);
+
+  // Helper to extract store slug from URL
+  const extractSlugFromUrl = (): string => {
+    if (typeof window === 'undefined') return 'gamas-burger';
+    const pathMatch = window.location.pathname.match(/\/loja\/([a-z0-9-]+)/i);
+    if (pathMatch && pathMatch[1]) return pathMatch[1].toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramSlug = urlParams.get('loja') || urlParams.get('store');
+    if (paramSlug) return paramSlug.toLowerCase();
+    const hashMatch = window.location.hash.match(/#\/?loja\/([a-z0-9-]+)/i);
+    if (hashMatch && hashMatch[1]) return hashMatch[1].toLowerCase();
+    try {
+      const saved = localStorage.getItem('gamas_tenant_slug');
+      if (saved) return saved;
+    } catch {}
+    return 'gamas-burger';
+  };
+
+  const [allTenants, setAllTenants] = useState<Tenant[]>(() => {
+    try {
+      const saved = localStorage.getItem('gamas_all_tenants');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_TENANTS;
+  });
+
+  const [currentStoreSlug, setCurrentStoreSlug] = useState<string>(extractSlugFromUrl);
+  const [currentTenant, setCurrentTenant] = useState<Tenant | null>(() => {
+    const initialSlug = extractSlugFromUrl();
+    const match = INITIAL_TENANTS.find((t) => t.slug === initialSlug);
+    return match || INITIAL_TENANTS[0];
+  });
+
+  const [isStoreNotFound, setIsStoreNotFound] = useState(false);
+  const [isStoreInactive, setIsStoreInactive] = useState(false);
+  const [isStoreSelectorOpen, setIsStoreSelectorOpen] = useState(false);
+
   const [routeAccessDeniedMessage, setRouteAccessDeniedMessage] = useState<string | null>(null);
   const clearRouteAccessDeniedMessage = () => setRouteAccessDeniedMessage(null);
 
+  const isSuperAdmin = adminRole === 'super_admin';
+
   const userRole: UserRole = isAdminAuthenticated
-    ? adminRole === 'balcao'
+    ? adminRole === 'super_admin'
+      ? 'super_admin'
+      : adminRole === 'balcao'
       ? 'balcao'
       : 'admin'
     : 'cliente';
@@ -378,7 +452,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Item 2.2: Verify saved admin session on startup with the server
   useEffect(() => {
     const saved = localStorage.getItem('gamas_admin_token');
-    const savedRole = (localStorage.getItem('gamas_admin_role') as StaffRole) || null;
     if (saved && !saved.startsWith('admin-token-')) {
       fetch('/api/admin/verify', {
         headers: { Authorization: `Bearer ${saved}` },
@@ -387,9 +460,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .then((data) => {
           if (data && data.valid) {
             setIsAdminAuthenticated(true);
-            const role: StaffRole = data.role === 'balcao' ? 'balcao' : 'admin';
+            const role: StaffRole =
+              data.role === 'super_admin' ? 'super_admin' : data.role === 'balcao' ? 'balcao' : 'admin';
             setAdminRole(role);
             setAdminToken(saved);
+            if (data.tenant_id) {
+              setAdminTenantId(data.tenant_id);
+              setAdminTenantName(data.tenant_name || null);
+              setAdminTenantSlug(data.tenant_slug || null);
+            }
             try {
               localStorage.setItem('gamas_admin_role', role);
             } catch {}
@@ -401,6 +480,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             localStorage.removeItem('burger10_admin_email');
             localStorage.removeItem('gamas_admin_token');
             localStorage.removeItem('gamas_admin_role');
+            localStorage.removeItem('gamas_admin_tenant_id');
+            localStorage.removeItem('gamas_admin_tenant_name');
+            localStorage.removeItem('gamas_admin_tenant_slug');
           }
         })
         .catch(() => {
@@ -415,11 +497,87 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.removeItem('burger10_admin_auth');
       localStorage.removeItem('gamas_admin_token');
       localStorage.removeItem('gamas_admin_role');
+      localStorage.removeItem('gamas_admin_tenant_id');
+      localStorage.removeItem('gamas_admin_tenant_name');
+      localStorage.removeItem('gamas_admin_tenant_slug');
     }
   }, []);
 
+  // Fetch initial list of public tenants and check store validity
+  const refreshTenants = async () => {
+    try {
+      const res = await fetch('/api/tenants');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.tenants)) {
+        setAllTenants(data.tenants);
+        try {
+          localStorage.setItem('gamas_all_tenants', JSON.stringify(data.tenants));
+        } catch {}
+        const matched = data.tenants.find((t: Tenant) => t.slug === currentStoreSlug);
+        if (matched) {
+          setCurrentTenant(matched);
+          setIsStoreNotFound(false);
+          setIsStoreInactive(matched.status === 'inativo');
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    refreshTenants();
+  }, []);
+
+  const selectStoreBySlug = async (slug: string): Promise<boolean> => {
+    const cleanSlug = slug.trim().toLowerCase();
+    setCurrentStoreSlug(cleanSlug);
+    try {
+      localStorage.setItem('gamas_tenant_slug', cleanSlug);
+    } catch {}
+
+    const localMatch = allTenants.find((t) => t.slug === cleanSlug);
+    if (localMatch) {
+      setCurrentTenant(localMatch);
+      setIsStoreNotFound(false);
+      setIsStoreInactive(localMatch.status === 'inativo');
+      if (typeof window !== 'undefined') {
+        window.history.pushState(null, '', `/loja/${cleanSlug}`);
+      }
+      return true;
+    }
+
+    try {
+      const res = await fetch(`/api/tenants/${cleanSlug}`);
+      const data = await res.json();
+      if (data.success && data.tenant) {
+        setCurrentTenant(data.tenant);
+        setIsStoreNotFound(false);
+        setIsStoreInactive(data.tenant.status === 'inativo');
+        if (typeof window !== 'undefined') {
+          window.history.pushState(null, '', `/loja/${cleanSlug}`);
+        }
+        return true;
+      } else if (data.reason === 'inactive') {
+        setIsStoreNotFound(false);
+        setIsStoreInactive(true);
+        return false;
+      } else {
+        setIsStoreNotFound(true);
+        setIsStoreInactive(false);
+        return false;
+      }
+    } catch {
+      setIsStoreNotFound(true);
+      return false;
+    }
+  };
+
   // Navigation & View States: Always default to 'client' for customers
-  const [currentView, setCurrentView] = useState<'client' | 'balcao' | 'admin'>(() => {
+  const [currentView, setCurrentView] = useState<'client' | 'balcao' | 'admin' | 'master'>(() => {
+    if (checkIsMasterRoute()) {
+      return 'master';
+    }
     if (checkIsAdminRoute()) {
       return 'admin';
     }
@@ -431,6 +589,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       typeof window !== 'undefined' &&
       (window.location.hash.includes('admin') ||
         window.location.hash.includes('balcao') ||
+        window.location.hash.includes('master') ||
         window.location.hash.includes('kitchen'))
     ) {
       try {
@@ -458,10 +617,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // URL Hash/Route listener with Route Guards
   useEffect(() => {
     const handleUrlChange = () => {
+      const isMaster = checkIsMasterRoute();
       const isAdmin = checkIsAdminRoute();
       const isBalcao = checkIsBalcaoRoute();
 
-      if (isAdmin) {
+      if (isMaster) {
+        if (adminRole !== 'super_admin') {
+          setRouteAccessDeniedMessage('Acesso exclusivo ao Super Administrador da plataforma.');
+          setCurrentView('admin');
+          return;
+        }
+        setCurrentView('master');
+      } else if (isAdmin) {
         // Strict guard: If logged in as 'balcao', prevent access to admin route
         if (adminRole === 'balcao') {
           setRouteAccessDeniedMessage(
@@ -488,8 +655,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [adminRole]);
 
-  const handleSetCurrentView = (view: 'client' | 'balcao' | 'admin' | 'kitchen') => {
-    const targetView: 'client' | 'balcao' | 'admin' = view === 'kitchen' ? 'balcao' : view;
+  const handleSetCurrentView = (view: 'client' | 'balcao' | 'admin' | 'kitchen' | 'master') => {
+    const targetView: 'client' | 'balcao' | 'admin' | 'master' = view === 'kitchen' ? 'balcao' : view;
+
+    // Strict SuperAdmin restriction: If not super_admin, block master access
+    if (targetView === 'master' && adminRole !== 'super_admin') {
+      setRouteAccessDeniedMessage('Acesso Bloqueado: Exclusivo para Super Administradores da plataforma.');
+      setCurrentView('admin');
+      return;
+    }
 
     // Strict Balcao restriction: If balcao role tries to access admin, block immediately
     if (targetView === 'admin' && adminRole === 'balcao') {
@@ -509,6 +683,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (
           window.location.hash.includes('admin') ||
           window.location.hash.includes('balcao') ||
+          window.location.hash.includes('master') ||
           window.location.hash.includes('kitchen')
         ) {
           window.history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -536,10 +711,32 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const data = await res.json();
 
       if (res.ok && data && data.success && data.token) {
-        const role: StaffRole = data.role === 'balcao' ? 'balcao' : 'admin';
+        const role: StaffRole =
+          data.role === 'super_admin' ? 'super_admin' : data.role === 'balcao' ? 'balcao' : 'admin';
         setIsAdminAuthenticated(true);
         setAdminRole(role);
         setAdminToken(data.token);
+
+        if (data.tenant_id) {
+          setAdminTenantId(data.tenant_id);
+          setAdminTenantName(data.tenant_name || null);
+          setAdminTenantSlug(data.tenant_slug || null);
+          try {
+            localStorage.setItem('gamas_admin_tenant_id', data.tenant_id);
+            if (data.tenant_name) localStorage.setItem('gamas_admin_tenant_name', data.tenant_name);
+            if (data.tenant_slug) localStorage.setItem('gamas_admin_tenant_slug', data.tenant_slug);
+          } catch {}
+        } else {
+          setAdminTenantId(null);
+          setAdminTenantName(null);
+          setAdminTenantSlug(null);
+          try {
+            localStorage.removeItem('gamas_admin_tenant_id');
+            localStorage.removeItem('gamas_admin_tenant_name');
+            localStorage.removeItem('gamas_admin_tenant_slug');
+          } catch {}
+        }
+
         try {
           localStorage.setItem('burger10_admin_auth', 'true');
           localStorage.setItem('burger10_admin_email', data.email || cleanEmail);
@@ -549,7 +746,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           // local storage fallback
         }
 
-        if (role === 'balcao') {
+        if (role === 'super_admin') {
+          handleSetCurrentView('master');
+        } else if (role === 'balcao') {
           handleSetCurrentView('balcao');
         } else {
           handleSetCurrentView('admin');
@@ -580,11 +779,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsAdminAuthenticated(false);
     setAdminRole(null);
     setAdminToken('');
+    setAdminTenantId(null);
+    setAdminTenantName(null);
+    setAdminTenantSlug(null);
     try {
       localStorage.removeItem('burger10_admin_auth');
       localStorage.removeItem('burger10_admin_email');
       localStorage.removeItem('gamas_admin_token');
       localStorage.removeItem('gamas_admin_role');
+      localStorage.removeItem('gamas_admin_tenant_id');
+      localStorage.removeItem('gamas_admin_tenant_name');
+      localStorage.removeItem('gamas_admin_tenant_slug');
     } catch {
       // ignore
     }
@@ -1249,6 +1454,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const newOrder: Order = {
       id: uniqueOrderId,
+      tenant_id: currentTenant?.id || 'tenant-gamas',
       orderNumber,
       createdAt: formattedDate,
       customer: orderCustomer,
@@ -1643,6 +1849,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const simulatedOrder: Order = {
       id: `ord-${orderNumber}-${Date.now().toString().slice(-4)}`,
+      tenant_id: currentTenant?.id || 'tenant-gamas',
       orderNumber,
       createdAt: formattedDate,
       customer: {
@@ -1776,6 +1983,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         userRole,
         routeAccessDeniedMessage,
         clearRouteAccessDeniedMessage,
+
+        // Multi-Tenant State
+        currentTenant,
+        allTenants,
+        isStoreNotFound,
+        isStoreInactive,
+        currentStoreSlug,
+        selectStoreBySlug,
+        refreshTenants,
+        adminTenantId,
+        adminTenantName,
+        adminTenantSlug,
+        isSuperAdmin,
+        superAdminSelectedTenantId,
+        setSuperAdminSelectedTenantId,
+        isStoreSelectorOpen,
+        setIsStoreSelectorOpen,
+
         clientTab,
         setClientTab,
         adminTab,
