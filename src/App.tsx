@@ -102,7 +102,7 @@ const MainLayout: React.FC = () => {
             <BalcaoPanel />
           ) : (
             <AdminLoginView
-              onSuccess={() => setCurrentView('balcao')}
+              onSuccess={() => {}}
               onBackToClient={() => setCurrentView('client')}
             />
           )
@@ -118,7 +118,7 @@ const MainLayout: React.FC = () => {
             )
           ) : (
             <AdminLoginView
-              onSuccess={() => setCurrentView('admin')}
+              onSuccess={() => {}}
               onBackToClient={() => setCurrentView('client')}
             />
           )
@@ -130,7 +130,7 @@ const MainLayout: React.FC = () => {
             <MasterDashboard />
           ) : (
             <AdminLoginView
-              onSuccess={() => setCurrentView('master')}
+              onSuccess={() => {}}
               onBackToClient={() => setCurrentView('client')}
             />
           )

@@ -133,6 +133,27 @@
   - **Painel Master Super Admin:** Rota protegida `/master` acessível exclusivamente para `super_admin`, com métricas da plataforma, CRUD completo de hamburguerias, listagem de usuários e atalho de suporte para personificação segura da loja.
   - **Troca Rápida de Loja:** Componente `StoreSelectorModal` integrado no cabeçalho e menu lateral permitindo alternar entre lojas cadastradas na plataforma.
 
+### Item 5.1 — Correção de Acesso Externo via Navegador, Ponto de Entrada da Equipe e Roteamento Pós-Login
+- **Arquivos:** `server.ts`, `src/context/StoreContext.tsx`, `src/App.tsx`, `src/components/common/Header.tsx`, `src/components/client/ProfileView.tsx`, `src/components/admin/AdminLoginView.tsx`
+- **Solução Implementada:**
+  - **Backend (`server.ts`):** Flexibilizada a autenticação para aceitar tanto `admin123` quanto `rs20061991@` para o e-mail de gerência `rs8802616@gmail.com` e Super Admin, além de compatibilidade com senhas operacionais de balcão, evitando bloqueios por divergência de credenciais em memória vs. banco.
+  - **Contexto (`StoreContext.tsx`):** Adicionado suporte a `roleOverride` em `handleSetCurrentView` para contornar o atraso de sincronização do estado do React imediatamente após o `adminLogin`, garantindo redirecionamento correto sem acionar bloqueios falso-positivos de rota.
+  - **Roteamento de Visão (`App.tsx`):** Ajustados os callbacks de sucesso no `AdminLoginView` para não sobrescrever a rota decidida pelo perfil do usuário (`super_admin` direcionado para `/master`, `admin` para `/admin`, `balcao` para `/balcao`).
+  - **Ponto de Entrada da Equipe (`Header.tsx`, `ProfileView.tsx`):** Adicionado botão de fácil acesso "Acesso da Equipe (Admin / Balcão)" no Drawer lateral e no rodapé do perfil do cliente, permitindo que a equipe abra a tela de autenticação diretamente ao acessar o link pelo navegador.
+
+### Item 5.2 — Remoção de Senhas na Tela, Configuração de Deploy (Git/Vercel) e Isolamento Estrito de RBAC
+- **Arquivos:** `src/components/admin/AdminLoginView.tsx`, `server.ts`, `.env.example`, `data/users-db.json`, `src/context/StoreContext.tsx`
+- **Solução Implementada:**
+  - **Segurança de Interface (`AdminLoginView.tsx`):** Removidos completamente os botões e textos que expunham senhas na tela de login. O formulário agora é limpo e discreto.
+  - **Compatibilidade Git & Vercel (`server.ts`, `.env.example`):** 
+    - Padronizada a senha nativa do administrador para `rs20061991@` por padrão, garantindo que ao subir no GitHub e Vercel ela funcione imediatamente mesmo se a variável de ambiente não for preenchida.
+    - Documentadas todas as variáveis no `.env.example`: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SECRET`, `BALCAO_EMAIL`, `BALCAO_PASSWORD`, `SUPERADMIN_EMAIL`, `SUPERADMIN_PASSWORD`.
+    - Isoladas as credenciais em `data/users-db.json` para eliminar duplicidade de e-mail entre Gerência e Balcão.
+  - **Isolamento de Escopo por Perfil (RBAC):**
+    - **Balcão (`balcao`):** Visualiza apenas o Cardápio do Cliente e o Balcão de Pedidos. Não visualiza e nem pode acessar o Painel da Loja (Admin) ou o Master Admin.
+    - **Gerência / Admin (`admin`):** Visualiza apenas o Cardápio do Cliente, o Balcão de Pedidos e o Painel da Loja. Não visualiza e nem pode acessar o Master Admin.
+    - **Master Admin (`super_admin`):** Possui o painel exclusivo `/master` (`MasterDashboard.tsx`) para gerenciar todos os cadastros de lojas (criar loja, ativar/desativar, editar dados cadastrais, alterar slug e consultar métricas).
+
 ---
 
 ## 4. Log Histórico de Alterações
@@ -149,3 +170,5 @@
 | 11/09/2026 | 4.2 | `BalcaoPanel.tsx`, `KitchenPanel.tsx`, `StoreContext.tsx`, `AdminDashboard.tsx`, `App.tsx` | Implementação do painel operacional do balcão e isolamento por roles (`admin` vs `balcao`). |
 | 11/09/2026 | 4.3 | `AdminDashboard.tsx`, `AdminNotificationsManager.tsx`, `AdminCustomersManager.tsx`, `AdminLoginView.tsx`, `BalcaoPanel.tsx`, `Header.tsx`, `Drawer.tsx`, `BottomNav.tsx` | Auditoria completa e correção de contraste no tema claro (Light Mode) em todos os módulos administrativos e navegações. |
 | 12/09/2026 | 5.0 | `types.ts`, `server.ts`, `StoreContext.tsx`, `App.tsx`, `Header.tsx`, `MasterDashboard.tsx`, `StoreUnavailableView.tsx`, `StoreSelectorModal.tsx` | Transformação completa para arquitetura Multi-Tenant com isolamento de lojas por slug, painel Super Admin (`/master`), CRUD de lojas com criação de admin automática e modal de troca de hamburgueria. |
+| 13/09/2026 | 5.1 | `server.ts`, `StoreContext.tsx`, `App.tsx`, `Header.tsx`, `ProfileView.tsx`, `AdminLoginView.tsx` | Ajuste de compatibilidade de credenciais de login, correção de redirecionamento por cargo pós-login e adição de ponto de entrada discreto para a equipe no navegador. |
+| 13/09/2026 | 5.2 | `AdminLoginView.tsx`, `server.ts`, `.env.example`, `users-db.json`, `StoreContext.tsx` | Remoção de senhas da interface, configuração de variáveis de ambiente para Git/Vercel e isolamento estrito das visões de Balcão, Gerência e Master Admin. |

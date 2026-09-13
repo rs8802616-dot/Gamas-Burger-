@@ -39,7 +39,10 @@ import { firebaseService, getOrderTimestamp } from '../services/firebase';
 interface StoreContextType {
   // Navigation & UI State
   currentView: 'client' | 'balcao' | 'admin' | 'master';
-  setCurrentView: (view: 'client' | 'balcao' | 'admin' | 'kitchen' | 'master') => void;
+  setCurrentView: (
+    view: 'client' | 'balcao' | 'admin' | 'kitchen' | 'master',
+    roleOverride?: StaffRole
+  ) => void;
   adminRole: StaffRole | null;
   userRole: UserRole;
   routeAccessDeniedMessage: string | null;
@@ -624,7 +627,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (isMaster) {
         if (adminRole !== 'super_admin') {
           setRouteAccessDeniedMessage('Acesso exclusivo ao Super Administrador da plataforma.');
-          setCurrentView('admin');
+          if (adminRole === 'balcao') {
+            setCurrentView('balcao');
+            if (typeof window !== 'undefined') window.location.hash = '#balcao';
+          } else if (adminRole === 'admin') {
+            setCurrentView('admin');
+            if (typeof window !== 'undefined') window.location.hash = '#admin';
+          } else {
+            setCurrentView('client');
+          }
           return;
         }
         setCurrentView('master');
@@ -655,18 +666,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [adminRole]);
 
-  const handleSetCurrentView = (view: 'client' | 'balcao' | 'admin' | 'kitchen' | 'master') => {
+  const handleSetCurrentView = (
+    view: 'client' | 'balcao' | 'admin' | 'kitchen' | 'master',
+    roleOverride?: StaffRole
+  ) => {
     const targetView: 'client' | 'balcao' | 'admin' | 'master' = view === 'kitchen' ? 'balcao' : view;
+    const effectiveRole = roleOverride !== undefined ? roleOverride : adminRole;
 
     // Strict SuperAdmin restriction: If not super_admin, block master access
-    if (targetView === 'master' && adminRole !== 'super_admin') {
+    if (targetView === 'master' && effectiveRole !== 'super_admin') {
       setRouteAccessDeniedMessage('Acesso Bloqueado: Exclusivo para Super Administradores da plataforma.');
-      setCurrentView('admin');
+      if (effectiveRole === 'balcao') {
+        setCurrentView('balcao');
+        if (typeof window !== 'undefined') window.location.hash = '#balcao';
+      } else if (effectiveRole === 'admin') {
+        setCurrentView('admin');
+        if (typeof window !== 'undefined') window.location.hash = '#admin';
+      } else {
+        setCurrentView('client');
+      }
       return;
     }
 
     // Strict Balcao restriction: If balcao role tries to access admin, block immediately
-    if (targetView === 'admin' && adminRole === 'balcao') {
+    if (targetView === 'admin' && effectiveRole === 'balcao') {
       setRouteAccessDeniedMessage(
         'Acesso Bloqueado: O perfil "Balcão" não possui permissão para acessar o Painel Administrativo.'
       );
@@ -677,6 +700,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
+    setRouteAccessDeniedMessage(null);
     setCurrentView(targetView);
     if (typeof window !== 'undefined') {
       if (targetView === 'client') {
@@ -747,11 +771,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         if (role === 'super_admin') {
-          handleSetCurrentView('master');
+          handleSetCurrentView('master', 'super_admin');
         } else if (role === 'balcao') {
-          handleSetCurrentView('balcao');
+          handleSetCurrentView('balcao', 'balcao');
         } else {
-          handleSetCurrentView('admin');
+          handleSetCurrentView('admin', 'admin');
         }
 
         return { success: true, message: data.message || 'Autenticado com sucesso!' };

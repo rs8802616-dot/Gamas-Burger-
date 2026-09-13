@@ -22,6 +22,7 @@ import {
   Sun,
   Moon,
   Shield,
+  Lock,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { NotificationCenterModal } from '../notifications/NotificationCenterModal';
@@ -672,6 +673,30 @@ export const Header: React.FC = () => {
                     >
                       <LogOut className="w-4 h-4 text-red-500" />
                       <span>Sair da Conta Staff</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Team / Staff Login button when NOT logged in */}
+                {!isAdminAuthenticated && (
+                  <div className={`pt-3 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                    <button
+                      id="drawer-staff-login-btn"
+                      onClick={() => {
+                        setCurrentView('admin');
+                        setIsDrawerOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2.5 rounded-xl flex items-center justify-between transition-colors text-xs font-bold border ${
+                        isDark
+                          ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Lock className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Acesso da Equipe (Admin / Balcão)</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold">Entrar →</span>
                     </button>
                   </div>
                 )}

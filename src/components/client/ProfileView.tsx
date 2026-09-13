@@ -528,6 +528,21 @@ export const ProfileView: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Staff / Store Management Access Link */}
+          <div className="pt-2 pb-6 text-center">
+            <button
+              id="profile-staff-access-btn"
+              onClick={() => setCurrentView('admin')}
+              className={`text-xs font-semibold px-4 py-2.5 rounded-xl transition-all inline-flex items-center gap-2 border ${
+                isDark
+                  ? 'bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border-white/5'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 border-gray-200'
+              }`}
+            >
+              <span>🔒 Acesso da Equipe (Admin / Balcão)</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
